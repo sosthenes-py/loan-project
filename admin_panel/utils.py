@@ -664,7 +664,7 @@ class LoanUtils:
                                     data-waive_status='{waive.status}'
                                     class='waive_rows' data-bs-toggle='modal' data-bs-target='#exampleLargeModal1'
                                     data-user_id='{loan.user.user_id}'" data-waive_id="{waive.id}"
-                                    >
+                                    > 
                             <td>{kwargs['sn']}.</td>
                             <td>{waive.loan.loan_id}
                             <span class="badge bg-{'warning' if waive.loan.reloan == 1 else 'info'}">{'1st loan' if waive.loan.reloan == 1 else f'reloan ({waive.loan.reloan})'}</span>
