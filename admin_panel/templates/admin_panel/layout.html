@@ -1,0 +1,546 @@
+{% load static %}
+    {% block title %}
+    {% endblock %}
+    <!--favicon-->
+	<link rel="icon" href="{% static 'admin_panel/images/favicon.png' %}" type="image/png" />
+	<!--plugins-->
+	<link href="{% static 'admin_panel/plugins/simplebar/css/simplebar.css' %}" rel="stylesheet" />
+	<link href="{% static 'admin_panel/plugins/perfect-scrollbar/css/perfect-scrollbar.css' %}" rel="stylesheet" />
+	<link href="{% static 'admin_panel/plugins/metismenu/css/metisMenu.min.css' %}" rel="stylesheet" />
+    <link href="{% static 'admin_panel/plugins/datatable/css/dataTables.bootstrap5.min.css' %}" rel="stylesheet" />
+
+
+    <link href="{% static 'admin_panel/plugins/Drag-And-Drop/dist/imageuploadify.min.css' %}" rel="stylesheet" />
+    <link href="{% static 'admin_panel/plugins/fancy-file-uploader/fancy_fileupload.css' %}" rel="stylesheet" />
+
+
+	<!-- loader-->
+	<link href="{% static 'admin_panel/css/pace.min.css' %}" rel="stylesheet" />
+	<!-- Bootstrap CSS -->
+	<link href="{% static 'admin_panel/css/bootstrap.min.css' %}" rel="stylesheet" />
+    <link href="{% static 'admin_panel/css/bootstrap-extended.css' %}" rel="stylesheet" />
+	<link href="{% static 'admin_panel/css/app.css' %}" rel="stylesheet" />
+	<link href="{% static 'admin_panel/css/icons.css' %}" rel="stylesheet" />
+	<!-- Theme Style CSS -->
+	<link rel="stylesheet" href="{% static 'admin_panel/css/dark-theme.css' %}" />
+	<link rel="stylesheet" href="{% static 'admin_panel/css/semi-dark.css' %}" />
+	<link rel="stylesheet" href="{% static 'admin_panel/css/header-colors.css' %}" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.15.2/css/selectize.bootstrap5.min.css" integrity="sha512-Ars0BmSwpsUJnWMw+KoUKGKunT7+T8NGK0ORRKj+HT8naZzLSIQoOSIIM3oyaJljgLxFi0xImI5oZkAWEFARSA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+	<!-- toastr js -->
+    <link rel="stylesheet" href="{% static 'admin_panel/css/toastr.min.css' %}" />
+
+
+	 <script src="{% static 'admin_panel/js/jquery-3.6.0.min.js' %}"></script>
+
+	 <style>
+        #loader{
+          position: fixed;
+          text-align:center;
+          width: 100%;
+          height: 100%;
+          top: 50%;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 10000;
+          cursor: pointer;
+          display:none;
+          justify-content: center;
+          margin-top:-50px;
+        }
+
+         #overlay{
+          position: fixed;
+          text-align:center;
+          width: 100%;
+          height: 100%;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: black;
+          opacity: 0.6;
+          z-index: 1000000;
+          cursor: not-allowed;
+          display:none;
+          justify-content: center;
+        }
+         th {
+            white-space: nowrap; /* Prevent text from wrapping */
+            overflow: hidden;    /* Hide any overflowing text */
+            text-overflow: ellipsis; /* Optionally, add ellipsis for long text */
+        }
+         td{
+             white-space: nowrap;
+         }
+         td input {
+            width: auto; /* Allow the input to expand to fit its content */
+            box-sizing: border-box; /* Include padding and border in the width calculation */
+        }
+         table{
+            font-size: 14px;
+         }
+        .actions{
+            cursor: pointer;
+        }
+
+         /* Custom CSS for the loader animation */
+            .thin-loader {
+              position: relative;
+              height: 4px; /* Adjust height as needed */
+              background-color: #007bff; /* Loader color */
+            }
+            .thin-loader::after {
+              content: "";
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 50%; /* Initial width of the loader */
+              height: 100%;
+              background-color: #fff; /* Background color */
+              animation: loader 2s infinite; /* Animation */
+            }
+            @keyframes loader {
+              0% {
+                width: 0; /* Start from 0 width */
+              }
+              50% {
+                width: 100%; /* Move to 100% width */
+                left: 0; /* Move to left */
+              }
+              100% {
+                width: 0; /* Back to 0 width */
+                left: 100%; /* Move to right */
+              }
+            }
+    </style>
+</head>
+
+<body>
+ <div id="loader">
+     <img src="{% static 'admin_panel/css/ajax-loader.gif' %}" alt="" width="40em" />
+ </div>
+ <div id="overlay"></div>
+
+
+	<!--wrapper-->
+	<div class="wrapper">
+		<!--sidebar wrapper -->
+		<div class="sidebar-wrapper" data-simplebar="true">
+			<div class="sidebar-header">
+				<div>
+					<img src="{% static 'admin_panel/images/logo.png' %}" class="logo-icon" alt="logo icon" />
+				</div>
+			</div>
+			<!--navigation-->
+			<ul class="metismenu" id="menu">
+				<li>
+					<a href="javascript:;" class="has-arrow">
+						<div class="parent-icon"><i class="bx bx-home-circle"></i>
+						</div>
+						<div class="menu-title">Dashboard</div>
+					</a>
+					<ul>
+						<li> <a href="{% url 'dashboard' %}"><i class="bx bx-right-arrow-alt"></i>Home</a>
+						</li>
+					</ul>
+
+                    <ul>
+						<li> <a href="{% url 'analysis' %}"><i class="bx bx-right-arrow-alt"></i>Analysis</a>
+						</li>
+					</ul>
+
+					<ul>
+						<li> <a href="{% url 'loans' %}"><i class="bx bx-right-arrow-alt"></i>Loan Tracker</a>
+						</li>
+					</ul>
+
+                    <ul>
+						<li> <a href="{% url 'waiver' %}"><i class="bx bx-right-arrow-alt"></i>Waiver</a>
+						</li>
+					</ul>
+
+                <ul>
+						<li> <a href="{% url 'repayments' %}"><i class="bx bx-right-arrow-alt"></i>Repayment History</a>
+						</li>
+					</ul>
+
+					<ul>
+						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Withdrawals</a>
+						</li>
+					</ul>
+					<ul>
+						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Crypto Trades</a>
+						</li>
+					</ul>
+
+					<ul>
+						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Investments</a>
+						</li>
+					</ul>
+
+                    {% if current_user.role == "admin" %}
+					<ul>
+						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Operators</a>
+						</li>
+					</ul>
+                    {% endif %}
+					<ul>
+						<li> <a href="{% url 'users' %}"><i class="bx bx-right-arrow-alt"></i>All Users</a>
+						</li>
+					</ul>
+				</li>
+                <li>
+					<a href="javascript:;" class="has-arrow">
+						<div class="parent-icon"><i class="bx bx-category"></i>
+						</div>
+						<div class="menu-title">CRM</div>
+					</a>
+					<ul>
+						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Leads</a>
+						</li>
+					</ul>
+                    <ul>
+						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Developer</a>
+						</li>
+					</ul>
+                    <ul>
+						<li> <a target="_blank" href="https://documenter.getpostman.com/view/28192247/2s9YJgSfhK"><i class="bx bx-right-arrow-alt"></i>Documentation</a>
+						</li>
+					</ul>
+				</li>
+				<li>
+					<a href="javascript:;" class="has-arrow">
+						<div class="parent-icon"><i class="bx bx-category"></i>
+						</div>
+						<div class="menu-title">Application</div>
+					</a>
+					<ul>
+						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Email</a>
+						</li>
+					</ul>
+				</li>
+				<li>
+					<a href="#0">
+						<div class="parent-icon"><i class="bx bx-user-circle"></i>
+						</div>
+						<div class="menu-title">Logout</div>
+					</a>
+				</li>
+
+
+			</ul>
+			<!--end navigation-->
+		</div>
+		<!--end sidebar wrapper -->
+		<!--start header -->
+		<header>
+			<div class="topbar d-flex align-items-center">
+				<nav class="navbar navbar-expand">
+					<div class="mobile-toggle-menu"><i class="bx bx-menu"></i>
+					</div>
+					<div class="search-bar flex-grow-1">
+                        {% block search_block %}
+
+                        {% endblock %}
+
+					</div>
+                    
+                
+                    <div  class="top-menu ms-auto">
+                       <ul  class="navbar-nav align-items-center">
+                          <li  class="nav-item mobile-search-icon"><a  href="#" class="nav-link"><i  class="bx bx-search"></i></a></li>
+                          <li  class="nav-item dropdown dropdown-large">
+                             <a  href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" class="nav-link dropdown-toggle dropdown-toggle-nocaret"><i  class="bx bx-category"></i></a>
+                             <div  class="dropdown-menu dropdown-menu-end">
+                                <div  class="row row-cols-3 g-3 p-3">
+                                   <div  class="col text-center">
+                                      <div  class="app-box mx-auto bg-gradient-cosmic text-white"><i  class="bx bx-group"></i></div>
+                                      <div  class="app-title">Teams</div>
+                                   </div>
+                                   <div  class="col text-center">
+                                      <div  class="app-box mx-auto bg-gradient-burning text-white"><i  class="bx bx-atom"></i></div>
+                                      <div  class="app-title">Projects</div>
+                                   </div>
+                                   <div  class="col text-center">
+                                      <div  class="app-box mx-auto bg-gradient-lush text-white"><i  class="bx bx-shield"></i></div>
+                                      <div  class="app-title">Tasks</div>
+                                   </div>
+                                </div>
+                             </div>
+                          </li>
+
+                          <li  class="nav-item dropdown dropdown-large">
+                             <a  href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" class="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative"><span  class="alert-count">7</span><i class="bx bx-bell"></i></a>
+                             <div class="dropdown-menu dropdown-menu-" style="padding-right: 2em">
+                                <a  href="#">
+                                   <div  class="msg-header">
+                                      <p  class="msg-header-title">Notifications</p>
+                                      <p  class="msg-header-clear ms-auto">Marks all as read</p>
+                                   </div>
+                                </a>
+                                <div  class="header-notifications-list ps">
+                                   <a  href="#" class="dropdown-item">
+                                      <div  class="d-flex align-items-center">
+                                         <div  class="notify bg-light-primary text-primary"><i  class="bx bx-group"></i></div>
+                                         <div  class="flex-grow-1">
+                                            <h6  class="msg-name">New Customers<span  class="msg-time float-end">14 Sec ago</span></h6>
+                                            <p  class="msg-info">5 new user registered</p>
+                                         </div>
+                                      </div>
+                                   </a>
+                                   <a  href="#" class="dropdown-item">
+                                      <div  class="d-flex align-items-center">
+                                         <div  class="notify bg-light-danger text-danger"><i  class="bx bx-cart-alt"></i></div>
+                                         <div  class="flex-grow-1">
+                                            <h6  class="msg-name">New Orders <span  class="msg-time float-end">2 min ago</span></h6>
+                                            <p  class="msg-info">You have recived new orders</p>
+                                         </div>
+                                      </div>
+                                   </a>
+
+                                </div>
+                                <a  href="#">
+                                   <div  class="text-center msg-footer">View All Notifications</div>
+                                </a>
+                             </div>
+                          </li>
+                           
+                           <li  class="nav-item dropdown dropdown-large">
+                             <a  href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" class="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative"><span  class="alert-count">0</span><i  class="bx bx-comment"></i></a>
+                             <div  class="dropdown-menu dropdown-menu-end">
+                                <a  href="#">
+                                   <div  class="msg-header">
+                                      <p  class="msg-header-title">Messages</p>
+                                      <p  class="msg-header-clear ms-auto">Marks all as read</p>
+                                   </div>
+                                </a>
+                             </div>
+                          </li>
+
+                       </ul>
+                    </div>
+                
+
+					<div class="top-menu ms-auto">
+						<ul class="navbar-nav align-items-center">
+
+
+							<li class="nav-item dropdown dropdown-large">
+								<div class="dropdown-menu dropdown-menu-end">
+									<a href="javascript:;">
+										<div class="msg-header">
+											<p class="msg-header-title">Notifications</p>
+											<p class="msg-header-clear ms-auto">Marks all as read</p>
+										</div>
+									</a>
+									<div class="header-notifications-list">
+
+
+
+									</div>
+									<a href="javascript:;">
+										<div class="text-center msg-footer">View All Notifications</div>
+									</a>
+								</div>
+							</li>
+							<li class="nav-item dropdown dropdown-large me-5">
+
+								<div class="dropdown-menu dropdown-menu-end">
+									<a href="javascript:;">
+										<div class="msg-header">
+											<p class="msg-header-title">Messages</p>
+											<p class="msg-header-clear ms-auto">Marks all as read</p>
+										</div>
+									</a>
+									<div class="header-message-list">
+
+									</div>
+									<a href="javascript:;">
+										<div class="text-center msg-footer">View All Messages</div>
+									</a>
+								</div>
+							</li>
+						</ul>
+					</div>
+					<div class="user-box dropdown" style="margin-right: 6em">
+						<a class="d-flex align-items-center nav-link dropdown-toggle dropdown-toggle-nocaret" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+							<img src="{% static 'admin_panel/images/avatars/user.png' %}" class="user-img" alt="user avatar">
+							<div class="user-info ps-3">
+								<p class="user-name mb-0">{{ user.first_name }}</p>
+								<p class="designattion mb-0">{{ user.level }}</p>
+							</div>
+						</a>
+					</div>
+				</nav>
+			</div>
+		</header>
+		<!--end header -->
+    </div>
+
+{% block content %}{% endblock content %}
+
+    	<!--start overlay-->
+		<div class="overlay toggle-icon"></div>
+		<!--end overlay-->
+		<!--Start Back To Top Button--> <a href="javaScript:;" class="back-to-top"><i class="bx bxs-up-arrow-alt"></i></a>
+		<!--End Back To Top Button-->
+		<footer class="page-footer">
+			<p class="mb-0">WE-DIGITAL Copyright © 2021. All right reserved.</p>
+		</footer>
+	</div>
+	<!--end wrapper-->
+
+    {% block switcher %}{% endblock switcher %}
+
+
+	<!--end switcher-->
+
+    <!--start switcher-->
+	<div class="switcher-wrapper">
+		<div class="switcher-btn"> <i class="bx bx-cog bx-spin"></i>
+		</div>
+		<div class="switcher-body">
+			<div class="d-flex align-items-center">
+				<h5 class="mb-0 text-uppercase">Theme Settings</h5>
+				<button type="button" class="btn-close ms-auto close-switcher" aria-label="Close"></button>
+			</div>
+			<hr/>
+			<h6 class="mb-0">Theme Styles</h6>
+			<hr/>
+			<div class="d-flex align-items-center justify-content-between">
+				<div class="form-check">
+					<input class="form-check-input" type="radio" name="flexRadioDefault" id="lightmode" checked>
+					<label class="form-check-label" for="lightmode">Light</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="radio" name="flexRadioDefault" id="darkmode">
+					<label class="form-check-label" for="darkmode">Dark</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="radio" name="flexRadioDefault" id="semidark">
+					<label class="form-check-label" for="semidark">Semi Dark</label>
+				</div>
+			</div>
+			<hr/>
+			<div class="form-check">
+				<input class="form-check-input" type="radio" id="minimaltheme" name="flexRadioDefault">
+				<label class="form-check-label" for="minimaltheme">Minimal Theme</label>
+			</div>
+			<hr/>
+			<h6 class="mb-0">Header Colors</h6>
+			<hr/>
+			<div class="header-colors-indigators">
+				<div class="row row-cols-auto g-3">
+					<div class="col">
+						<div class="indigator headercolor1" id="headercolor1"></div>
+					</div>
+					<div class="col">
+						<div class="indigator headercolor2" id="headercolor2"></div>
+					</div>
+					<div class="col">
+						<div class="indigator headercolor3" id="headercolor3"></div>
+					</div>
+					<div class="col">
+						<div class="indigator headercolor4" id="headercolor4"></div>
+					</div>
+					<div class="col">
+						<div class="indigator headercolor5" id="headercolor5"></div>
+					</div>
+					<div class="col">
+						<div class="indigator headercolor6" id="headercolor6"></div>
+					</div>
+					<div class="col">
+						<div class="indigator headercolor7" id="headercolor7"></div>
+					</div>
+					<div class="col">
+						<div class="indigator headercolor8" id="headercolor8"></div>
+					</div>
+				</div>
+			</div>
+
+			<hr/>
+			<h6 class="mb-0">Sidebar Backgrounds</h6>
+			<hr/>
+			<div class="header-colors-indigators">
+				<div class="row row-cols-auto g-3">
+					<div class="col">
+						<div class="indigator sidebarcolor1" id="sidebarcolor1"></div>
+					</div>
+					<div class="col">
+						<div class="indigator sidebarcolor2" id="sidebarcolor2"></div>
+					</div>
+					<div class="col">
+						<div class="indigator sidebarcolor3" id="sidebarcolor3"></div>
+					</div>
+					<div class="col">
+						<div class="indigator sidebarcolor4" id="sidebarcolor4"></div>
+					</div>
+					<div class="col">
+						<div class="indigator sidebarcolor5" id="sidebarcolor5"></div>
+					</div>
+					<div class="col">
+						<div class="indigator sidebarcolor6" id="sidebarcolor6"></div>
+					</div>
+					<div class="col">
+						<div class="indigator sidebarcolor7" id="sidebarcolor7"></div>
+					</div>
+					<div class="col">
+						<div class="indigator sidebarcolor8" id="sidebarcolor8"></div>
+					</div>
+				</div>
+			</div>
+
+
+		</div>
+	</div>
+
+
+
+	<!-- Bootstrap JS -->
+	<script src="{% static 'admin_panel/js/bootstrap.bundle.min.js' %}"></script>
+	<!--plugins-->
+	<script src="{% static 'admin_panel/plugins/simplebar/js/simplebar.min.js' %}"></script>
+	<script src="{% static 'admin_panel/plugins/metismenu/js/metisMenu.min.js' %}"></script>
+	<script src="{% static 'admin_panel/plugins/perfect-scrollbar/js/perfect-scrollbar.js' %}"></script>
+	<script src="{% static 'admin_panel/plugins/datatable/js/jquery.dataTables.min.js' %}"></script>
+	<script src="{% static 'admin_panel/plugins/datatable/js/dataTables.bootstrap5.min.js' %}"></script>
+
+
+{#    FILE UPLOADS#}
+    <script src="{% static 'admin_panel/plugins/fancy-file-uploader/jquery.ui.widget.js' %}"></script>
+    <script src="{% static 'admin_panel/plugins/fancy-file-uploader/jquery.fileupload.js' %}"></script>
+    <script src="{% static 'admin_panel/plugins/fancy-file-uploader/jquery.iframe-transport.js' %}"></script>
+    <script src="{% static 'admin_panel/plugins/fancy-file-uploader/jquery.fancy-fileupload.js' %}"></script>
+    <script src="{% static 'admin_panel/js/custom-uploadify.js' %}"></script>
+
+
+
+
+	 <!-- toastr js -->
+    <script src="{% static 'admin_panel/js/toastr.min.js' %}"></script>
+
+{##}
+{#	<script src="{% static 'admin_panel/js/index.js' %}"></script>#}
+
+    <script src="{% static 'admin_panel/js/pace.min.js' %}"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.15.2/js/selectize.min.js" integrity="sha512-IOebNkvA/HZjMM7MxL0NYeLYEalloZ8ckak+NDtOViP7oiYzG5vn6WVXyrJDiJPhl4yRdmNAG49iuLmhkUdVsQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script src="{% static 'admin_panel/plugins/fullcalendar/js/main.min.js' %}"></script>
+
+    <script src="{% static 'admin_panel/plugins/highcharts/js/highcharts.js' %}"></script>
+	<script src="{% static 'admin_panel/plugins/apexcharts-bundle/js/apexcharts.min.js' %}"></script>
+	<script src="{% static 'admin_panel/js/index2.js' %}"></script>
+
+    <!--app JS-->
+	<script src="{% static 'admin_panel/js/app.js' %}"></script>
+
+
+
+</body>
+
+
+</html>

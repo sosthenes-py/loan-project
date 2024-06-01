@@ -1,0 +1,1865 @@
+{% extends "admin_panel/layout.html" %}
+{% load static %}
+
+{% block title %}
+    <title>APP_NAME - We Digital</title>
+{% endblock %}
+
+{% block content %}
+    <style>
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .progress {
+            flex-grow: 1;
+            margin: 0 10px;
+            height: 18px;
+            position: relative;
+        }
+
+        .progress-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .progress-bar-text {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .rdp-table-container {
+            max-height: 70vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .rdp-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+        }
+
+        .rdp-thead .rdp-th {
+            position: sticky;
+            top: 0;
+            background-color: #343a40;
+            color: white;
+            z-index: 3;
+        }
+
+        .rdp-tbody .rdp-th {
+            position: sticky;
+            left: 0;
+            background-color: #f8f9fa;
+            z-index: 2;
+        }
+
+        .rdp-tbody .rdp-td,
+        .rdp-tbody .rdp-th {
+            white-space: nowrap;
+            background-clip: padding-box;
+        }
+
+        .rdp-tbody .rdp-tr:nth-child(odd) .rdp-th,
+        .rdp-tbody tr:nth-child(odd) .rdp-td {
+            background-color: #f1f1f1;
+        }
+
+        .rdp-tbody .rdp-tr:nth-child(even) .rdp-th,
+        .rdp-tbody .rdp-tr:nth-child(even) .rdp-td {
+            background-color: #e9ecef;
+        }
+
+        .table-bordered .rdp-th,
+        .table-bordered .rdp-td {
+            border: 1px solid #dee2e6;
+        }
+
+    </style>
+
+
+		<!--start page wrapper -->
+		<div class="page-wrapper">
+			<div class="page-content">
+
+
+                <div class="card shadow-none bg-transparent border-bottom border-2 mb-4">
+                   <div  class="card-body">
+                      <div  class="row align-items-center">
+                         <div  class="col-md-3">
+                            <h4  class="mb-3 mb-md-0">Timeframe Setting</h4>
+                         </div>
+                         <div  class="col-md-9">
+                            <form  class="float-md-end">
+                               <div  class="row row-cols-md-auto g-lg-3">
+                                  <label  for="inputFromDate" class="col-md-2 col-form-label text-md-end">From Date</label>
+                                  <div  class="col-md-4"><input  type="date" id="timeframe_from" class="form-control" value="2024-01-01"></div>
+                                  <label  for="inputToDate" class="col-md-2 col-form-label text-md-end">To Date</label>
+                                  <div  class="col-md-4"><input  type="date" id="timeframe_to" class="form-control"></div>
+                               </div>
+                            </form>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+
+
+{#                REAL DAY ANALYSIS#}
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-2">
+                    <div class="col">
+                        <div class="card radius-10">
+                            <div class="pt-3 ps-3 pb-0" style="display: inline-block">
+                                <p style="float: left" class="fw-bold fs-6">Real Day Analysis</p>
+                                <input style="float: right; width: 30%" type="month" id="rd_month_input"
+                                       class="form-control me-2" value="" onchange="get_analysis('rda')">
+                            </div>
+                            <hr>
+
+                            <div class="card-body" id="rda_show" style="max-height: 65vh; overflow-y: auto">
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="card radius-10">
+                            <div class="card-body">
+                                <div id="chart" data-highcharts-chart="1" style="overflow: hidden;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+
+{#------------   REAL DAY PROGRESSIVE#}
+                <div class="row row-cols-1 row-cols-md-12 row-cols-xl-12">
+					<div class="">
+						<div class="card radius-10">
+                            <div class="pt-3 ps-3 pb-0" style="display: inline-block">
+                                <p style="float: left" class="fw-bold fs-6">Real-Days Progressive Analysis</p>
+
+                            </div>
+                            <div class="card-body" style="margin-bottom: -1em">
+                                <div style="float: right; width: 30%; display: inline-block">
+                                    <div style="width: 40%; float: left">
+                                        <label for="rdp_start">From:</label>
+                                        <input type="date" id="rdp_start" class="me-2" value="" >
+                                    </div>
+
+                                    <div style="width: 40%; float: right">
+                                        <label for="rdp_end">To:</label>
+                                        <input type="date" id="rdp_end" class="me-2" value="">
+                                    </div>
+                                    <div class="mt-3" style="width: 30%; float: right">
+                                        <button id="search_rdp" type="button" class="btn btn-primary px-3 radius-30" onclick="get_analysis('rdp')">Search</button>
+                                    </div>
+
+                                </div>
+
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="form-check">
+
+                                        <label class="form-check-label fw-bold" for="flexRadioDefault1">
+                                          Dimension:
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="dimension" value="count" checked>
+                                        <label class="form-check-label" for="flexRadioSuccess">
+                                          Overdue Loans
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="dimension" value="count_rate">
+                                        <label class="form-check-label" for="flexRadioDanger">
+                                          Overdue Loan Rate
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="dimension" value="sum">
+                                        <label class="form-check-label" for="flexRadioWarning">
+                                          Overdue Amount
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="dimension" value="sum_rate">
+                                        <label class="form-check-label" for="flexRadioDark">
+                                          Overdue Amount Rate
+                                        </label>
+                                      </div>
+
+                                </div>
+
+                                <label class="form-check-label fw-bold" for="flexRadioDefault1">
+                                          Loan Type:
+                                        </label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="first_loan" checked="">
+                                    <label class="form-check-label" for="flexCheckDefault">
+                                      First Loan
+                                    </label>
+                                  </div>
+                                  <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="reloan" checked="">
+                                    <label class="form-check-label" for="flexCheckChecked">
+                                      Reloan
+                                    </label>
+                                  </div>
+
+
+                            </div>
+
+                            <hr>
+							<div class="rdp-table-container" style="overflow-x: auto !important;">
+								<table class="table rdp-table table-bordered mb-0" >
+									<thead class="table-dark rdp-thead">
+										<tr>
+											<th scope="col" class="rdp-th">Disburse Date</th>
+											<th scope="col" class="rdp-th">Loans</th>
+											<th scope="col" class="rdp-th">DPD-1</th>
+											<th scope="col" class="rdp-th">DPD0</th>
+                                            <th scope="col" class="rdp-th">DPD1</th>
+                                            <th scope="col" class="rdp-th">DPD2</th>
+                                            <th scope="col" class="rdp-th">DPD3</th>
+                                            <th scope="col" class="rdp-th">DPD4</th>
+                                            <th scope="col" class="rdp-th">DPD5</th>
+                                            <th scope="col" class="rdp-th">DPD6</th>
+                                            <th scope="col" class="rdp-th">DPD7</th>
+                                            <th scope="col" class="rdp-th">DPD8</th>
+                                            <th scope="col" class="rdp-th">DPD9</th>
+                                            <th scope="col" class="rdp-th">DPD10</th>
+                                            <th scope="col" class="rdp-th">DPD11</th>
+                                            <th scope="col" class="rdp-th">DPD12</th>
+                                            <th scope="col" class="rdp-th">DPD13</th>
+                                            <th scope="col" class="rdp-th">DPD14</th>
+                                            <th scope="col" class="rdp-th">DPD15</th>
+                                            <th scope="col" class="rdp-th">DPD16</th>
+                                            <th scope="col" class="rdp-th">DPD17</th>
+                                            <th scope="col" class="rdp-th">DPD18</th>
+                                            <th scope="col" class="rdp-th">DPD19</th>
+                                            <th scope="col" class="rdp-th">DPD20</th>
+                                            <th scope="col" class="rdp-th">DPD21</th>
+                                            <th scope="col" class="rdp-th">DPD22</th>
+                                            <th scope="col" class="rdp-th">DPD23</th>
+                                            <th scope="col" class="rdp-th">DPD24</th>
+                                            <th scope="col" class="rdp-th">DPD25</th>
+                                            <th scope="col" class="rdp-th">DPD26</th>
+                                            <th scope="col" class="rdp-th">DPD27</th>
+                                            <th scope="col" class="rdp-th">DPD28</th>
+                                            <th scope="col" class="rdp-th">DPD29</th>
+                                            <th scope="col" class="rdp-th">DPD30</th>
+                                            <th scope="col" class="rdp-th">DPD31</th>
+										</tr>
+									</thead>
+									<tbody id="rdp_show" class="rdp-tbody">
+
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+
+
+
+
+{#------------   COLLECTORS DATA ANALYSIS#}
+                <div class="row row-cols-1 row-cols-md-12 row-cols-xl-12">
+					<div class="">
+						<div class="card radius-10">
+                            <div class="pt-3 ps-3 pb-0" style="display: inline-block">
+                                <p style="float: left" class="fw-bold fs-6">Collectors Data Analysis</p>
+
+                            </div>
+                            <div style="margin-bottom: -1em; width: 100%;">
+                                <div style="float: right; width: 25%; display: inline-block" class="pe-4">
+                                    <div style="width: 40%; float: left">
+                                        <label for="cda_start">From:</label>
+                                        <input type="date" id="cda_start" class="me-2" value="" >
+                                    </div>
+
+                                    <div style="width: 40%; float: right">
+                                        <label for="cda_end">To:</label>
+                                        <input type="date" id="cda_end" class="me-2" value="" readonly>
+                                    </div>
+                                    <div class="mt-3" style="width: 30%; float: right">
+                                        <button id="cda_search" type="button" class="btn btn-primary px-3 radius-30" onclick="get_analysis('cda')">Search</button>
+                                    </div>
+
+                                </div>
+
+                                <div style="width: 70%; float: left" class="d-flex align-items-center gap-2 mb-1">
+                                    <div class="form-check">
+
+                                        <label class="form-check-label fw-bold" for="flexRadioDefault1">
+                                          Collection Stage:
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="S-1,S0,S1,S2,S3,S4,M1" checked>
+                                        <label class="form-check-label" for="flexRadioSuccess">
+                                          All
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="S-1">
+                                        <label class="form-check-label" for="flexRadioDanger">
+                                          S-1 (-1)
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="S0">
+                                        <label class="form-check-label" for="flexRadioWarning">
+                                          S0 (0)
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="S1">
+                                        <label class="form-check-label" for="flexRadioDark">
+                                          S1 (1-3)
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="S2">
+                                        <label class="form-check-label" for="flexRadioDark">
+                                          S2 (4-7)
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="S3">
+                                        <label class="form-check-label" for="flexRadioDark">
+                                          S3 (8-15)
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="S4">
+                                        <label class="form-check-label" for="flexRadioDark">
+                                          S4 (16-30)
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="M1">
+                                        <label class="form-check-label" for="flexRadioDark">
+                                          M1 (31+)
+                                        </label>
+                                      </div>
+
+                                </div>
+
+
+                            </div>
+
+
+
+                            <hr>
+							<div class="rdp-table-container">
+								<table class="table table-bordered mb-0" >
+									<thead class="table-dark rdp-thead">
+										<tr>
+											<th scope="col" class="rdp-th">Account</th>
+											<th scope="col" class="rdp-th">CIQ</th>
+											<th scope="col" class="rdp-th">New</th>
+											<th scope="col" class="rdp-th">Amount Held</th>
+											<th scope="col" class="rdp-th">Paid</th>
+                                            <th scope="col" class="rdp-th">PartlyPaid</th>
+                                            <th scope="col" class="rdp-th">Paid Rate</th>
+                                            <th scope="col" class="rdp-th">Amount Paid</th>
+                                            <th scope="col" class="rdp-th">Amt Paid Rate</th>
+                                            <th scope="col" class="rdp-th">Notes</th>
+										</tr>
+									</thead>
+									<tbody id="cda_show" class="rdp-tbody">
+
+									</tbody>
+								</table>
+							</div>
+
+						</div>
+					</div>
+				</div>
+
+
+
+
+
+
+				<div class="row row-cols-1 row-cols-md-2 row-cols-xl-5">
+
+					<div class="col">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									<div>
+										<p class="mb-0">Main Balance</p>
+										<h5 class="mb-0">&#x20A6;0</h5>
+									</div>
+									<div class="dropdown ms-auto">
+										<a class="dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown"><i class='bx bx-dots-horizontal-rounded font-22 text-option'></i>
+										</a>
+										<ul class="dropdown-menu">
+											<li><a class="dropdown-item" href="javascript:;">Action</a>
+											</li>
+											<li><a class="dropdown-item" href="javascript:;">Another action</a>
+											</li>
+											<li>
+												<hr class="dropdown-divider">
+											</li>
+											<li><a class="dropdown-item" href="javascript:;">Something else here</a>
+											</li>
+										</ul>
+									</div>
+								</div>
+								<div class="" id="chart2"></div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									<div>
+										<p class="mb-0">Disbursed</p>
+										<h5 class="mb-0">&#x20A6;0</h5>
+									</div>
+									<div class="dropdown ms-auto">
+										<a class="dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown"><i class='bx bx-dots-horizontal-rounded font-22 text-option'></i>
+										</a>
+										<ul class="dropdown-menu">
+											<li><a class="dropdown-item" href="javascript:;">Action</a>
+											</li>
+											<li><a class="dropdown-item" href="javascript:;">Another action</a>
+											</li>
+											<li>
+												<hr class="dropdown-divider">
+											</li>
+											<li><a class="dropdown-item" href="javascript:;">Something else here</a>
+											</li>
+										</ul>
+									</div>
+								</div>
+								<div class="" id="chart3"></div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									<div>
+										<p class="mb-0">Repayment</p>
+										<h5 class="mb-0">&#x20A6;0</h5>
+									</div>
+									<div class="dropdown ms-auto">
+										<a class="dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown"><i class='bx bx-dots-horizontal-rounded font-22 text-option'></i>
+										</a>
+										<ul class="dropdown-menu">
+											<li><a class="dropdown-item" href="javascript:;">Action</a>
+											</li>
+											<li><a class="dropdown-item" href="javascript:;">Another action</a>
+											</li>
+											<li>
+												<hr class="dropdown-divider">
+											</li>
+											<li><a class="dropdown-item" href="javascript:;">Something else here</a>
+											</li>
+										</ul>
+									</div>
+								</div>
+								<div class="" id="chart4"></div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									<div>
+										<p class="mb-0">Pending Loan</p>
+										<h5 class="mb-0">&#x20A6;0</h5>
+									</div>
+									<div class="dropdown ms-auto">
+										<a class="dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown"><i class='bx bx-dots-horizontal-rounded font-22 text-option'></i>
+										</a>
+										<ul class="dropdown-menu">
+											<li><a class="dropdown-item" href="javascript:;">Action</a>
+											</li>
+											<li><a class="dropdown-item" href="javascript:;">Another action</a>
+											</li>
+											<li>
+												<hr class="dropdown-divider">
+											</li>
+											<li><a class="dropdown-item" href="javascript:;">Something else here</a>
+											</li>
+										</ul>
+									</div>
+								</div>
+								<div class="" id="chart5"></div>
+							</div>
+						</div>
+					</div>
+
+                    <div class="col">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									<div>
+										<p class="mb-0">Declined</p>
+										<h5 class="mb-0">&#x20A6;0</h5>
+									</div>
+									<div class="dropdown ms-auto">
+										<a class="dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown"><i class='bx bx-dots-horizontal-rounded font-22 text-option'></i>
+										</a>
+										<ul class="dropdown-menu">
+											<li><a class="dropdown-item" href="javascript:;">Action</a>
+											</li>
+											<li><a class="dropdown-item" href="javascript:;">Another action</a>
+											</li>
+											<li>
+												<hr class="dropdown-divider">
+											</li>
+											<li><a class="dropdown-item" href="javascript:;">Something else here</a>
+											</li>
+										</ul>
+									</div>
+								</div>
+								<div class="" id="chart5"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+
+{#   ----------------- PRESENT STATS -------------------------#}
+
+                <h6 class="mb-0 text-uppercase">Present Stats</h6>
+                <hr>
+
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4">
+
+					<div class="col">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									<div>
+										<p class="mb-0 text-secondary">Pending Loans</p>
+										<h4 class="my-1">0</h4>
+									</div>
+									<div class="widgets-icons bg-light-warning text-warning ms-auto"><i class="bx bxs-time-five"></i>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									<div>
+										<p class="mb-0 text-secondary">Approved Loans</p>
+										<h4 class="my-1">0</h4>
+									</div>
+									<div class="widgets-icons bg-light-info text-info ms-auto"><i class="bx bxs-check-circle"></i>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									<div>
+										<p class="mb-0 text-secondary">Disbursed Loans</p>
+										<h4 class="my-1">0</h4>
+									</div>
+									<div class="widgets-icons bg-light-success text-success ms-auto"><i class="bx bxs-badge-dollar"></i>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									<div>
+										<p class="mb-0 text-secondary">Declined Loans</p>
+										<h4 class="my-1">0</h4>
+									</div>
+									<div class="widgets-icons bg-light-danger text-danger ms-auto"><i class="bx bx-x-circle"></i>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+                    <div class="col">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									<div>
+										<p class="mb-0 text-secondary">Repaid Loans</p>
+										<h4 class="my-1">0</h4>
+									</div>
+									<div class="widgets-icons bg-light-success text-success ms-auto"><i class="bx bxs-credit-card"></i>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+                    <div class="col">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									<div>
+										<p class="mb-0 text-secondary">Part-payment Loans</p>
+										<h4 class="my-1">0</h4>
+									</div>
+									<div class="widgets-icons bg-light-info text-info ms-auto"><i class="bx bxs-credit-card-alt"></i>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+                    <div class="col">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									<div>
+										<p class="mb-0 text-secondary">Due Today Loans</p>
+										<h4 class="my-1">0</h4>
+									</div>
+									<div class="widgets-icons bg-light-primary text-primary ms-auto"><i class="bx bxs-calendar"></i>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+                    <div class="col">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									<div>
+										<p class="mb-0 text-secondary">Overdue Loans</p>
+										<h4 class="my-1">0</h4>
+									</div>
+									<div class="widgets-icons bg-light-danger text-danger ms-auto"><i class="bx bxs-alarm"></i>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</div>
+
+
+
+
+ {#   ----------------- PRESENT STATS CHART-------------------------#}
+
+                <div class="row row-cols-1 row-cols-md-12 row-cols-xl-12">
+					<div class="">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div id="present_stats_chart" data-highcharts-chart="0" style="overflow: hidden;"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+
+
+{#   ----------------- CATEGORIES CHART-------------------------#}
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-2">
+					<div class="col">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div id="categories_chart" data-highcharts-chart="0" style="overflow: hidden;"></div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div id="chart7" data-highcharts-chart="1" style="overflow: hidden;"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+
+
+ {#   ----------------- DISBURSED VS REPAID CHART-------------------------#}
+                <div class="row row-cols-1 row-cols-md-12 row-cols-xl-12">
+					<div class="">
+						<div class="card radius-10">
+							<div class="card-body">
+								<div id="disbursed_vs_repaid_chart" data-highcharts-chart="0" style="overflow: hidden;"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+
+			</div>
+		</div>
+		<!--end page wrapper -->
+
+
+
+
+
+    <script>
+        const success_audio = new Audio("{% static 'admin_panel/audio/correct.mp3' %}");
+	        const error_audio = new Audio("{% static 'admin_panel/audio/wrong.mp3' %}");
+
+
+	         var overlay= $("#overlay");
+            var loader= $("#loader");
+            var loader_trans= $("#loader-trans");
+
+            function loadOn(){
+                overlay.css('display', 'block');
+                loader.css('display', 'block');
+            }
+            function loadOff(){
+                overlay.css('display', 'none');
+                loader.css('display', 'none');
+            }
+            function loadOn_trans(){
+                loader_trans.css('display', 'block');
+            }
+            function loadOff_trans(){
+                loader_trans.css('display', 'none');
+            }
+
+            function notify(status, message){
+                if(status === "success" || status ==="info"){
+                    success_audio.play();
+                }else{
+                    error_audio.play();
+                }
+                toastr[status](message)
+            }
+
+            function get_current_month(cc=1){
+                const today = new Date();
+                // Get the current year and month
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + cc).padStart(2, '0'); // Months are zero-indexed
+                // Set the value of the month input to the current year-month
+                return `${year}-${month}`;
+            }
+
+            function get_current_day(cc = 1) {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + cc).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            function get_analysis(fetch='rda,rdp,cda'){
+                var items = fetch.split(',')
+                loadOn()
+                $.ajax({
+                    url: '{% url "analysis" %}',
+                    data: {
+                        action: 'get_analysis',
+                        date: $("#rd_month_input").val(),
+                        rdp_start: $('#rdp_start').val(),
+                        rdp_end: $('#rdp_end').val(),
+                        rdp_loan_type: get_rdp_loan_type(),
+                        rdp_dimension: get_rdp_dimension(),
+                        fetch: fetch,
+                        cda_start: $('#cda_start').val(),
+                        cda_end: $('#cda_end').val(),
+                        cda_stage: get_cda_stage()
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        $.each(items, function (index, value){
+                            $(`#${value}_show`).html(data.content[value])
+                        })
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            }
+
+            function get_rdp_dimension(){
+                return $('input[name="dimension"]:checked').val();
+            }
+            function get_cda_stage(){
+                return $('input[name="cda_stage"]:checked').val();
+            }
+
+            function get_rdp_loan_type(){
+                var loan_type= '';
+                if($('#first_loan').is(':checked') && $('#reloan').is(':checked')){
+                    loan_type = 'all';
+                }else if($('#first_loan').is(':checked') && !$('#reloan').is(':checked')){
+                    loan_type = 'first_loan';
+                }else if(!$('#first_loan').is(':checked') && $('#reloan').is(':checked')){
+                    loan_type = 'reloan'
+                }else{
+                    loan_type = 'all'
+                    notify('info', 'showing all loans')
+                }
+                return loan_type
+            }
+
+    </script>
+
+	<script>
+	    $(function(){
+            $('#rd_month_input').val(get_current_month())
+            $('#rdp_start').val(get_current_day(-1))
+            $('#rdp_end').val(get_current_day())
+            $('#cda_start').val(get_current_day(-1))
+            $('#cda_end').val(get_current_day())
+
+            get_analysis()
+
+            $('#timeframe_to').change(function (){
+                var start_date = new Date($("#timeframe_from").val())
+                var end_date = new Date($(this).val())
+                if(start_date > end_date){
+                    $(this).val('')
+                    $("#timeframe_from").val('')
+                    notify('warning', 'Ending date cannot be less than starting date')
+                }
+            })
+
+            $('#timeframe_from').change(function (){
+                var end_date = new Date($("#timeframe_to").val())
+                var start_date = new Date($(this).val())
+                if(start_date > end_date){
+                    $(this).val('')
+                    $("#timeframe_to").val('')
+                    notify('warning', 'Ending date cannot be less than starting date')
+                }
+
+            })
+
+
+{#   ----------------- PRESENT STATS CHART -------------------------#}
+
+            var e1 = {
+		series: [{
+			name: 'Net Profit',
+			data: [44, 55, 57, 56, 61, 58, 63, 60, 66]
+		}, {
+			name: 'Revenue',
+			data: [76, 85, 101, 98, 87, 105, 91, 114, 94]
+		}, {
+			name: 'Free Cash Flow',
+			data: [35, 41, 36, 26, 45, 48, 52, 53, 41]
+		}],
+		chart: {
+			foreColor: '#9ba7b2',
+			type: 'bar',
+			height: 360
+		},
+		plotOptions: {
+			bar: {
+				horizontal: false,
+				columnWidth: '55%',
+				endingShape: 'rounded'
+			},
+		},
+		dataLabels: {
+			enabled: false
+		},
+		stroke: {
+			show: true,
+			width: 2,
+			colors: ['transparent']
+		},
+		title: {
+			text: 'Present Stat Chart',
+			align: 'left',
+			style: {
+				fontSize: '14px'
+			}
+		},
+		colors: ["#212529", '#0d6efd', '#ffc107'],
+		xaxis: {
+			categories: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+		},
+		yaxis: {
+			title: {
+				text: '$ (thousands)'
+			}
+		},
+		fill: {
+			opacity: 1
+		},
+		tooltip: {
+			y: {
+				formatter: function (val) {
+					return "$ " + val + " thousands"
+				}
+			}
+		}
+	};
+            var e1_chart = new ApexCharts(document.querySelector("#present_stats_chart"), e1);
+            e1_chart.render();
+
+
+{#   ----------------- DISBURSED VS REPAID -------------------------#}
+
+            var e2 = {
+		chart: {
+			foreColor: '#9ba7b2',
+			height: 360,
+			type: 'line',
+			zoom: {
+				enabled: false
+			},
+			dropShadow: {
+				enabled: true,
+				top: 3,
+				left: 2,
+				blur: 4,
+				opacity: 0.1,
+			}
+		},
+		stroke: {
+			curve: 'smooth',
+			width: 5
+		},
+		colors: ["#0d6efd", '#212529'],
+		series: [{
+			name: "Music",
+			data: [1, 15, 56, 20, 33, 27]
+		}, {
+			name: "Photos",
+			data: [30, 33, 21, 42, 19, 32]
+		}],
+		title: {
+			text: 'Disbursed VS Repaid',
+			align: 'left',
+			offsetY: 25,
+			offsetX: 20
+		},
+		subtitle: {
+			text: 'Statistics',
+			offsetY: 55,
+			offsetX: 20
+		},
+		markers: {
+			size: 4,
+			strokeWidth: 0,
+			hover: {
+				size: 7
+			}
+		},
+		grid: {
+			show: true,
+			padding: {
+				bottom: 0
+			}
+		},
+		labels: ['01/15/2002', '01/16/2002', '01/17/2002', '01/18/2002', '01/19/2002', '01/20/2002'],
+		xaxis: {
+			tooltip: {
+				enabled: false
+			}
+		},
+		legend: {
+			position: 'top',
+			horizontalAlign: 'right',
+			offsetY: -20
+		}
+	}
+            var e2_chart = new ApexCharts(document.querySelector('#disbursed_vs_repaid_chart'), e2);
+            e2_chart.render();
+
+
+
+ {#   ----------------- CATEGORIES CHART-------------------------#}
+
+            var e3 = {
+            series: [44, 55, 13, 43, 22],
+            chart: {
+                foreColor: '#9ba7b2',
+                height: 330,
+                type: 'pie',
+            },
+            colors: ["#0d6efd", "#6c757d", "#17a00e", "#f41127", "#ffc107"],
+            labels: ['Team A', 'Team B', 'Team C', 'Team D', 'Team E'],
+            responsive: [{
+                breakpoint: 480,
+                options: {
+                    chart: {
+                        height: 360
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }],
+                title: {
+                    text: 'Categories',
+                    align: 'left',
+                    offsetY: 25,
+                    offsetX: 20
+                },
+        };
+        var e3_chart = new ApexCharts(document.querySelector("#categories_chart"), e3);
+        e3_chart.render();
+
+
+        	 $("#login_as").click(function(){
+		            var user= $("#general_username").val();
+		            var url= "https://"+site_domain+"/admin-signin?username="+user;
+		            $.post('', {
+		                login_as: "set",
+		                username: user
+		            }, function(data, status){
+		                if(data=== "success"){
+		                    notify('error', 'Action could not be completed')
+		                }
+		            })
+		        })
+
+
+	        $("#order_search").keyup(function(){
+	            var key= $(this).val().toLowerCase();
+	            if(key !== ""){
+	                $('.trs').each(function (){
+                        const name = $(this).data('code').toLowerCase()
+                        const fullname = $(this).data('fullname').toLowerCase()
+                        if(name.startsWith(key) || fullname.startsWith(key)){
+                            $(this).show();
+                         }else{
+                            $(this).hide();
+                         }
+                    })
+	            }else{
+                    $('.trs').show()
+                }
+	        })
+
+
+
+	       $('body').on('click', '.trs', function(){
+                var row= $(this);
+                var fullname= row.data('fullname');
+                var country= row.data('country');
+                var email= row.data('email');
+                var phone= row.data('phone');
+                var reg_date= row.data('reg_date');
+                var registered= row.data('registered');
+                var city= row.data('state');
+                var file_status= row.data('file_status');
+                var file_name= row.data('file_name');
+                var avatar_name= row.data('avatar_name');
+                var equity= row.data('equity');
+                var total_spot= row.data('total_spot');
+                var total_bal= row.data('total_bal');
+                var style= row.data('style');
+                var status= row.data('status');
+                var code= row.data('code');
+                var bonus= row.data('bonus');
+                var last_access= row.data('last_access');
+                var id= row.data('id');
+                var total_deposit= row.data('total_deposit');
+                var total_with= row.data('total_with');
+                var deposit_count= row.data('deposit_count');
+                var with_count= row.data('with_count');
+                var trade_count= row.data('trade_count');
+                var trade2_count= row.data('trade2_count');
+                var invest_count= row.data('invest_count');
+
+                $(".details_fullname").val(fullname);
+                $(".details_email").val(email);
+                $(".details_city").val(city);
+                $(".details_phone").val(phone);
+                $(".details_reg_date").val(reg_date);
+                $(".details_country").val(country);
+                $(".details_bonus").val(bonus);
+                $(".details_status").css('color', style+' !important');
+                $(".details_status").text(status);
+                $(".details_equity").val('$'+equity);
+                $(".details_total_bal").val('$'+total_bal);
+                $(".details_total_spot").val('$'+total_spot);
+
+                $(".details_avatar").attr('src', "" + avatar_name);
+                $(".details_last_access").text(last_access);
+                $(".details_registered").text(registered);
+                $(".details_code").text(code);
+                $(".details_text_fname").text(fullname);
+                $(".details_total_deposit").val('$'+total_deposit);
+                $(".details_total_with").val('$'+total_with);
+                $(".deposit_count").text(deposit_count);
+                $(".with_count").text(with_count);
+                $(".trade_count").text(trade_count);
+                $(".trade2_count").text(trade2_count);
+                $(".invest_count").text(invest_count);
+
+                $(".details_file_src").attr('src', "" + file_name);
+                $(".file_href").attr('href', "" + file_name);
+                if(file_status== 1){
+                    $(".details_file_status").text('Document is yet to be verified');
+                    $(".details_file_status").css('color', 'blue')
+                }else if(file_status== 2){
+                    $(".details_file_status").text('Document has already been verified!');
+                    $(".details_file_status").css('color', 'green')
+                }else if(file_status== 100){
+                    $(".details_file_status").text('Document was rejected, awaiting client...');
+                    $(".details_file_status").css('color', 'red')
+                }else if(file_status== 0){
+                    $(".details_file_status").text('Client is yet to submit a document!');
+                    $(".details_file_status").css('color', 'blue')
+                }
+
+
+
+                $(".details_reg_date").data('id', id)
+                $(".details_deposited").data('id', id)
+                $(".details_fullname").data('id', id)
+                $(".details_addr").data('id', id)
+                $(".details_phone").data('id', id)
+                $(".details_addr").data('id', id)
+                $(".details_email").data('id', id)
+                $(".details_country").data('id', id)
+                $(".details_city").data('id', id)
+                $(".details_bonus").data('id', id)
+
+                $(".view_tax_trans").data('username', code)
+                $(".view_transfer_trans").data('username', code)
+                $("#general_username").val(code);
+                $('.details_trans_loader').show()
+
+
+                $(".details_trans").html('<li  class="list-group-item d-flex justify-content-between align-items-center flex-wrap"><h6  class="mb-0">Loading </h6><span  class="text-secondary">...</span><span  class="text-secondary"></span></li>');
+                // HANDLE TRABSACTION HISTORY FETCH
+                $.post('', {
+                    get_user_trans: "set",
+                    username: code
+                }, function(data, status){
+                    $('.details_trans_loader').hide()
+                    $(".details_trans").html(data.return);
+                }, "JSON");
+
+            })
+
+
+            $('body').on('click', '.top_actions', function(){
+                var action= $(this).data('action');
+                loadOn();
+                $.post('', {
+                    top_actions: "set",
+                    username: $("#general_username").val(),
+                    action: action
+                }, function(data, status){
+                    loadOff();
+                    if(data.err === 0){
+                        notify('success', data.msg)
+                        $.post('', {
+            	            get_signup_history: "set",
+            	            key: '*'
+            	        }, function(data, status){
+            	            loadOff();
+            	            $("#members").html(data);
+            	        })
+            	        if(action === "erase"){
+                    	     $("#close_user").trigger('click');
+                    	 }
+                    }else{
+                        notify('error', data.msg)
+                    }
+                }, "JSON")
+            })
+
+
+
+	        $("body").on('blur', '.edit_profile', function(){
+	            var id= $(this).data('id');
+	            var key= $(this).data('key');
+	            var table= $(this).data('table');
+	            var username= $("#general_username").val();
+	            var table2= $(this).data('table2');
+	            var value= $(this).val();
+	            $.post('', {
+	                save_actions: "set",
+	                id: id,
+	                table: table,
+	                value: value,
+	                key: key,
+	                username: username
+	            }, function(data, status){
+	                if(data.err === 1){
+	                    notify('warning', data.msg)
+	                }else if(data.err === 2){
+	                    notify('error', data.msg)
+	                }else{
+                        if (data.msg !== ""){
+                            notify('success', data.msg)
+                        }
+	                }
+
+	                if(table === "members" && data.err === 0){
+    	                $.post('', {
+            	            get_signup_history: "set",
+            	            key: '*'
+            	        }, function(data, status){
+            	            $("#members").html(data);
+            	        })
+    	            }else if(table2 === "deposit_history" && data.err === 0){
+    	                $.post('', {
+            	            get_deposit_history2: "set",
+            	            username: username
+            	        }, function(data, status){
+            	            $("#deposit_history").html(data);
+            	        })
+    	            }else if(table2 === "with_history" && data.err === 0){
+    	                $.post('', {
+            	            get_with_history2: "set",
+            	            username: username
+            	        }, function(data, status){
+            	            $("#with_history").html(data);
+            	        })
+    	            }else if(table2 === "invest_history" && data.err === 0){
+    	                $.post('', {
+            	            get_invest_history2: "set",
+            	            username: username
+            	        }, function(data, status){
+            	            $("#invest_history").html(data);
+            	        })
+    	            }
+
+	            }, "JSON")
+	        })
+
+
+
+	        $("body").on('change', '.date', function(){
+	            var id= $(this).data('id');
+	            var key= $(this).data('key');
+	            var value= $(this).val();
+	            var table= $(this).data('table');
+	            var table2= $(this).data('table2');
+	            var username= $("#general_username").val();
+	            //loadOn();
+	            $.post('', {
+	                save_actions: "set",
+	                id: id,
+	                table: table,
+	                value: value,
+	                key: key,
+                    username: username
+	            }, function(data, status){
+	                if(data.err === 1){
+	                    notify('warning', data.msg)
+	                }else if(data.err === 2){
+	                    notify('error', data.msg)
+	                }else{
+	                    if (data.msg !== ""){
+                            notify('success', data.msg)
+                        }
+	                }
+	                //loadOn();
+	                if(table === "members"){
+    	                $.post('', {
+            	            get_signup_history: "set",
+            	            key: '*'
+            	        }, function(data, status){
+            	            //loadOff();
+            	            $("#members").html(data);
+            	        })
+    	            }else if(table2 === "deposit_history"){
+    	                $.post('', {
+            	            get_deposit_history2: "set",
+            	            username: username
+            	        }, function(data, status){
+            	            //loadOff();
+            	            $("#deposit_history").html(data);
+            	        })
+    	            }else if(table2 === "with_history"){
+    	                $.post('', {
+            	            get_with_history2: "set",
+            	            username: username
+            	        }, function(data, status){
+            	            //loadOff();
+            	            $("#with_history").html(data);
+            	        })
+    	            }else if(table2 === "invest_history"){
+    	                $.post('', {
+            	            get_invest_history2: "set",
+            	            username: username
+            	        }, function(data, status){
+            	            //loadOff();
+            	            $("#invest_history").html(data);
+            	        })
+    	            }
+
+	            }, "JSON")
+	        })
+
+
+
+
+
+
+
+
+	       // DEPOSIT TRANSACTIONS BLOCK
+	       $(".view_deposit_history").click(function(){
+	           var username= $("#general_username").val();
+	           $.post('', {
+            	    get_deposit_history2: "set",
+            	    username: username
+            	 }, function(data, status){
+            	     $("#deposit_history").html(data);
+            	 })
+	       })
+
+
+	        $('body').on('click', '.deposit_trs', function(){
+                var row= $(this);
+                var username= $("#general_username").val();
+                var amt= row.data('amt');
+                var time= row.data('date');
+                var code= row.data('code');
+                var id= row.data('id');
+
+                $(".details_deposit_amt").val(amt);
+                $(".details_username").val(username);
+                $(".details_tx_id").val(code);
+                $(".details_deposit_time").val(time);
+
+                $(".details_deposit_time").data('id', id)
+                $(".details_deposit_amt").data('id', id)
+
+            })
+
+
+	        $("body").on('click', '.deposit_actions', function(){
+	            var id= $(this).data('id');
+	            var action= $(this).data('action');
+	            var username= $("#general_username").val();
+	            loadOn();
+	            $.post('', {
+	                deposit_actions: "set",
+	                id: id,
+	                action: action
+	            }, function(data, status){
+	                if(data.err === 1){
+	                    notify('warning', data.msg)
+	                }else if(data.err === 2){
+	                    notify('error', data.msg)
+	                }else{
+	                    notify('success', data.msg)
+	                }
+	                loadOn();
+	                $.post('', {
+        	            get_deposit_history2: "set",
+        	            username: username
+        	        }, function(data, status){
+        	            loadOff();
+        	            $("#deposit_history").html(data);
+        	        })
+
+	            }, "JSON")
+	        })
+
+
+
+
+
+	       // WITHDRAWAL TRANSACTION BLOCK
+	       $(".view_with_history").click(function(){
+	           var username= $("#general_username").val();
+	           $.post('', {
+            	    get_with_history2: "set",
+            	    username: username
+            	 }, function(data, status){
+            	     $("#with_history").html(data);
+            	 })
+	       })
+
+
+	        $('body').on('click', '.with_trs', function(){
+                var row= $(this);
+                var username= $("#general_username").val();
+                var amt= row.data('amt');
+                var time= row.data('date');
+                var wallet= row.data('wallet');
+                var bank_name = row.data('bank_name');
+                var acct_name= row.data('acct_name');
+                var acct_no= row.data('acct_no');
+                var swift= row.data('swift');
+                var id= row.data('id');
+
+                if(bank_name === ""){ //IF COIN
+                    $('.with_section_coin').show()
+                    $('.with_section_bank').hide()
+                    $(".details_with_address").val(wallet);
+                }else{ //IF BANK
+                    $('.with_section_coin').hide()
+                    $('.with_section_bank').show()
+                    $(".details_with_bank_name").val(bank_name);
+                    $(".details_with_acct_name").val(acct_name);
+                    $(".details_with_acct_no").val(acct_no);
+                    $(".details_with_swift").val(swift);
+                }
+                $(".details_with_amt").val(amt);
+                $(".details_username").val(username);
+
+                $(".details_with_time").val(time);
+
+
+                $(".details_with_time").data('id', id)
+                $(".details_with_amt").data('id', id)
+                $(".details_with_wallet").data('id', id)
+                $(".details_with_bank_name").data('id', id)
+                $(".details_with_acct_name").data('id', id)
+                $(".details_with_acct_no").data('id', id)
+                $(".details_with_swift").data('id', id)
+
+            })
+
+
+	        $("body").on('click', '.with_actions', function(){
+	            var id= $(this).data('id');
+	            var action= $(this).data('action');
+	            var username= $("#general_username").val();
+	            loadOn();
+	            $.post('', {
+	                with_actions: "set",
+	                id: id,
+	                action: action
+	            }, function(data, status){
+	                if(data.err === 1){
+	                    notify('warning', data.msg)
+	                }else if(data.err === 2){
+	                    notify('error', data.msg)
+	                }else{
+	                    notify('success', data.msg)
+	                }
+	                loadOn();
+	                $.post('', {
+        	            get_with_history2: "set",
+        	            key: '*',
+        	            username: username
+        	        }, function(data, status){
+        	            loadOff();
+        	            $("#with_history").html(data);
+        	        })
+
+	            }, "JSON")
+	        })
+
+
+
+
+             // INVESTMENT BLOCK
+	       $(".view_invest_history").click(function(){
+	           var username= $("#general_username").val();
+	           $("#invest_history").html('<tr colspan=12><td style="font-weight: bold">Fetching '+username+'\'s investment data ...</td></tr>');
+	           $.post('', {
+            	    get_invest_history2: "set",
+            	    username: username
+            	 }, function(data, status){
+            	     $("#invest_history").html(data);
+            	 })
+	       })
+
+
+	       $('body').on('click', '.invest_trs', function(){
+                var row= $(this);
+                var username= $("#general_username").val();
+                var amt= row.data('amt');
+                var time= row.data('date');
+                var id= row.data('id');
+
+                $(".details_invest_amt").val(amt);
+                $(".details_username").val(username);
+                $(".details_invest_time").val(time);
+
+                $(".details_invest_time").data('id', id)
+                $(".details_invest_amt").data('id', id)
+
+            })
+
+
+	       $("body").on('click', '.invest_actions', function(){
+	            var id= $(this).data('id');
+	            var action= $(this).data('action');
+	            var username= $("#general_username").val();
+	            loadOn();
+	            $.post('', {
+	                invest_actions: "set",
+	                id: id,
+	                action: action
+	            }, function(data, status){
+                    loadOff()
+	                if(data.err === 1){
+	                    toastr['warning'](data.msg)
+	                }else if(data.err === 2){
+	                    toastr['error'](data.msg)
+	                }else{
+	                    toastr['success'](data.msg)
+	                }
+	                $.post('', {
+                	    get_invest_history2: "set",
+                	    username: username
+                	 }, function(data, status){
+                	     $("#invest_history").html(data);
+                	 })
+
+	            }, "JSON")
+	        })
+
+
+
+
+
+
+	        // CRYPTO TRADE BLOCK
+	       $(".view_trade_history").click(function(){
+	           var username= $("#general_username").val();
+	           var rows= $("#trade_rows").val();
+	           $("#trade_history").html('<tr><td colspan="15" style="font-weight: bold">Fetching '+username+'\'s crypto trades ...</td></tr>');
+	           $.post('', {
+            	    get_trade_history: "set",
+            	    username: username,
+            	    rows: rows,
+                    trade: 'trade' //for stock, omit this line
+            	 }, function(data, status){
+            	     $("#trade_history").html(data);
+            	 })
+	       })
+
+
+
+	        $("body").on('blur', '.a_input', function(){
+	            var id= $(this).data('id');
+	            var key= $(this).data('name');
+	            var value= $(this).val();
+	            if(value !== ""){
+	                loadOn();
+	                $.post('', {
+	                    update_order: "set",
+	                    value: value,
+	                    key: key,
+	                    id: id,
+                        trade: 'trade' //for stock, omit this line
+	                }, function(data, status){
+	                    loadOff();
+	                    if(data.err === 0){
+                            if(data.msg !== ""){
+                                notify('success', data.msg)
+                            }
+	                    }else{
+	                        notify('error', data.msg)
+	                    }
+	                }, "JSON")
+	            }else{
+	                notify('warning', 'Value cannot be empty')
+	            }
+
+	        })
+
+
+
+	        $("body").on('click', '.actions', function(){
+	            var id= $(this).data('id');
+	            var action= $(this).data('action');
+	            var rows= $("#rows").val();
+	            var username= $("#general_username").val();
+	            var trade_rows= $("#trade_rows").val();
+	            loadOn();
+	            $.post('', {
+	                order_actions: "set",
+	                id: id,
+	                action: action,
+                    trade: 'trade' //for stock, omit this line
+	            }, function(data, status){
+                    loadOff()
+	                if(data.err === 1){
+	                    notify('warning', data.msg)
+	                }else if(data.err === 2){
+	                    notify('error', data.msg)
+	                }else{
+	                    notify('success', data.msg)
+                            $.post('', {
+                            get_trade_history: "set",
+                            username: username,
+                            rows: rows,
+                                trade: 'trade' //for stock, omit this line
+                         }, function(data, status){
+                             loadOff();
+                             $("#trade_history").html(data);
+                         })
+	                }
+
+	            }, "JSON")
+	        })
+
+
+
+	        $("#trade_rows").change(function(){
+	            var rows= $("#trade_rows").val();
+	            var username= $("#general_username").val();
+	            loadOn();
+	            $.post('', {
+            	    get_trade_history: "set",
+            	    username: username,
+            	    rows: rows,
+                    trade: 'trade'
+            	 }, function(data, status){
+                    loadOff()
+            	     $("#trade_history").html(data);
+            	 })
+	        })
+
+
+
+
+
+
+	       // TASK BLOCK
+	        $("#sbmt-task").click(function(){
+	            var username= $("#general_username").val();
+		           var input= $("#new-task").val();
+		           if(input === ""){
+		               toastr["warning"]('Input cannot be empty');
+		           }else{
+		               loadOn();
+    		           $.post('', {
+    		               tasks: "set",
+    		               action: "add",
+    		               input: input,
+    		               username: username
+    		           }, function(data, status){
+    		               loadOff();
+    		               if(data.err === 0){
+    		                   notify('success', data.msg);
+    		                   $("#show-tasks").html(data.tasks)
+    		                   $("#new-task").val('');
+    		               }else{
+    		                   notify('error', data.msg)
+    		               }
+    		           }, "JSON")
+		           }
+		       })
+
+
+		       $("body").on('change', '.task-status', function(){
+		           var username= $("#general_username").val();
+		           var id= $(this).data('id');
+		           $.post('', {
+    		               tasks: "set",
+    		               action: "status",
+    		               username: username,
+    		               id: id
+    		           }, function(data, status){
+    		               loadOff();
+    		               if(data.err === 0){
+    		                   notify('success', data.msg);
+    		                   $("#show-tasks").html(data.tasks)
+    		               }else{
+    		                   notify('error', data.msg)
+    		               }
+    		           }, "JSON")
+		       })
+
+
+		       $("body").on('click', '.delete-task', function(){
+		           var username= $("#general_username").val();
+		           var id= $(this).data('id');
+		           $.post('', {
+    		               tasks: "set",
+    		               action: "delete",
+    		               username: username,
+    		               id: id
+    		           }, function(data, status){
+    		               loadOff();
+    		               if(data.err === 0){
+    		                   notify('success', data.msg);
+    		                   $("#show-tasks").html(data.tasks)
+    		               }else{
+    		                   notify('error', data.msg)
+    		               }
+    		           }, "JSON")
+		       })
+
+
+		       $("body").on('blur', '.old-task', function(){
+		           var username= $("#general_username").val();
+		           var id= $(this).data('id');
+		           var input= $(this).val();
+		           if(input !== ""){
+    		           $.post('', {
+        		               tasks: "set",
+        		               action: "edit",
+        		               username: username,
+        		               id: id,
+        		               input: input
+        		           }, function(data, status){
+        		               if(data.err === 0){
+        		                   if(data.msg !== ""){
+        		                       notify('success', data.msg);
+        		                        $("#show-tasks").html(data.tasks)
+        		                   }
+        		               }else{
+        		                   notify('error', data.msg)
+        		               }
+        		           }, "JSON")
+		           }else{
+		               toastr["error"]("Input cannot be empty. Note was not saved");
+		           }
+		       })
+
+
+		       $("body").on('click', '.view_note', function(){
+		           var username= $("#general_username").val();
+		           $.post('', {
+    		               tasks: "set",
+    		               action: "",
+    		               username: username
+    		           }, function(data, status){
+    		               loadOff();
+    		               if(data.err === 0){
+    		                   notify('success', data.msg);
+    		                   $("#show-tasks").html(data.tasks)
+    		               }else{
+    		                   notify('error', data.msg)
+    		               }
+    		           }, "JSON")
+		       })
+
+
+
+
+
+	       // ASSIGN
+	       $(".assign").click(function(){
+	           var username= $("#general_username").val();
+	           $("#assign_body").html('<tr colspan=3><td style="font-weight: bold">Loading agents ...</td></tr>');
+    	        $.post('', {
+    	            assign: "set",
+    	            username: username
+    	        }, function(data, status){
+    	            $("#assign_body").html(data);
+    	        })
+	       })
+
+
+	       $("body").on('change', '.assign_check', function(){
+	           var username= $("#general_username").val();
+	           var agent_id= $(this).data('agent_id');
+	           $.post('', {
+    	            assign_check: "set",
+    	            username: username,
+    	            agent_id: agent_id
+    	        }, function(data, status){
+    	            $("#assign_body").html(data);
+    	            notify('success', 'Action success!');
+    	        })
+	       })
+
+
+
+
+	        $('body').on('mouseover', '.trs, .tax_trs, .transfer_trs, .deposit_trs, .with_trs, .agents_trs', function(){
+	            $(this).css({'background':'#E2EDFF', 'color':'#267DFD', 'cursor':'pointer'})
+	        })
+	        $('body').on('mouseout', '.trs, .tax_trs, .transfer_trs, .deposit_trs, .with_trs, .agents_trs', function(){
+	            $(this).css({'background':'white', 'color':'black', 'cursor':'pointer'})
+	        })
+
+	        $("body").on('click', '.actions_admins', function(){
+	            var id= $(this).data('id');
+	            var username= $(this).data('username');
+	            var action= $(this).data('action');
+	            loadOn();
+	            $.post('ajax', {
+	                admins_actions: "set",
+	                id: id,
+	                action: action,
+	                username: username
+	            }, function(data, status){
+	                if(data.err== 1){
+	                    notify('warning', data.msg)
+	                }else if(data.err== 2){
+	                    notify('error', data.msg)
+	                }else{
+	                    notify('success', data.msg)
+	                }
+	                loadOn();
+	                $.post('ajax', {
+        	            get_signup_history: "set"
+        	        }, function(data, status){
+        	            loadOff();
+        	            $("#members").html(data);
+        	        })
+
+	            }, "JSON")
+	        })
+
+
+	    })
+	</script>
+
+
+{% endblock content %}
+
+
+{% block switcher %}
+
+
+{% endblock switcher %}

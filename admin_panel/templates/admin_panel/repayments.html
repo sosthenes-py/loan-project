@@ -1,0 +1,1466 @@
+{% extends "admin_panel/layout.html" %}
+{% load static %}
+
+{% block title %}
+    <title>Repayment History - We Digital</title>
+{% endblock %}
+
+{% block content %}
+
+
+
+<!--start page wrapper -->
+		<div class="page-wrapper">
+			<div class="page-content">
+
+				<!--end row-->
+
+				<div class="card radius-10">
+					<div class="card-body">
+						<div class="d-flex align-items-center text-bg-">
+							<div class="pt-3 ps-3 pb-0" style="display: inline-block; width: 100%">
+                                <p style="float: left" class="fw-bold fs-6">Repayments History</p>
+                                <div style="float: right; width: 30%; display: inline-block">
+                                    <div style="width: 40%; float: left">
+                                        <label for="history_month_start">From:</label>
+                                        <input  type="date" id="history_month_start"
+                                           class="me-2" value="" onchange="start(true)" >
+                                    </div>
+
+                                    <div style="width: 40%; float: right">
+                                        <label for="history_month_end">To:</label>
+                                        <input  type="date" id="history_month_end"
+                                           class="me-2" value="" onchange="start(true)">
+                                    </div>
+
+                                    <div style="width: 20%; float: right">
+                                        <label for="history_rows">Rows:</label>
+                                        <select id="history_rows" class="" onchange="start(true)">
+                                            <option value="10">10</option>
+                                            <option value="20">20</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                            <option value="500">500</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+						</div>
+						<hr/>
+						<div class="table-responsive">
+							<table class="table align-middle mb-5" id="loan_table">
+								<thead class="table-light">
+									<tr>
+                                        <th>S/N</th>
+                                        <th>Loan ID</th>
+                                        <th>User</th>
+                                        <th>Principal</th>
+                                        <th>Amount Due</th>
+                                        <th>Record Pay</th>
+                                        <th>Record Stage</th>
+                                        <th>Total Repaid</th>
+                                        <th>Status</th>
+                                        <th>Record Date</th>
+                                    </tr>
+								</thead>
+								<tbody id="repayment_history" style="padding-bottom: 4em !important">
+
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--end page wrapper -->
+
+
+
+    <input type="hidden" id="selected_user_id">
+
+
+
+    <!--MODAL FOR USER PROFILE-->
+
+
+    <div id="exampleLargeModal1" tabindex="-1" class="modal fade show" style="display: none;" aria-modal="true"
+         role="dialog">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">User Profile</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"
+                            id="close_user"></button>
+                </div>
+
+
+                <div class="modal-body">
+                    <div id="user-modal"></div>
+
+
+                    <div class="page-content">
+                        <router-outlet></router-outlet>
+                        <app-user-profile>
+                            <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
+                                <div class="ps-3">
+                                    <nav aria-label="breadcrumb">
+                                        <ol class="breadcrumb mb-0 p-0">
+                                            <li class="breadcrumb-item"><a href="#"><i class="bx bx-home-alt"></i></a>
+                                            </li>
+                                            <li aria-current="page" class="breadcrumb-item active">Account: <span
+                                                    class="details_text_username">John Doe</span></li>
+                                        </ol>
+                                    </nav>
+                                </div>
+
+                                <!---------------TOP ACTIONS------------------->
+                                <div class="ms-auto">
+                                    <div class="btn-group">
+                                        <button data-bs-toggle="dropdown" type="button" class="btn btn-primary">More
+                                            Actions
+                                        </button>
+                                        <button type="button" data-bs-toggle="dropdown"
+                                                class="btn btn-primary split-bg-primary dropdown-toggle dropdown-toggle-split">
+                                            <span class="visually-hidden">Toggle Dropdown</span></button>
+                                        <div class="dropdown-menu dropdown-menu-right dropdown-menu-lg-end">
+                                            <a href="#" class="dropdown-item view_repayment_history text-primary"
+                                               data-bs-toggle='modal' data-bs-target='#LoanModal'><i
+                                                    class="lni lni-cloud-sync"></i> Loans <span
+                                                    class="badge rounded-pill bg-primary m-1 loan_count count">0</span></a>
+
+                                            <a href="#" class="dropdown-item view_repayment_history text-dark"
+                                               data-bs-toggle='modal' data-bs-target='#RepaymentModal'><i
+                                                    class="lni lni-cloud-upload"></i> Repayments <span
+                                                    class="badge rounded-pill bg-dark m-1 repayment_count count">0</span></a>
+
+
+                                            <div class="dropdown-divider"></div>
+
+
+                                            <a href="#0" class="dropdown-item text-primary assign"
+                                               style="font-weight: bold" data-bs-toggle='modal'
+                                               data-bs-target='#AssignModal'><i class="lni lni-network"></i> Assign To
+                                                Collector</a>
+
+
+                                            <div class="dropdown-divider"></div>
+                                            <a href="#" class="dropdown-item top_actions text-warning"
+                                               style="font-weight: bold" data-action="ban"><i class="lni lni-ban"></i>
+                                                Ban/Unban User</a>
+                                            <a href="#" class="dropdown-item" style="color: red; font-weight: bold"
+                                               data-bs-toggle='modal' data-bs-target='#EraseUserModal'><i
+                                                    class="lni lni-trash"></i> Delete Account</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                            <div class="container">
+                                <div class="main-body">
+                                    <div class="row">
+                                        <div class="col-lg-4">
+                                            <div class="card">
+                                                <div class="card-body">
+
+
+                                                    <!--------------------AVATAR AND USER NAMES---------------------->
+                                                    <div class="d-flex flex-column align-items-center text-center">
+                                                        <img src="{% static 'admin_panel/images/avatars/user.png' %}"
+                                                             alt="Admin" width="110"
+                                                             class="rounded-circle p-1 bg-primary details_avatar">
+                                                        <div class="mt-3">
+                                                            <h4 class="details_fullname"></h4>
+                                                            <p class="mb-1 details_status_show"
+                                                               style="text-transform: capitalize; font-weight: bold">
+                                                                <span class='badge rounded-pill'>AA</span></p>
+                                                            <p class="font-size-sm fw-bold">Registered: <span
+                                                                    class="details_registered"></span></p>
+                                                            <button class="btn btn-primary m-1" data-bs-toggle='modal'
+                                                                    data-bs-target='#DocsModal'><i
+                                                                    class="fadeIn animated bx bx-book-content"></i> Docs
+                                                                <span class="badge bg-light text-primary files_count count">0</span>
+                                                            </button>
+
+                                                            <button type="button" class="btn btn-dark view_note"
+                                                                    data-bs-toggle='modal' data-bs-target='#NoteModal'>
+                                                                <i class="fadeIn animated bx bx-note"></i> Notes <span
+                                                                    class="badge bg-secondary notes_count count">0</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr class="my-4">
+
+
+                                                    <!--------------------MINI TRANSACTION HISTORY---------------------->
+                                                    <div class="d-flex flex-column align-items-center text-center">
+                                                        <h5 style="font-size:1.2em; font-weight: bold">Quick
+                                                            Actions</h5>
+
+                                                        <div class="col mb-4 mt-3">
+                                                            <button type="button" class="btn btn-outline-primary px-5">
+                                                                <i class="bx bx-user mr-1"></i>Check Eligibility
+                                                            </button>
+                                                        </div>
+
+
+                                                    </div>
+
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+                                        <!--------------------MAIN PROFILE---------------------->
+                                        <style>
+                                            .nav-tabs {
+                                                display: flex;
+                                                width: 100%;
+                                                overflow-x: auto; /* Enable horizontal scrolling if necessary */
+                                                white-space: nowrap; /* Prevent line breaks */
+                                            }
+
+                                            .nav-item {
+                                                flex: 1;
+                                                min-width: 0; /* Allow items to shrink */
+                                            }
+                                        </style>
+
+                                        <div class="col-lg-8">
+
+                                            {# --------------------SELECTED USER PROFILE AND OTHER INFO ---------------------------------#}
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <ul class="nav nav-tabs nav-primary py-2" role="tablist">
+                                                        <li class="nav-item" role="presentation">
+                                                            <a class="nav-link active" data-bs-toggle="tab"
+                                                               href="#contactinfo" role="tab" aria-selected="true">
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="tab-icon"><i
+                                                                            class="bx bx-user font-18 me-1"></i>
+                                                                    </div>
+                                                                    <div class="tab-title">Contact Info</div>
+                                                                </div>
+                                                            </a>
+                                                        </li>
+                                                        <li class="nav-item" role="presentation">
+                                                            <a class="nav-link" data-bs-toggle="tab" href="#employment"
+                                                               role="tab" aria-selected="false" tabindex="-1">
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="tab-icon"><i
+                                                                            class="bx bxs-briefcase font-18 me-1"></i>
+                                                                    </div>
+                                                                    <div class="tab-title">Employment</div>
+                                                                </div>
+                                                            </a>
+                                                        </li>
+                                                        <li class="nav-item" role="presentation">
+                                                            <a class="nav-link" data-bs-toggle="tab" href="#emergency"
+                                                               role="tab" aria-selected="false" tabindex="-1">
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="tab-icon"><i
+                                                                            class="bx bxs-phone-call font-18 me-1"></i>
+                                                                    </div>
+                                                                    <div class="tab-title">Emergency</div>
+                                                                </div>
+                                                            </a>
+                                                        </li>
+                                                        <li class="nav-item" role="presentation">
+                                                            <a class="nav-link" data-bs-toggle="tab" href="#guarantor"
+                                                               role="tab" aria-selected="false" tabindex="-1">
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="tab-icon"><i
+                                                                            class="bx bxs-user-check font-18 me-1"></i>
+                                                                    </div>
+                                                                    <div class="tab-title">Guarantors</div>
+                                                                </div>
+                                                            </a>
+                                                        </li>
+
+                                                        <li class="nav-item" role="presentation">
+                                                            <a class="nav-link" data-bs-toggle="tab" href="#bankdetails"
+                                                               role="tab" aria-selected="false" tabindex="-1">
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="tab-icon"><i
+                                                                            class="bx bxs-bank font-18 me-1"></i>
+                                                                    </div>
+                                                                    <div class="tab-title">Bank Details</div>
+                                                                </div>
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+
+
+                                                    {#       -------------------------  CONTACT INFO ----------------------#}
+                                                    <div class="tab-content py-3">
+                                                        <div class="tab-pane fade active show" id="contactinfo"
+                                                             role="tabpanel">
+
+
+                                                            <div class="card-body">
+
+                                                                <div class="row mb-3">
+                                                                    <div class="col-sm-3">
+                                                                        <h6 class="mb-0 fw-bold"><i
+                                                                                class="fadeIn animated bx bx-user"></i>
+                                                                            First Name</h6>
+                                                                    </div>
+                                                                    <div class="col-sm-9 text-secondary">
+                                                                        <div class="input-group mb-3">
+                                                                            <input type="text" placeholder="First Name"
+                                                                                   aria-label="First Name"
+                                                                                   aria-describedby="button-addon2"
+                                                                                   class="form-control details_first_name">
+                                                                            <button type="button" id="button-addon2"
+                                                                                    class="btn btn-outline-primary details_save"
+                                                                                    data-key="first_name"
+                                                                                    data-table="members">Save
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="row mb-3">
+                                                                    <div class="col-sm-3">
+                                                                        <h6 class="mb-0 fw-bold"><i
+                                                                                class="fadeIn animated bx bx-user font-18"></i>
+                                                                            Last Name</h6>
+                                                                    </div>
+                                                                    <div class="col-sm-9 text-secondary">
+                                                                        <div class="input-group mb-3">
+                                                                            <input type="text" placeholder="Last Name"
+                                                                                   aria-label="Last Name"
+                                                                                   aria-describedby="button-addon2"
+                                                                                   class="form-control details_last_name">
+                                                                            <button type="button" id="button-addon2"
+                                                                                    class="btn btn-outline-primary details_save"
+                                                                                    data-key="last_name"
+                                                                                    data-table="members">Save
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="row mb-3">
+                                                                    <div class="col-sm-3">
+                                                                        <h6 class="mb-0 fw-bold"><i
+                                                                                class="fadeIn animated bx bx-user"></i>
+                                                                            Middle Name</h6>
+                                                                    </div>
+                                                                    <div class="col-sm-9 text-secondary">
+                                                                        <div class="input-group mb-3">
+                                                                            <input type="text" placeholder="Middle Name"
+                                                                                   aria-label="Fullname"  aria-describedby="button-addon2"
+                                                                                   class="form-control details_middle_name">
+                                                                            <button type="button" id="button-addon2"
+                                                                                    class="btn btn-outline-primary details_save"
+                                                                                    data-key="middle_name"
+                                                                                    data-table="members">Save
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+
+                                                                <div class="row mb-3">
+                                                                    <div class="col-sm-3">
+                                                                        <h6 class="mb-0 fw-bold"><i
+                                                                                class="fadeIn animated bx bx-mail-send"></i>
+                                                                            Email</h6>
+                                                                    </div>
+                                                                    <div class="col-sm-9 text-secondary">
+                                                                        <div class="input-group mb-3">
+                                                                            <input type="email"
+                                                                                   placeholder="Email Address"
+                                                                                   aria-label="Email" aria-describedby="button-addon2"
+                                                                                   class="form-control details_email">
+                                                                            <button type="button" id="button-addon2"
+                                                                                    class="btn btn-outline-primary details_save"
+                                                                                    data-key="email"
+                                                                                    data-table="members">Save
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="row mb-3">
+                                                                    <div class="col-sm-3">
+                                                                        <h6 class="mb-0 fw-bold"><i
+                                                                                class="fadeIn animated bx bx-mail-send"></i>
+                                                                            Secondary Email</h6>
+                                                                    </div>
+                                                                    <div class="col-sm-9 text-secondary">
+                                                                        <div class="input-group mb-3">
+                                                                            <input type="email"
+                                                                                   placeholder="Secondary Email Address"
+                                                                                   aria-label="Email"
+                                                                                   aria-describedby="button-addon2"
+                                                                                   class="form-control details_email2">
+                                                                            <button type="button" id="button-addon2"
+                                                                                    class="btn btn-outline-primary details_save"
+                                                                                    data-key="email2"
+                                                                                    data-table="members">Save
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+
+                                                                <div class="row mb-3">
+                                                                    <div class="col-sm-3">
+                                                                        <h6 class="mb-0 fw-bold"><i
+                                                                                class="fadeIn animated bx bx-phone"></i>
+                                                                            Phone</h6>
+                                                                    </div>
+                                                                    <div class="col-sm-9 text-secondary">
+                                                                        <div class="input-group mb-3">
+                                                                            <input type="text" placeholder="Phone"
+                                                                                   aria-label="Phone"
+                                                                                   aria-describedby="button-addon2"
+                                                                                   class="form-control details_phone">
+                                                                            <button type="button" id="button-addon2"
+                                                                                    class="btn btn-outline-primary details_save"
+                                                                                    data-key="phone"
+                                                                                    data-table="members">Save
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="row mb-3">
+                                                                    <div class="col-sm-3">
+                                                                        <h6 class="mb-0 fw-bold"><i
+                                                                                class="fadeIn animated bx bx-phone"></i>
+                                                                            Secondary Phone</h6>
+                                                                    </div>
+                                                                    <div class="col-sm-9 text-secondary">
+                                                                        <div class="input-group mb-3">
+                                                                            <input type="text"
+                                                                                   placeholder="Secondary Phone"
+                                                                                   aria-label="Phone"
+                                                                                   aria-describedby="button-addon2"
+                                                                                   class="form-control details_phone2">
+                                                                            <button type="button" id="button-addon2"
+                                                                                    class="btn btn-outline-primary details_save"
+                                                                                    data-key="phone2"
+                                                                                    data-table="members">Save
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+
+                                                                <div class="row mb-3">
+                                                                    <div class="col-sm-3">
+                                                                        <h6 class="mb-0 fw-bold"><i
+                                                                                class="fadeIn animated bx bx-user"></i>
+                                                                            Gender</h6>
+                                                                    </div>
+                                                                    <div class="col-sm-9 text-secondary">
+                                                                        <div class="input-group mb-3">
+                                                                            <select class="form-control details_gender select2">
+                                                                                <option value="male">Male</option>
+                                                                                <option value="female">Female</option>
+                                                                            </select>
+                                                                            <button type="button" id="button-addon2"
+                                                                                    class="btn btn-outline-primary details_save"
+                                                                                    data-key="gender"
+                                                                                    data-table="members">Save
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+
+                                                                <div class="row mb-3">
+                                                                    <div class="col-sm-3">
+                                                                        <h6 class="mb-0 fw-bold"><i
+                                                                                class="fadeIn animated bx bx-current-location"></i>
+                                                                            Address</h6>
+                                                                    </div>
+                                                                    <div class="col-sm-9 text-secondary">
+                                                                        <div class="input-group mb-3">
+                                                                            <input type="text" placeholder="Address"
+                                                                                   aria-label="State"
+                                                                                   aria-describedby="button-addon2"
+                                                                                   class="form-control details_address">
+                                                                            <button type="button" id="button-addon2"
+                                                                                    class="btn btn-outline-primary details_save"
+                                                                                    data-key="address"
+                                                                                    data-table="members">Save
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+
+                                                                <div class="row mb-3">
+                                                                    <div class="col-sm-3">
+                                                                        <h6 class="mb-0 fw-bold"><i
+                                                                                class="fadeIn animated bx bx-phone"></i>
+                                                                            State</h6>
+                                                                    </div>
+                                                                    <div class="col-sm-9 text-secondary">
+                                                                        <div class="input-group mb-3">
+                                                                            <input type="text" placeholder="State"
+                                                                                   aria-label="State"
+                                                                                   aria-describedby="button-addon2"
+                                                                                   class="form-control details_state">
+                                                                            <button type="button" id="button-addon2"
+                                                                                    class="btn btn-outline-primary details_save"
+                                                                                    data-key="state"
+                                                                                    data-table="members">Save
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="row mb-3">
+                                                                    <div class="col-sm-3">
+                                                                        <h6 class="mb-0 fw-bold"><i
+                                                                                class="fadeIn animated bx bx-phone"></i>
+                                                                            LGA</h6>
+                                                                    </div>
+                                                                    <div class="col-sm-9 text-secondary">
+                                                                        <div class="input-group mb-3">
+                                                                            <input type="text" placeholder="LGA"
+                                                                                   aria-label="DOB"
+                                                                                   aria-describedby="button-addon2"
+                                                                                   class="form-control details_lga">
+                                                                            <button type="button" id="button-addon2"
+                                                                                    class="btn btn-outline-primary details_save"
+                                                                                    data-key="lga" data-table="members">
+                                                                                Save
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+
+                                                                <div class="row mb-3">
+                                                                    <div class="col-sm-3">
+                                                                        <h6 class="mb-0 fw-bold"><i
+                                                                                class="fadeIn animated bx bx-phone"></i>
+                                                                            Date of Birth</h6>
+                                                                    </div>
+                                                                    <div class="col-sm-9 text-secondary">
+                                                                        <div class="input-group mb-3">
+                                                                            <input type="date" placeholder="DOB"
+                                                                                   aria-label="DOB"
+                                                                                   aria-describedby="button-addon2"
+                                                                                   class="form-control details_dob">
+                                                                            <button type="button" id="button-addon2"
+                                                                                    class="btn btn-outline-primary details_save"
+                                                                                    data-key="dob" data-table="members">
+                                                                                Save
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+
+                                                            </div>
+
+
+                                                        </div>
+
+
+                                                        {#       -------------------------  EMPLOYMENT INFO ----------------------#}
+
+                                                        <div class="tab-pane fade" id="employment" role="tabpanel">
+                                                            <ul class="list-group list-group-flush">
+                                                                <h5 class="mt-1 text-primary">Employment Info</h5>
+                                                                <div class="w-100 border-top mb-2"></div>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-building font-18 me-1"></i>Company
+                                                                        Name</h6>
+                                                                    <span class="text-secondary employment_name">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-map-pin font-18 me-1"></i>
+                                                                        Company Location</h6>
+                                                                    <span class="text-secondary employment_address">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-buildings font-18 me-1"></i>
+                                                                        Estate or Complex</h6>
+                                                                    <span class="text-secondary employment_complex">@wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-briefcase-alt font-18 me-1"></i>
+                                                                        Role</h6>
+                                                                    <span class="text-secondary employment_role">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-calendar-alt font-18 me-1"></i>
+                                                                        Duration</h6>
+                                                                    <span class="text-secondary employment_duration">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-badge-dollar font-18 me-1"></i>
+                                                                        Salary Range</h6>
+                                                                    <span class="text-secondary employment_salary">wedigital</span>
+                                                                </li>
+
+
+                                                                <h5 class="mt-5 text-primary">Additional Info</h5>
+                                                                <div class="w-100 border-top mb-2"></div>
+
+
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-user-badge font-18 me-1"></i>
+                                                                        Company's Contact Person (HR)</h6>
+                                                                    <span class="text-secondary employment_hr_name">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-envelope-open font-18 me-1"></i>
+                                                                        Company's HR Email</h6>
+                                                                    <span class="text-secondary employment_hr_email">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-phone font-18 me-1"></i>
+                                                                        Company's HR Phone</h6>
+                                                                    <span class="text-secondary employment_hr_phone">wedigital</span>
+                                                                </li>
+
+                                                            </ul>
+                                                        </div>
+
+
+                                                        {#       -------------------------  EMERGENCY INFO ----------------------#}
+
+                                                        <div class="tab-pane fade" id="emergency" role="tabpanel">
+                                                            <ul class="list-group list-group-flush">
+                                                                <h5 class="mt-1 text-primary">Family Emergency
+                                                                    Contact</h5>
+                                                                <div class="w-100 border-top mb-2"></div>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-user font-18 me-1"></i> Name
+                                                                    </h6>
+                                                                    <span class="text-secondary emergency_family_name">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-phone-call font-18 me-1"></i>
+                                                                        Phone Number</h6>
+                                                                    <span class="text-secondary emergency_family_phone">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-envelope-open font-18 me-1"></i>
+                                                                        Email</h6>
+                                                                    <span class="text-secondary emergency_family_email">@wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-briefcase-alt font-18 me-1"></i>
+                                                                        Occupation</h6>
+                                                                    <span class="text-secondary emergency_family_occupation">wedigital</span>
+                                                                </li>
+
+
+                                                                <h5 class="mt-5 text-primary">Colleague Emergency
+                                                                    Contact</h5>
+                                                                <div class="w-100 border-top mb-2"></div>
+
+
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-user font-18 me-1"></i> Name
+                                                                    </h6>
+                                                                    <span class="text-secondary emergency_colleague_name">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-phone-call font-18 me-1"></i>
+                                                                        Phone Number</h6>
+                                                                    <span class="text-secondary emergency_colleague_phone">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-envelope-open font-18 me-1"></i>
+                                                                        Email</h6>
+                                                                    <span class="text-secondary emergency_colleague_email">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-briefcase-alt font-18 me-1"></i>
+                                                                        Occupation</h6>
+                                                                    <span class="text-secondary emergency_colleague_occupation">wedigital</span>
+                                                                </li>
+
+                                                            </ul>
+                                                        </div>
+
+
+                                                        {#       -------------------------  GUARANTORS INFO ----------------------#}
+
+                                                        <div class="tab-pane fade" id="guarantor" role="tabpanel">
+                                                            <ul class="list-group list-group-flush">
+                                                                <h5 class="mt-1 text-primary">First Guarantor</h5>
+                                                                <div class="w-100 border-top mb-2"></div>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-user font-18 me-1"></i> Name
+                                                                    </h6>
+                                                                    <span class="text-secondary guarantor_name1">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-phone-call font-18 me-1"></i>
+                                                                        Phone</h6>
+                                                                    <span class="text-secondary guarantor_phone1">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-envelope-open font-18 me-1"></i>
+                                                                        Email</h6>
+                                                                    <span class="text-secondary guarantor_email1">@wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-map-pin font-18 me-1"></i>
+                                                                        House Address</h6>
+                                                                    <span class="text-secondary guarantor_address1">wedigital</span>
+                                                                </li>
+
+
+                                                                <h5 class="mt-5 text-primary">Second Guarantor</h5>
+                                                                <div class="w-100 border-top mb-2"></div>
+
+
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-user font-18 me-1"></i> Name
+                                                                    </h6>
+                                                                    <span class="text-secondary guarantor_name2">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-phone-call font-18 me-1"></i>
+                                                                        Phone</h6>
+                                                                    <span class="text-secondary guarantor_phone2">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-envelope-open font-18 me-1"></i>
+                                                                        Email</h6>
+                                                                    <span class="text-secondary guarantor_email2">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-map-pin font-18 me-1"></i>
+                                                                        House Address</h6>
+                                                                    <span class="text-secondary guarantor_address2">wedigital</span>
+                                                                </li>
+
+
+                                                            </ul>
+                                                        </div>
+
+
+                                                        {#       -------------------------  BANK DETAILS ----------------------#}
+
+                                                        <div class="tab-pane fade" id="bankdetails" role="tabpanel">
+                                                            <ul class="list-group list-group-flush">
+                                                                <h5 class="mt-1 text-primary">Disbursement Bank Details</h5>
+                                                                <div class="w-100 border-top mb-2"></div>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-building font-18 me-1"></i>
+                                                                        Account Number</h6>
+                                                                    <span class="text-secondary bankdetails_number">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-map-pin font-18 me-1"></i>
+                                                                        Bank Name</h6>
+                                                                    <span class="text-secondary bankdetails_bank">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-buildings font-18 me-1"></i>
+                                                                        Account Name</h6>
+                                                                    <span class="text-secondary bankdetails_name">@wedigital</span>
+                                                                </li>
+
+
+
+                                                                <h5 class="mt-5 text-primary">Virtual Bank Details</h5>
+                                                                <div class="w-100 border-top mb-2"></div>
+
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-building font-18 me-1"></i>
+                                                                        Account Number</h6>
+                                                                    <span class="text-secondary virtual_bankdetails_number">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-map-pin font-18 me-1"></i>
+                                                                        Bank Name</h6>
+                                                                    <span class="text-secondary virtual_bankdetails_bank">wedigital</span>
+                                                                </li>
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-buildings font-18 me-1"></i>
+                                                                        Account Name</h6>
+                                                                    <span class="text-secondary virtual_bankdetails_name">@wedigital</span>
+                                                                </li>
+
+                                                            </ul>
+                                                        </div>
+
+
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <div class="card">
+
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+                                </div>
+                            </div>
+
+
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+    <!--MODAL FOR REPAYMENTS-->
+
+    <div id="RepaymentModal" tabindex="-1" class="modal fade show" aria-modal="true" role="dialog"
+         style="display: none;">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light">User -> <span class="details_current_user"></span></h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <div class="card border-top border-0 border-4 border-primary">
+
+
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div>
+                                    <h5 class="mb-0">Repayment History</h5>
+                                </div>
+
+                                <div class="font-22 ms-auto"><i class='bx bx-dots-horizontal-rounded'></i>
+                                </div>
+                            </div>
+                            <hr/>
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-0">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>S/N</th>
+                                        <th>Loan ID</th>
+                                        <th>Loaned Amount</th>
+                                        <th>Repayment Amount</th>
+                                        <th>Record Pay</th>
+                                        <th>Record Stage</th>
+                                        <th>Total Repaid</th>
+                                        <th>Status</th>
+                                        <th>Record Date</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="repayment_history" style="padding-bottom: 4em !important">
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+    <!--MODAL FOR LOANS-->
+
+    <div id="LoanModal" tabindex="-1" class="modal fade show" aria-modal="true" role="dialog" style="display: none;">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light">User's Loans</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <div class="card border-top border-0 border-4 border-primary">
+
+
+                        <div class="card-body">
+
+                            <hr/>
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-5">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>S/N</th>
+                                        <th>Loan ID</th>
+                                        <th>Loaned</th>
+                                        <th>Repayment</th>
+                                        <th>Repaid</th>
+                                        <th>Requested</th>
+                                        <th>Disbursed</th>
+                                        <th>Due Date</th>
+                                        <th>Overdue Days</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="mini_repayment_history" style="padding-bottom: 4em !important">
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+    <!--DOCS MODAL	-->
+    <div id="DocsModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light">User Docs</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <div class="card">
+                        <div class="card-body">
+
+                            <div class="form-row mt-3" id="show_files">
+
+                            </div>
+
+
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+    <!--NOTES MODAL	-->
+    <div id="NoteModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light">User Notes</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <div class="card">
+                        <div class="card-body">
+
+                            <div class="row gy-3">
+                                <div class="col-md-10">
+                                    <textarea id="note_input" placeholder="Enter new note here..." class="form-control"
+                                              rows=2></textarea>
+                                </div>
+                                <div class="col-md-2 text-end d-grid">
+                                    <button type="button" class="btn btn-primary" id="add_note">Add Note</button>
+                                </div>
+                            </div>
+
+
+                            <div class="form-row mt-3" id="show_notes" style="max-height: 60vh; overflow-y: auto">
+
+                            </div>
+
+
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <script>
+        const success_audio = new Audio("{% static 'admin_panel/audio/correct.mp3' %}");
+            const error_audio = new Audio("{% static 'admin_panel/audio/wrong.mp3' %}");
+
+
+            var overlay = $("#overlay");
+            var loader = $("#loader");
+            var loader_trans = $("#loader-trans");
+
+            function loadOn() {
+                overlay.css('display', 'block');
+                loader.css('display', 'block');
+            }
+
+            function onProgress(elem) {
+                $('#' + elem).addClass('thin-loader')
+            }
+
+            function offProgress(elem) {
+                $('#' + elem).removeClass('thin-loader')
+            }
+
+            function loadOff() {
+                overlay.css('display', 'none');
+                loader.css('display', 'none');
+            }
+
+            function notify(status, message) {
+                if (status === "success" || status === "info") {
+                    success_audio.play();
+                } else {
+                    error_audio.play();
+                }
+                toastr[status](message)
+            }
+
+            function get_current_month(cc = 1) {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + cc).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            $('#history_month_end').change(function (){
+                var start_date = new Date($("#history_month_start").val())
+                var end_date = new Date($(this).val())
+                if(start_date > end_date){
+                    $(this).val(get_current_month())
+                    $("#history_month_start").val(get_current_month(-1))
+                    notify('warning', 'Ending date cannot be less than starting date')
+                }
+            })
+
+            $('#history_month_start').change(function (){
+                var end_date = new Date($("#history_month_end").val())
+                var start_date = new Date($(this).val())
+                if(start_date > end_date){
+                    $(this).val(get_current_month(-1))
+                    $("#history_month_end").val(get_current_month())
+                    notify('warning', 'Ending date cannot be less than starting date')
+                }
+
+            })
+
+            function start(refresh = false) {
+                $.ajax({
+                    url: '{% url "repayments" %}',
+                    data: {
+                        action: 'fetch_all_repayments',
+                        rows: $('#history_rows').val(),
+                        start: $('#history_month_start').val(),
+                        end: $('#history_month_end').val()
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    async: false,
+                    success: function (data) {
+                        if (refresh) {
+                            $('#loan_table').DataTable().destroy()
+                        }
+                        setTimeout(function () {
+                            $("#repayment_history").html(data.content);
+                            var table = $('#loan_table').DataTable({
+                                lengthChange: false,
+                                buttons: ['copy', 'excel', 'pdf', 'print']
+                            });
+                            table.buttons().container().appendTo('#loan_table_wrapper .col-md-6:eq(0)');
+                        }, 10)
+                    },
+                    error: function (jqXHR, errorThrown) {
+                        notify('error', 'An error occurred. Page will be refreshed in 3s')
+                        setTimeout(function () {
+                            {#window.location.update()#}
+                        }, 3000)
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            }
+
+    </script>
+
+   <script>
+	    $(function(){
+            $('#history_month_start').val(get_current_month(-1))
+            $('#history_month_end').val(get_current_month())
+
+            start()
+
+
+	        $("body").on('click', '.loan_actions', function(){
+	            var id= $(this).data('id');
+                var user_id= $(this).data('user_id');
+	            var action= $(this).data('action');
+                var size= $(this).data('size');
+	            loadOn();
+
+                $.ajax({
+                    url: '{% url "loans" %}',
+                    data: {
+                        action: 'status_update',
+                        loan_id: id,
+                        main_action: action,
+                        size: size,
+                        user_id: user_id
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        $('#mini_repayment_history').html(data.content)
+                        notify(data.status, data.message)
+                        start(true)
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+	        })
+
+
+
+
+            $('body').on('click', '.repay_rows', function () {
+                var row = $(this);
+                var first_name = row.data('first_name');
+                var last_name = row.data('last_name');
+                var middle_name = row.data('middle_name');
+                var email = row.data('email');
+                var email2 = row.data('email2');
+                var phone = row.data('phone');
+                var phone2 = row.data('phone2');
+                var created_at = row.data('created_at');
+                var avatar = row.data('avatar');
+                var address = row.data('address');
+                var dob = row.data('dob');
+                var status = row.data('status');
+                var gender = row.data('gender');
+                var lga = row.data('lga');
+                var state = row.data('state');
+                var status_pill = row.data('status_pill');
+                var id = row.data('user_id');
+                var deposit_count = row.data('deposit_count');
+                var with_count = row.data('with_count');
+                var tf_count = row.data('tf_count');
+                var trade2_count = row.data('trade2_count');
+                var invest_count = row.data('invest_count');
+
+                $(".details_first_name").val(first_name).data('id', id);
+                $(".details_last_name").val(last_name).data('id', id);
+                $(".details_middle_name").val(middle_name).data('id', id);
+                $(".details_email").val(email).data('id', id);
+                $(".details_email2").val(email2).data('id', id);
+                $(".details_phone").val(phone).data('id', id);
+                $(".details_phone2").val(phone2).data('id', id);
+                $(".details_address").val(address).data('id', id);
+                $(".details_dob").val(dob).data('id', id);
+                $(".details_state").val(state).data('id', id);
+                $(".details_lga").val(lga).data('id', id);
+                $(".details_gender").val(gender).select().data('id', id);
+                $(".details_status_show").html(status_pill);
+                $(".details_status").data('id', id);
+
+                $(".details_avatar").attr('src', avatar);
+                $(".details_registered").text(created_at);
+                $(".details_current_user").text(id);
+                $(".details_text_username").text(last_name + ' ' + first_name + ' (' + id + ')');
+                $(".deposit_count").text(deposit_count);
+                $(".with_count").text(with_count);
+                $(".tf_count").text(tf_count);
+                $(".trade2_count").text(trade2_count);
+                $(".invest_count").text(invest_count);
+
+
+                $("#selected_user_id").val(id);
+
+                {#RESET COUNTERS AND ELEMENTS#}
+                $('.count').text('0')
+                $('#show_notes').html('')
+
+                onProgress('user-modal')
+
+                // HANDLE OTHER DETAILS FETCH
+                setTimeout(function () {
+                    $.ajax({
+                        url: "{% url 'users' %}",
+                        dataType: "json",
+                        type: "POST",
+                        async: false,
+                        data: {
+                            user_id: id,
+                            action: 'get_other_details'
+                        },
+                        success: function (data) {
+                            offProgress('user-modal')
+                            {#POPULATE OTHER DETAILS WITH RESPONSE#}
+                            $.each(data.content, function (key, value) {
+                                if (key !== "tables") {
+                                    $('.' + key).text(value)
+                                }
+                            });
+                            $('#show_notes').html(data.content['tables']['notes'])
+                            $('#show_files').html(data.content['tables']['files'])
+                        },
+                        error: function () {
+                            notify('error', 'Fetch failed, Retry')
+                        },
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                        }
+                    })
+
+                }, 1100)
+
+
+            })
+
+
+            $(".details_save").click(function () {
+                var key = $(this).data('key');
+                var user_id = $("#selected_user_id").val();
+                var value = $(".details_" + key).val();
+                loadOn();
+                $.ajax({
+                    url: '{% url "users" %}',
+                    data: {
+                        key: key,
+                        value: value,
+                        user_id: user_id,
+                        action: 'update_user'
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        notify(data.status, data.content)
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            })
+
+
+            // LOANS BLOCK
+            $(".view_repayment_history").click(function () {
+                var user_id = $("#selected_user_id").val();
+                loadOn();
+                $.ajax({
+                    url: '{% url "loans" %}',
+                    data: {
+                        user_id: user_id,
+                        action: 'fetch_repayments'
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        $('#mini_repayment_history').html(data.content)
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            })
+
+
+
+
+             // NOTE BLOCK
+            $("#add_note").click(function () {
+                var user_id = $("#selected_user_id").val();
+                var input = $("#note_input").val();
+                if (input === "") {
+                    toastr["warning"]('Input cannot be empty');
+                } else {
+                    loadOn();
+                    $.ajax({
+                        url: '{% url "users" %}',
+                        data: {
+                            note: input,
+                            user_id: user_id,
+                            action: 'add_note'
+                        },
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (data) {
+                            loadOff()
+                            $('#note_input').val('')
+                            $('#show_notes').html(data.content)
+                            notify(data.status, data.message)
+                        },
+                        error: function (err1, err2) {
+                            loadOff()
+                            notify('error', JSON.stringify(err1))
+                        },
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                        }
+                    })
+                }
+            })
+
+
+            $("body").on('click', '.delete_note', function () {
+                var user_id = $("#selected_user_id").val();
+                var id = $(this).data('id');
+                loadOn()
+                $.ajax({
+                    url: '{% url "users" %}',
+                    data: {
+                        note_id: id,
+                        user_id: user_id,
+                        action: 'delete_note'
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        $('#show_notes').html(data.content)
+                        notify(data.status, data.message)
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            })
+
+
+            $("body").on('blur', '.old_note', function () {
+                var user_id = $("#selected_user_id").val();
+                var id = $(this).data('id');
+                var input = $(this).val();
+                if (input !== "") {
+                    $.ajax({
+                        url: '{% url "users" %}',
+                        data: {
+                            note: input,
+                            user_id: user_id,
+                            action: 'modify_note',
+                            note_id: id
+                        },
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (data) {
+                            loadOff()
+                            notify(data.status, data.message)
+                        },
+                        error: function (err1, err2) {
+                            loadOff()
+                            notify('error', JSON.stringify(err1))
+                        },
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                        }
+                    })
+                } else {
+                    toastr["error"]("Input cannot be empty. Note was not saved");
+                }
+            })
+
+
+
+
+            $('body').on('mouseover', '.repay_rows', function(){
+	            $(this).css({'background':'#E2EDFF', 'color':'#267DFD', 'cursor':'pointer'})
+	        })
+	        $('body').on('mouseout', '.repay_rows', function(){
+	            $(this).css({'background':'white', 'color':'black', 'cursor':'pointer'})
+	        })
+
+
+	    })
+	</script>
+
+{% endblock %}

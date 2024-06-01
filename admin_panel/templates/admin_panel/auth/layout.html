@@ -1,0 +1,144 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+	<!-- Required meta tags -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!--plugins-->
+	<link href="{% static 'admin_panel/plugins/simplebar/css/simplebar.css' %}" rel="stylesheet" />
+	<link href="{% static 'admin_panel/plugins/perfect-scrollbar/css/perfect-scrollbar.css' %}" rel="stylesheet" />
+	<link href="{% static 'admin_panel/plugins/metismenu/css/metisMenu.min.css' %}" rel="stylesheet" />
+	<!-- loader-->
+	<link href="{% static 'admin_panel/css/pace.min.css' %}" rel="stylesheet" />
+	<script src="{% static 'admin_panel/js/pace.min.js' %}"></script>
+	<!-- Bootstrap CSS -->
+	<link href="{% static 'admin_panel/css/bootstrap.min.css' %}" rel="stylesheet">
+	<link href="{% static 'admin_panel/css/app.css' %}" rel="stylesheet">
+	<link href="{% static 'admin_panel/css/icons.css' %}" rel="stylesheet">
+    <link href="{% static 'admin_panel/css/toastr.min.css' %}" rel="stylesheet">
+	<title>APP_NAME - ADMIN SIGN IN</title>
+
+    <style>
+        #loader{
+          position: fixed;
+          text-align:center;
+          width: 100%;
+          height: 100%;
+          top: 50%;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 10000;
+          cursor: pointer;
+          display:none;
+          justify-content: center;
+          margin-top:-50px;
+        }
+
+         #overlay{
+          position: fixed;
+          text-align:center;
+          width: 100%;
+          height: 100%;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: black;
+          opacity: 0.6;
+          z-index: 1000000;
+          cursor: not-allowed;
+          display:none;
+          justify-content: center;
+        }
+    </style>
+</head>
+
+<body class="bg-login">
+    <div id="loader">
+     <img src="{% static 'admin_panel/css/ajax-loader.gif' %}" alt="" width="40em">
+     </div>
+     <div id="overlay"></div>
+	<!--wrapper-->
+	<div class="wrapper">
+		<div class="section-authentication-signin d-flex align-items-center justify-content-center my-5 my-lg-0">
+			<div class="container-fluid">
+				<div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3">
+					<div class="col mx-auto">
+						<div class="mb-4 text-center">
+							<img src="{% static 'admin_panel/images/logo.png' %}" width="180" alt="" />
+						</div>
+
+                    {% block content %}{% endblock content %}
+
+
+                    	</div>
+				</div>
+				<!--end row-->
+			</div>
+		</div>
+	</div>
+	<!--end wrapper-->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+	<!-- Bootstrap JS -->
+	<script src="{% static 'admin_panel/js/bootstrap.bundle.min.js' %}"></script>
+	<!--plugins-->
+	<script src="{% static 'admin_panel/plugins/simplebar/js/simplebar.min.js' %}"></script>
+	<script src="{% static 'admin_panel/plugins/metismenu/js/metisMenu.min.js' %}"></script>
+	<script src="{% static 'admin_panel/plugins/perfect-scrollbar/js/perfect-scrollbar.js' %}"></script>
+    <script src="{% static 'admin_panel/js/toastr.min.js' %}"></script>
+
+	<script src="{% static 'admin_panel/js/app.js' %}"></script>
+
+	<!--Password show & hide js -->
+	<script>
+            var overlay= $("#overlay");
+            var loader= $("#loader");
+            var loader_trans= $("#loader-trans");
+
+            const success_audio = new Audio("{% static 'admin_panel/audio/correct.mp3' %}}");
+	        const error_audio = new Audio("{% static 'admin_panel/audio/wrong.mp3' %}");
+
+
+            function loadOn(){
+                overlay.css('display', 'block');
+                loader.css('display', 'block');
+            }
+            function loadOff(){
+                overlay.css('display', 'none');
+                loader.css('display', 'none');
+            }
+
+            function notify(status, message){
+                if(status === "success" || status === "info"){
+                    success_audio.play();
+                }else{
+                    error_audio.play();
+                }
+                toastr[status](message)
+            }
+
+            $("#show_hide_password a").on('click', function (event) {
+                event.preventDefault();
+                if ($('#show_hide_password input').attr("type") === "text") {
+                    $('#show_hide_password input').attr('type', 'password');
+                    $('#show_hide_password i').addClass("bx-hide");
+                    $('#show_hide_password i').removeClass("bx-show");
+                } else if ($('#show_hide_password input').attr("type") === "password") {
+                    $('#show_hide_password input').attr('type', 'text');
+                    $('#show_hide_password i').removeClass("bx-hide");
+                    $('#show_hide_password i').addClass("bx-show");
+                }
+            });
+	</script>
+
+    {% block script %}{% endblock script %}
+
+	<!--app JS-->
+</body>
+
+</html>

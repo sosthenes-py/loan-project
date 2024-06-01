@@ -1,0 +1,379 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}
+    <title>Agents - We Digital</title>
+{% endblock %}
+
+{% block search_block %}
+
+    <div class="position-relative search-bar-box">
+        <input id="order_search" type="text" class="form-control" placeholder="Type to search...">
+        <span class="position-absolute top-50 search-show translate-middle-y">
+            <button class="btn btn-primary search_btn">Search</button>
+        </span>
+    </div>
+
+{% endblock %}
+
+{% block content %}
+
+<!--start page wrapper -->
+		<div class="page-wrapper">
+			<div class="page-content">
+				
+				<!--end row-->
+				
+				<div class="card radius-10">
+					<div class="card-body">
+						<div class="d-flex align-items-center">
+							<div>
+								<h5 class="mb-0">All Operators</h5>
+							</div>
+							
+							<div class="font-22 ms-auto"><i class='bx bx-dots-horizontal-rounded'></i>
+							</div>
+						</div>
+						<hr/>
+						<div class="table-responsive">
+							<table class="table align-middle mb-0">
+								<thead class="table-light">
+									<tr>
+									            <th>S/N</th>
+										        <th>Name</th>
+												<th>Email</th>
+												<th>Role</th>
+												<th>Status</th>
+												<th>Last Login</th>
+									</tr>
+								</thead>
+								<tbody id="agents_history" style="padding-bottom: 4em !important">
+								
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--end page wrapper -->
+		<input type="hidden" id="general_admin">
+		
+		
+		
+			<div  id="exampleLargeModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+			        <div  class="modal-dialog modal-lg modal-dialog-scrollable">
+			            <div  class="modal-content">
+			                <div  class="modal-header">
+			                    <h5 class="mb-0 text-primary"><span class="agent_name"></span>'s Logs</h5>
+			                    
+			                    
+			    <div style="width: 70% !important; text-align: right">
+			    <div class="dropdown"><button type="button" data-bs-toggle="dropdown" aria-expanded="false" class="btn btn-dark dropdown-toggle">Actions</button><ul class="dropdown-menu">
+			        <li ><a href="#0" class="dropdown-item text-primary privs" style="font-weight: bold" data-bs-toggle='modal' data-bs-target='#privilegeModal' >Set Privileges</a></li>
+			        
+			        <li ><a href="#" class="dropdown-item text-primary" style="font-weight: bold" data-bs-toggle='modal' data-bs-target='#ClearLogsModal' >Clear logs</a></li>
+			        
+			        <div  class="dropdown-divider"></div>
+			        
+			        <li ><a href="#" class="dropdown-item top_actions text-warning" data-action="suspend" style="font-weight: bold">Suspend/Unsuspend</a></li>
+			    <li ><a href="#" class="dropdown-item text-danger" data-bs-toggle='modal' data-bs-target='#EraseAgentModal' style="font-weight: bold">Remove Agent</a></li></ul></div>
+                </div>
+			                    <button  type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close" id="close_agent"></button>
+			                 </div>
+			                 <div  class="modal-body">
+			    
+			    
+                
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table mb-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th scope="col">Date</th>
+                                            <th scope="col">User</th>
+                                            <th scope="col">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="agent_actions">
+                                                 
+                                                   
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                          
+
+                       
+			    </div>  
+			</div>
+		</div>
+	</div>
+		
+		
+	
+	
+	
+	<!--CLEAR AGENT LOGS	-->
+		<div  id="ClearLogsModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+			        <div  class="modal-dialog modal-lg modal-dialog-centered">
+			            <div  class="modal-content bg-primary">
+			                <div  class="modal-header">
+			                    <h5 class="mb-0 text-light">Clear Agent Logs</h5>
+			                    <button  type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+			                 </div>
+			                 <div class="modal-body text-white"><p >This action will clear all logs for <b class="agent_name"></b>. </p>
+			                 <p ><b>Operation can not be undone.</b> Proceed?</p>
+			                 </div> 
+			                 
+			                 <div class="modal-footer"><button type="button" data-bs-dismiss="modal" class="btn btn-light">Close</button><button data-bs-dismiss="modal" type="button" class="btn btn-dark top_actions" data-action="clear_logs">Yes, clear!</button></div>
+			</div>
+		</div>
+	</div>
+	
+	
+	
+	
+	
+	
+	<!--ERASE AGENT DIALOG	-->
+		<div  id="EraseAgentModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+			        <div  class="modal-dialog modal-lg modal-dialog-centered">
+			            <div  class="modal-content bg-danger">
+			                <div  class="modal-header">
+			                    <h5 class="mb-0 text-light">Remove Agent</h5>
+			                    <button  type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+			                 </div>
+			                 <div class="modal-body text-white"><p >You are about to delete the agent <b class="agent_name"></b>. </p>
+			                 <p >All information/privileges associated/assigned to this agent's profile will be permanently deleted/reversed. <b>This operation can not be undone.</b> Proceed?</p>
+			                 </div> 
+			                 
+			                 <div class="modal-footer"><button type="button" data-bs-dismiss="modal" class="btn btn-light">Close</button><button data-bs-dismiss="modal" type="button" class="btn btn-dark top_actions" data-action="erase">Yes, remove!</button></div>
+			</div>
+		</div>
+	</div>
+	
+	
+	
+	
+	
+	<!--EDIT ACTION	-->
+		<div  id="editModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+			        <div  class="modal-dialog modal-lg modal-dialog-centered">
+			            <div  class="modal-content bg-primary">
+			                <div  class="modal-header">
+			                    <h5 class="mb-0 text-light">Edit Action</h5>
+			                    <button  type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+			                 </div>
+			                 <div class="modal-body text-white">
+			                     <textarea  type="text" value="..." class="form-control details_email edit_action_inp" ></textarea>
+			                 </div> 
+			                 
+			                 <div class="modal-footer"><button type="button" data-bs-dismiss="modal" class="btn btn-light">Close</button><button data-bs-dismiss="modal" type="button" class="btn btn-dark update_actions" data-action="erase">Update</button></div>
+			</div>
+		</div>
+	</div>
+	
+		
+		
+		
+	
+		<!--ASSIGN MODAL-->
+	
+	<div  id="privilegeModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+			        <div  class="modal-dialog modal-lg modal-dialog-scrollable">
+			            <div  class="modal-content bg-primary">
+			                <div  class="modal-header">
+			                    <h5 class="mb-0 text-light">Set <b class="agent_name"></b>'s Privileges</h5>
+			                    <button  type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+			                 </div>
+			                 <div  class="modal-body">
+			    
+
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table mb-0">
+                                    <thead class="table-primary">
+                                        <tr>
+                                            <th scope="col">Privileges</th>
+                                            <th scope="col">Allow</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="privs_body">
+                                                 
+                                                   
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                          
+			    </div>  
+			</div>
+		</div>
+	</div>
+		
+	
+	
+    
+    
+
+   <script>
+	    $(function(){
+
+            var overlay= $("#overlay");
+        var loader= $("#loader");
+
+        function loadOn(){
+            overlay.css('display', 'block');
+            loader.css('display', 'block');
+        }
+        function loadOff(){
+            overlay.css('display', 'none');
+            loader.css('display', 'none');
+        }
+
+        function notify(status, message){
+            toastr[status](message)
+        }
+
+
+	        $.post('{{ url_for('admin_get_agents_history') }}', {
+        	    key: '*'
+        	 }, function(data, status){
+        	     $("#agents_history").html(data);
+        	 })
+
+
+
+
+	        $("#order_search").keyup(function(){
+	            var key= $(this).val().toLowerCase();
+	            if(key !== ""){
+	                $('.trs').each(function (){
+                        const name = $(this).data('name').toLowerCase()
+                        const email = $(this).data('email').toLowerCase()
+                        if(name.startsWith(key) || email.startsWith(key)){
+                            $(this).show();
+                         }else{
+                            $(this).hide();
+                         }
+                    })
+	            }else{
+                    $('.trs').show()
+                }
+	        })
+
+
+
+          $('body').on('click', '.trs', function(){
+                var row= $(this);
+                var id= row.data('id');
+                var name= row.data('name');
+                $(".agent_name").text(name);
+                $("#agent_actions").html('<tr><td>Loading ...</td></tr>');
+                $("#general_admin").val(id)
+
+                $.post('{{ url_for('admin_get_agent_actions') }}', {
+            	    id: id
+            	 }, function(data, status){
+            	     $("#agent_actions").html(data);
+            	 })
+
+            })
+
+
+            $("body").on('click', '.edit_action', function(){
+                $('.edit_action_inp').val($(this).text());
+                $('.edit_action_inp').data('id', $(this).data('id'));
+            })
+
+
+            $(".update_actions").click(function(){
+                var value= $('.edit_action_inp').val();
+                var id= $('.edit_action_inp').data('id');
+                var admin_id= $("#general_admin").val();
+                $.post('{{ url_for('admin_update_agents_actions') }}', {
+    	            id: id,
+    	            value: value
+    	        }, function(data, status){
+    	            $.post('{{ url_for('admin_get_agent_actions') }}', {
+                	    get_agent_actions: "set",
+                	    id: admin_id
+                	 }, function(data, status){
+                	     $("#agent_actions").html(data);
+                	 })
+    	        })
+            })
+
+
+            // $("body").on('click', '.edit_action2', function(){
+            //     var text= $(this).children('input').val();
+            //     $(this).html(text);
+            //     $(this).addClass('edit_action');
+            //     $(this).removeClass('edit_action2');
+            // })
+
+
+
+            $("body").on('click', '.privs', function(){
+                var id= $("#general_admin").val();
+                $("#privs_body").html('<tr colspan=3><td style="font-weight: bold">Loading privileges ...</td></tr>');
+    	        $.post('{{ url_for('admin_agent_privs') }}', {
+    	            id: id
+    	        }, function(data, status){
+    	            $("#privs_body").html(data);
+    	        })
+            })
+
+            $("body").on('change', '.assign_check', function(){
+	           var id= $("#general_admin").val();
+	           var key= $(this).data('key');
+	           $.post('{{ url_for('admin_agent_privs_check') }}', {
+    	            privs_check: "set",
+    	            key: key,
+    	            id: id
+    	        }, function(data, status){
+    	            $("#privs_body").html(data);
+    	            notify('success', 'Action success!');
+    	        })
+	       })
+
+
+
+            $('body').on('click', '.top_actions', function(){
+                var action= $(this).data('action');
+                loadOn();
+                $.post('{{ url_for('admin_agent_top_action') }}', {
+                    admin_id: $("#general_admin").val(),
+                    action: action
+                }, function(data, status){
+                    loadOff();
+                    if(data.err === 0){
+                        notify('success', data.msg)
+                        $.post('{{ url_for('admin_get_agents_history') }}', {
+                    	    key: '*'
+                    	 }, function(data, status){
+                    	     $("#agents_history").html(data);
+                    	 })
+                    	 if(action === "clear_logs" || action ==="erase"){
+                    	     $("#exampleLargeModal").modal('hide');
+                    	 }
+                    }else{
+                        notify('error', data.msg)
+                    }
+                }, "JSON")
+            })
+
+
+
+            $('body').on('mouseover', '.trs, .actions_trs, .privs_trs', function(){
+	            $(this).css({'background':'#E2EDFF', 'color':'#267DFD', 'cursor':'pointer'})
+	        })
+	        $('body').on('mouseout', '.trs, .actions_trs, .privs_trs', function(){
+	            $(this).css({'background':'white', 'color':'black', 'cursor':'pointer'})
+	        })
+
+
+	    })
+	</script>
+
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'admin_panel/auth/layout.html' %}
+
+{% block content %}
+    <div>
+        <h3 class="text-center">Login to panel</h3>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="border p-4 rounded">
+
+
+                <div class="form-body">
+                    <form id="form" action="" class="row g-3" novalidate>
+                        <div class="col-12">
+                            <label for="inputEmailAddress" class="form-label">Phone Number</label>
+                            <input type="tel" name="phone" class="form-control" id="inputEmailAddress">
+                        </div>
+                        <div class="col-12">
+                            <label for="inputChoosePassword" id="pass" class="form-label">Enter Password</label>
+                            <div class="input-group" id="show_hide_password">
+                                <input name="password" type="password" class="form-control" id="inputChoosePassword">
+                                <a href="javascript:;" class="input-group-text bg-transparent"><i
+                                        class='bx bx-hide'></i></a>
+                            </div>
+                        </div>
+
+
+                        <div id="msg">
+                            <p>Create new account <a href="{% url 'register' %}">here</a></p>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-grid">
+                                <button id="sbmt" class="btn btn-primary"><i class="bx bxs-lock-open"></i>Sign in
+                                </button>
+
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}
+
+
+
+{% block script %}
+    <script>
+        $('#sbmt').click(function (event){
+            event.preventDefault()
+            var formData = $('#form').serialize()
+            loadOn()
+            $.ajax({
+                url: '{% url "login" %}',
+                data: formData,
+                type: 'POST',
+                dataType: 'json',
+                success: function (response){
+                    loadOff()
+                    if(response.status === "warning"){
+                        var err_key = Object.keys(response.message)[0]
+                        notify(response.status, err_key +": "+ response.message[err_key])
+                    }else if(response.status === "error"){
+                        notify(response.status, response.message)
+                    }else{
+                        notify(response.status, response.message)
+                        setTimeout(function (){
+                            window.location.href = "{% url 'dashboard' %}"
+                        }, 2000)
+                    }
+                },
+                error: function (err1, err2){
+                    loadOff()
+                },
+                beforeSend: function (xhr, settings){
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                }
+            })
+        })
+    </script>
+{% endblock %}
+
