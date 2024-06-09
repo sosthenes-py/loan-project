@@ -50,6 +50,45 @@
         .user-online, .user-offline {
             position: relative;
         }
+
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+            list-style: none;
+        }
+        .timeline:before {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 40px;
+            width: 2px;
+            content: "";
+            background-color: #dee2e6;
+        }
+        .timeline > .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding-left: 60px;
+        }
+        .timeline > .timeline-item:before {
+            position: absolute;
+            left: 30px;
+            top: 0;
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #fff;
+            border: 5px solid #0D6EFD;
+            content: "";
+        }
+        .timeline > .timeline-item .timeline-content {
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: .25rem;
+        }
     </style>
     <!--start page wrapper -->
     <div class="page-wrapper">
@@ -67,24 +106,29 @@
                                     <div style="width: 40%; float: left">
                                         <label for="history_month_start">From:</label>
                                         <input  type="date" id="history_month_start"
-                                           class="me-2" value="" onchange="start(true)" >
+                                           class="me-2" value="" >
                                     </div>
 
                                     <div style="width: 40%; float: right">
                                         <label for="history_month_end">To:</label>
                                         <input  type="date" id="history_month_end"
-                                           class="me-2" value="" onchange="start(true)">
+                                           class="me-2" value="">
                                     </div>
 
                                     <div style="width: 20%; float: right">
                                         <label for="history_rows">Rows:</label>
-                                        <select id="history_rows" class="" onchange="start(true)">
+                                        <select id="history_rows" class="">
                                             <option value="10">10</option>
                                             <option value="20">20</option>
                                             <option value="50">50</option>
                                             <option value="100">100</option>
                                             <option value="500">500</option>
                                         </select>
+                                    </div>
+
+
+                                    <div class="mt-3" style="width: 30%; float: right">
+                                        <button id="search_rdp" type="button" class="btn btn-primary px-3 radius-30" onclick="start(true)">Search</button>
                                     </div>
                                 </div>
                             </div>
@@ -175,6 +219,12 @@
                                                data-bs-toggle='modal' data-bs-target='#RepaymentModal'><i
                                                     class="lni lni-cloud-upload"></i> Repayments <span
                                                     class="badge rounded-pill bg-dark m-1 repayment_count">0</span></a>
+
+
+                                            <a href="#" class="dropdown-item view_timeline text-info-emphasis"
+                                               data-bs-toggle='modal' data-bs-target='#TimelineModal'><i
+                                                    class="lni lni-video"></i> Timeline</a>
+
 
 
                                             <div class="dropdown-divider"></div>
@@ -1133,7 +1183,7 @@
 
                             <div class="row gy-3">
                                 <div class="col-md-10">
-                                    <textarea id="note_input" placeholder="Enter new note here..." class="form-control"
+                                    <textarea id="note_input" placeholder="('promise to pay', 'switched off', 'not reachable', 'not picking', 'fraudulent')..." class="form-control"
                                               rows=2></textarea>
                                 </div>
                                 <div class="col-md-2 text-end d-grid">
@@ -1167,7 +1217,7 @@
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content bg-primary">
                 <div class="modal-header">
-                    <h5 class="mb-0 text-light">Assign <span class="details_current_user"></span> to an agent</h5>
+                    <h5 class="mb-0 text-light">Assign this user to a collector</h5>
                     <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
                 </div>
                 <div class="modal-body">
@@ -1178,7 +1228,7 @@
                             <table class="table mb-0">
                                 <thead class="table-primary">
                                 <tr>
-                                    <th scope="col">Agent</th>
+                                    <th scope="col">Collector</th>
                                     <th scope="col">Total Assigned</th>
                                     <th scope="col">Assign</th>
                                 </tr>
@@ -1220,6 +1270,109 @@
                             </div>
 
 
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+      <!--WAIVE MODAL	-->
+    <div id="WaiveModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light device_details_name">Waive Loan</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <input id="selected_loan" type="hidden">
+                    <div class="card">
+                        <div class="card-body">
+
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">&#x20A6;</span>
+                                <input type="number" class="form-control" placeholder="Amount to waive" aria-label="Amount (to the nearest naira)" id="waive_amount">
+                                <span class="input-group-text">.00</span>
+                            </div>
+                            <button class="btn btn-primary" id="waive_sbmt">
+                                {% if user.level == 'super admin' or user.level == 'approval admin' %}
+                                    Waive Now
+                                {% else %}
+                                    Submit waive request
+                                {% endif %}
+                            </button>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <!--TIMELINE MODAL	-->
+    <div id="TimelineModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light">User Timelines</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3 mb-4">
+							<div class="form-check form-check-primary ms-4">
+								<input class="form-check-input timeline_names" type="checkbox" value="transfer" id="flexCheckCheckedSuccess" checked="">
+								<label class="form-check-label" for="flexCheckCheckedSuccess">
+								  Transfer
+								</label>
+							  </div>
+
+                                <div class="form-check form-check-primary">
+								<input class="form-check-input timeline_names" type="checkbox" value="manual assign" id="flexCheckCheckedDanger" checked="">
+								<label class="form-check-label" for="flexCheckCheckedDanger">
+								  Manual Assign
+								</label>
+							  </div>
+
+							  <div class="form-check form-check-primary">
+								<input class="form-check-input timeline_names" type="checkbox" value="collection record" id="flexCheckCheckedDanger" checked="">
+								<label class="form-check-label" for="flexCheckCheckedDanger">
+								  Collection Record
+								</label>
+							  </div>
+							  <div class="form-check form-check-primary">
+								<input class="form-check-input timeline_names" type="checkbox" value="repayment" id="flexCheckCheckedWarning" checked="">
+								<label class="form-check-label" for="flexCheckCheckedWarning">
+								  Repayment
+								</label>
+							  </div>
+							  <div class="form-check form-check-primary">
+								<input class="form-check-input timeline_names" type="checkbox" value="disbursement" id="flexCheckCheckedDark" checked="">
+								<label class="form-check-label" for="flexCheckCheckedDark">
+								  Disbursement
+								</label>
+							  </div>
+
+
+						</div>
+                            <ul class="timeline show_timeline">
+
+
+                            </ul>
                         </div>
                     </div>
 
@@ -1351,6 +1504,52 @@
             $('.generate_repayment_link').click(function (){
                 notify('error', 'Error generating link')
             })
+
+            $('body').on('click', '.waive', function (){
+                var id = $(this).data('id')
+                $('#selected_loan').val(id)
+            })
+
+
+
+            $('#waive_sbmt').click(function (){
+                var id = $('#selected_loan').val()
+                var amount = $('#waive_amount').val()
+                if(amount === 0 || amount === ''){
+                    notify('warning', 'Please enter valid amount')
+                }else{
+                    loadOn();
+                    $.ajax({
+                        url: '{% url "loans" %}',
+                        data: {
+                            action: 'waive_loan',
+                            loan_id: id,
+                            size: 'single',
+                            user_id: $('#selected_user_id').val(),
+                            amount: amount
+                        },
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (data) {
+                            loadOff()
+                            notify(data.status, data.message)
+                            $('#WaiveModal').modal('close')
+                            if(data.status === "success"){
+                                $('#mini_loan_history').html(data.content)
+                                start(true)
+                            }
+                        },
+                        error: function (err1, err2) {
+                            loadOff()
+                            notify('error', JSON.stringify(err1))
+                        },
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                        }
+                    })
+                }
+            })
+
 
             $(".login_as").click(function () {
                 var user = $("#selected_user_id").val();
@@ -1570,6 +1769,52 @@
 
 
 
+
+
+            $('.view_timeline').click(function (){
+                var user_id = $("#selected_user_id").val();
+                loadOn();
+                    $.ajax({
+                        url: '{% url "users" %}',
+                        data: {
+                            user_id: user_id,
+                            action: 'get_timeline'
+                        },
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (data) {
+                            loadOff()
+                            $('.show_timeline').html(data.content)
+                        },
+                        error: function (err1, err2) {
+                            loadOff()
+                            notify('error', JSON.stringify(err1))
+                        },
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                        }
+                    })
+            })
+
+            function updateCheckedList() {
+                const checkedValues = [];
+                $('.timeline_names:checked').each(function() {
+                    checkedValues.push($(this).val());
+                });
+                return checkedValues
+            }
+
+            $('.timeline_names').on('change', function (){
+                var names = updateCheckedList()
+                $('.timeline-item').each(function (){
+                    var name = $(this).data('name')
+                    if($.inArray(name, names) !== -1){
+                        $(this).fadeIn()
+                    }else{
+                        $(this).fadeOut()
+                    }
+                })
+            });
 
 
             // NOTE BLOCK

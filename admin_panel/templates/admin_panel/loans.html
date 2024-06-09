@@ -7,6 +7,45 @@
 
 {% block content %}
 
+    <style>
+    .timeline {
+            position: relative;
+            padding: 20px 0;
+            list-style: none;
+        }
+        .timeline:before {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 40px;
+            width: 2px;
+            content: "";
+            background-color: #dee2e6;
+        }
+        .timeline > .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding-left: 60px;
+        }
+        .timeline > .timeline-item:before {
+            position: absolute;
+            left: 30px;
+            top: 0;
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #fff;
+            border: 5px solid #0D6EFD;
+            content: "";
+        }
+        .timeline > .timeline-item .timeline-content {
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: .25rem;
+        }
+    </style>
 
 
 <!--start page wrapper -->
@@ -25,24 +64,30 @@
                                     <div style="width: 40%; float: left">
                                         <label for="history_month_start">From:</label>
                                         <input  type="date" id="history_month_start"
-                                           class="me-2" value="" onchange="start(true)" >
+                                           class="me-2" value="" >
                                     </div>
 
                                     <div style="width: 40%; float: right">
                                         <label for="history_month_end">To:</label>
                                         <input  type="date" id="history_month_end"
-                                           class="me-2" value="" onchange="start(true)">
+                                           class="me-2" value="">
                                     </div>
 
                                     <div style="width: 20%; float: right">
                                         <label for="history_rows">Rows:</label>
-                                        <select id="history_rows" class="" onchange="start(true)">
+                                        <select id="history_rows" class="">
                                             <option value="10">10</option>
                                             <option value="20">20</option>
                                             <option value="50">50</option>
                                             <option value="100">100</option>
                                             <option value="500">500</option>
+                                            <option value="2000">2000</option>
                                         </select>
+                                    </div>
+
+
+                                    <div class="mt-3" style="width: 30%; float: right">
+                                        <button id="search_rdp" type="button" class="btn btn-primary px-3 radius-30" onclick="start(true)">Search</button>
                                     </div>
                                 </div>
                             </div>
@@ -81,6 +126,7 @@
 
 
     <input type="hidden" id="selected_user_id">
+    <input type="hidden" id="selected_loan_id">
 
 
 
@@ -136,6 +182,11 @@
                                                data-bs-toggle='modal' data-bs-target='#RepaymentModal'><i
                                                     class="lni lni-cloud-upload"></i> Repayments <span
                                                     class="badge rounded-pill bg-dark m-1 repayment_count count">0</span></a>
+
+
+                                            <a href="#" class="dropdown-item view_timeline text-info-emphasis"
+                                               data-bs-toggle='modal' data-bs-target='#TimelineModal'><i
+                                                    class="lni lni-video"></i> Timeline</a>
 
 
                                             <div class="dropdown-divider"></div>
@@ -1051,7 +1102,7 @@
 
                             <div class="row gy-3">
                                 <div class="col-md-10">
-                                    <textarea id="note_input" placeholder="Enter new note here..." class="form-control"
+                                    <textarea id="note_input" placeholder="('promise to pay', 'switched off', 'not reachable', 'not picking', 'fraudulent')..." class="form-control"
                                               rows=2></textarea>
                                 </div>
                                 <div class="col-md-2 text-end d-grid">
@@ -1148,13 +1199,115 @@
 
 
 
+    <!--TIMELINE MODAL	-->
+    <div id="TimelineModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light">User Timelines</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3 mb-4">
+							<div class="form-check form-check-primary ms-4">
+								<input class="form-check-input timeline_names" type="checkbox" value="transfer" id="flexCheckCheckedSuccess" checked="">
+								<label class="form-check-label" for="flexCheckCheckedSuccess">
+								  Transfer
+								</label>
+							  </div>
+
+                                <div class="form-check form-check-primary">
+								<input class="form-check-input timeline_names" type="checkbox" value="manual assign" id="flexCheckCheckedDanger" checked="">
+								<label class="form-check-label" for="flexCheckCheckedDanger">
+								  Manual Assign
+								</label>
+							  </div>
+
+							  <div class="form-check form-check-primary">
+								<input class="form-check-input timeline_names" type="checkbox" value="collection record" id="flexCheckCheckedDanger" checked="">
+								<label class="form-check-label" for="flexCheckCheckedDanger">
+								  Collection Record
+								</label>
+							  </div>
+							  <div class="form-check form-check-primary">
+								<input class="form-check-input timeline_names" type="checkbox" value="repayment" id="flexCheckCheckedWarning" checked="">
+								<label class="form-check-label" for="flexCheckCheckedWarning">
+								  Repayment
+								</label>
+							  </div>
+							  <div class="form-check form-check-primary">
+								<input class="form-check-input timeline_names" type="checkbox" value="disbursement" id="flexCheckCheckedDark" checked="">
+								<label class="form-check-label" for="flexCheckCheckedDark">
+								  Disbursement
+								</label>
+							  </div>
+
+
+						</div>
+                            <ul class="timeline show_timeline">
+
+
+                            </ul>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!--ASSIGN MODAL-->
+
+    <div id="AssignModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light">Assign this user to a collector</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <div class="card">
+                        <div class="card-body">
+                            <table class="table mb-0">
+                                <thead class="table-primary">
+                                <tr>
+                                    <th scope="col">Collector</th>
+                                    <th scope="col">Total Assigned</th>
+                                    <th scope="col">Assign</th>
+                                </tr>
+                                </thead>
+                                <tbody id="assign_body">
+
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 
 
     <script>
          const success_audio = new Audio("{% static 'admin_panel/audio/correct.mp3' %}");
-                const error_audio = new Audio("{% static 'admin_panel/audio/wrong.mp3' %}");
+         const error_audio = new Audio("{% static 'admin_panel/audio/wrong.mp3' %}");
 
-         var overlay= $("#overlay");
+            var overlay= $("#overlay");
             var loader= $("#loader");
 
             function loadOn(){
@@ -1214,7 +1367,7 @@
 
             })
 
-         function start(refresh = false) {
+            function start(refresh = false) {
                 loadOn()
                 $.ajax({
                     url: '{% url "loans" %}',
@@ -1299,6 +1452,7 @@
                         success: function (data) {
                             loadOff()
                             notify(data.status, data.message)
+                            $('#WaiveModal').modal('close')
                             if(data.status === "success"){
                                 $('#mini_loan_history').html(data.content)
                                 start(true)
@@ -1314,6 +1468,76 @@
                     })
                 }
             })
+
+
+            $('.assign').click(function () {
+                loadOn()
+                $.ajax({
+                    url: '{% url "loans" %}',
+                    data: {
+                        action: 'fetch_assigned',
+                        loan_id: $('#selected_loan_id').val(),
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        if (data.status === "success") {
+                            $('#assign_body').html(data.content)
+                        }
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            })
+
+            $('body').on('change', '.assign_check', function (){
+                var collector_id = $(this).data('collector_id')
+                var clicked_elem = $(this)
+                var checked = ''
+                if($(this).prop('checked') === true){
+                    checked = 'add'
+                }else{
+                    checked = 'remove'
+                }
+                loadOn()
+                $.ajax({
+                    url: '{% url "loans" %}',
+                    data: {
+                        action: 'assign',
+                        loan_id: $('#selected_loan_id').val(),
+                        main_action: checked,
+                        collector_id: collector_id
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        notify(data.status, data.message)
+                        if (data.status === "success") {
+                            $('#assign_body').html(data.content)
+                        }
+                        if(data.status === "error" && checked === 'add'){
+                            clicked_elem.prop('checked', false)
+                        }else if(data.status === 'error' && checked === 'remove'){
+                            clicked_elem.prop('checked', true)
+                        }
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            })
+
 
 	        $("body").on('click', '.loan_actions', function(){
 	            var id= $(this).data('id');
@@ -1371,11 +1595,7 @@
                 var state = row.data('state');
                 var status_pill = row.data('status_pill');
                 var id = row.data('user_id');
-                var deposit_count = row.data('deposit_count');
-                var with_count = row.data('with_count');
-                var tf_count = row.data('tf_count');
-                var trade2_count = row.data('trade2_count');
-                var invest_count = row.data('invest_count');
+                var loan_id = row.data('loan_id');
 
                 $(".details_first_name").val(first_name).data('id', id);
                 $(".details_last_name").val(last_name).data('id', id);
@@ -1396,14 +1616,10 @@
                 $(".details_registered").text(created_at);
                 $(".details_current_user").text(id);
                 $(".details_text_username").text(last_name + ' ' + first_name + ' (' + id + ')');
-                $(".deposit_count").text(deposit_count);
-                $(".with_count").text(with_count);
-                $(".tf_count").text(tf_count);
-                $(".trade2_count").text(trade2_count);
-                $(".invest_count").text(invest_count);
 
 
                 $("#selected_user_id").val(id);
+                $("#selected_loan_id").val(loan_id);
 
                 {#RESET COUNTERS AND ELEMENTS#}
                 $('.count').text('0')
@@ -1503,6 +1719,53 @@
                 })
             })
 
+
+
+
+            $('.view_timeline').click(function (){
+                var user_id = $("#selected_user_id").val();
+                loadOn();
+                    $.ajax({
+                        url: '{% url "users" %}',
+                        data: {
+                            user_id: user_id,
+                            action: 'get_timeline'
+                        },
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (data) {
+                            loadOff()
+                            $('.show_timeline').html(data.content)
+                        },
+                        error: function (err1, err2) {
+                            loadOff()
+                            notify('error', JSON.stringify(err1))
+                        },
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                        }
+                    })
+            })
+
+            function updateCheckedList() {
+                const checkedValues = [];
+                $('.timeline_names:checked').each(function() {
+                    checkedValues.push($(this).val());
+                });
+                return checkedValues
+            }
+
+            $('.timeline_names').on('change', function (){
+                var names = updateCheckedList()
+                $('.timeline-item').each(function (){
+                    var name = $(this).data('name')
+                    if($.inArray(name, names) !== -1){
+                        $(this).fadeIn()
+                    }else{
+                        $(this).fadeOut()
+                    }
+                })
+            });
 
 
 

@@ -62,7 +62,6 @@ def users(request):
         posted_data[key] = value
     response = utils.UserUtils(request, **posted_data)
     response.process()
-    print(response.status)
     return JsonResponse({'status': response.status, 'content': response.content, 'message': response.message})
 
 
@@ -75,7 +74,6 @@ def loans(request):
         posted_data[key] = value
     response = utils.LoanUtils(request, **posted_data)
     response.process()
-    print(response.status)
     return JsonResponse({'status': response.status, 'content': response.content, 'message': response.message})
 
 

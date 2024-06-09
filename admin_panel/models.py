@@ -77,7 +77,7 @@ class Note(models.Model):
 
 class Collection(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
+    loan = models.OneToOneField(Loan, on_delete=models.CASCADE)
     amount_due = models.FloatField(max_length=15)
     amount_paid = models.FloatField(max_length=10, default=0)
     stage = models.CharField(default='', max_length=10)
@@ -102,7 +102,7 @@ class Repayment(models.Model):
     amount_due = models.FloatField(max_length=10, default=0)
     amount_paid_now = models.FloatField(max_length=10, default=0)
     total_paid = models.FloatField(max_length=10, default=0)
-    stage = models.IntegerField(default=0)
+    stage = models.CharField(max_length=10, default='A')
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(auto_now=True)
 
@@ -264,3 +264,14 @@ class Waive(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=10, default='pending')
+
+
+class Timeline(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    app_user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50, default='')
+    body = models.TextField(blank=True, null=True)
+    detail = models.CharField(max_length=100, default='', blank=True)
+    overdue_days = models.CharField(max_length=100, default='', blank=True)
+    # 'Overdue 10 Days', 'Due Day'
+    created_at = models.DateTimeField(default=timezone.now)

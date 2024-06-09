@@ -185,7 +185,7 @@
                                                             Actions</h5>
 
                                                         <div class="col mb-4 mt-3">
-                                                            <button type="button" class="btn btn-outline-primary px-5" id="waive_sbmt">
+                                                            <button type="button" class="btn btn-outline-primary px-5" id="waive">
                                                                 <i class="bx bx-check mr-1"></i>Approve Waive
                                                             </button>
                                                         </div>
@@ -1074,6 +1074,41 @@
 
 
 
+     <!--WAIVE MODAL	-->
+    <div id="WaiveModa" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light device_details_name">Waive Loan</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <input id="selected_loan" type="hidden">
+                    <div class="card">
+                        <div class="card-body">
+
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">&#x20A6;</span>
+                                <input type="number" class="form-control" placeholder="Amount to waive" aria-label="Amount (to the nearest naira)" id="waive_amount">
+                                <span class="input-group-text">.00</span>
+                            </div>
+                            <button class="btn btn-primary" id="waive_sbmt">
+                                {% if user.level == 'super admin' or user.level == 'approval admin' %}
+                                    Waive Now
+                                {% else %}
+                                    Submit waive request
+                                {% endif %}
+                            </button>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 
 
@@ -1200,17 +1235,19 @@
                 notify('error', 'Error generating link')
             })
 
-            $('#waive_sbmt').click(function () {
+
+            $('#waive').click(function () {
                 var waive_id = $('#selected_waive_id').val()
+                var id = $('#selected_loan').val()
                 loadOn();
                 $.ajax({
                     url: '{% url "loans" %}',
                     data: {
                         action: 'waive_loan',
-                        loan_id: id,
                         size: 'single',
                         user_id: $('#selected_user_id').val(),
-                        waive_id: waive_id
+                        waive_id: waive_id,
+                        loan_id: id
                     },
                     dataType: 'json',
                     type: 'post',
@@ -1230,6 +1267,45 @@
                         xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
                     }
                 })
+            })
+
+
+            $('#waive_sbmt').click(function (){
+                var id = $('#selected_loan').val()
+                var amount = $('#waive_amount').val()
+                if(amount === 0 || amount === ''){
+                    notify('warning', 'Please enter valid amount')
+                }else{
+                    loadOn();
+                    $.ajax({
+                        url: '{% url "loans" %}',
+                        data: {
+                            action: 'waive_loan',
+                            loan_id: id,
+                            size: 'single',
+                            user_id: $('#selected_user_id').val(),
+                            amount: amount
+                        },
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (data) {
+                            loadOff()
+                            notify(data.status, data.message)
+                            $('#WaiveModal').modal('close')
+                            if(data.status === "success"){
+                                $('#waive_history').html(data.content)
+                                start(true)
+                            }
+                        },
+                        error: function (err1, err2) {
+                            loadOff()
+                            notify('error', JSON.stringify(err1))
+                        },
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                        }
+                    })
+                }
             })
 
 
@@ -1290,6 +1366,7 @@
                 var status_pill = row.data('status_pill');
                 var id = row.data('user_id');
                 var waive_id = row.data('waive_id');
+                var loan_id = row.data('loan_id');
                 var waive_status = row.data('waive_status')
 
 
@@ -1314,13 +1391,14 @@
                 $(".details_text_username").text(last_name + ' ' + first_name + ' (' + id + ')');
 
                 if(waive_status === 'pending'){
-                    $('#waive_sbmt').attr('disabled', false).html('<i class="bx bx-check mr-1"></i>Approve Waive')
+                    $('#waive').attr('disabled', false).html('<i class="bx bx-check mr-1"></i>Approve Waive')
                 }else{
-                    $('#waive_sbmt').attr('disabled', true).html('<i class="bx bx-check-double mr-1"></i>Waive Approved')
+                    $('#waive').attr('disabled', true).html('<i class="bx bx-check-double mr-1"></i>Waive Approved')
                 }
 
 
                 $("#selected_user_id").val(id);
+                $('#selected_loan').val(loan_id)
                 $("#selected_waive_id").val(waive_id);
 
                 {#RESET COUNTERS AND ELEMENTS#}

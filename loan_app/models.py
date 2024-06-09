@@ -129,7 +129,7 @@ class Loan(models.Model):
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
     principal_amount = models.FloatField(max_length=10, default=0)
     amount_disbursed = models.FloatField(max_length=10, default=0)
-    # amount_loaned = principal amount - interest
+    # amount_disbursed = principal amount - interest
     amount_due = models.FloatField(max_length=10, default=0)
     # amount_due = principal amount (overdue charges will accumulate here too)
     amount_paid = models.FloatField(max_length=10, default=0)
