@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'admin_panel',
-    'loan_app'
+    'loan_app',
+    'project_pack'
 ]
 
 MIDDLEWARE = [
@@ -82,6 +83,7 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
 
 
 # Password validation
@@ -139,3 +141,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'admin_panel.User'
 
 LOGIN_URL = '/'
+

@@ -1,0 +1,1506 @@
+{% extends "admin_panel/layout.html" %}
+{% load static %}
+
+{% block title %}
+    <title>Operators - APP_NAME</title>
+{% endblock %}
+
+{% block search_block %}
+
+
+{% endblock %}
+
+{% block content %}
+    <style>
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+            list-style: none;
+        }
+
+        .timeline:before {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 40px;
+            width: 2px;
+            content: "";
+            background-color: #dee2e6;
+        }
+
+        .timeline > .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding-left: 60px;
+        }
+
+        .timeline > .timeline-item:before {
+            position: absolute;
+            left: 30px;
+            top: 0;
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #fff;
+            border: 5px solid #0D6EFD;
+            content: "";
+        }
+
+        .timeline > .timeline-item .timeline-content {
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: .25rem;
+        }
+    </style>
+
+    <!--start page wrapper -->
+    <div class="page-wrapper">
+        <div class="page-content">
+
+            <!--end row-->
+
+            <div class="card radius-10">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="mb-0">All Operators</h5>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="form-check-label fw-bold mb-0" for="flexRadioDefault1">
+                                    Stage:
+                                </label>
+                                <div class="form-check form-check-primary mb-0">
+                                    <input class="form-check-input stage" type="radio" name="cda_stage"
+                                           value="S-1,S0,S1,S2,S3,S4,M1,A" checked>
+                                    <label class="form-check-label mb-0" for="flexRadioSuccess">
+                                        All
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-primary mb-0">
+                                    <input class="form-check-input stage" type="radio" name="cda_stage" value="S-1">
+                                    <label class="form-check-label mb-0" for="flexRadioDanger">
+                                        S-1 (-1)
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-primary mb-0">
+                                    <input class="form-check-input stage" type="radio" name="cda_stage" value="S0">
+                                    <label class="form-check-label mb-0" for="flexRadioWarning">
+                                        S0 (0)
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-primary mb-0">
+                                    <input class="form-check-input stage" type="radio" name="cda_stage" value="S1">
+                                    <label class="form-check-label mb-0" for="flexRadioDark">
+                                        S1 (1-3)
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-primary mb-0">
+                                    <input class="form-check-input stage" type="radio" name="cda_stage" value="S2">
+                                    <label class="form-check-label mb-0" for="flexRadioDark">
+                                        S2 (4-7)
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-primary mb-0">
+                                    <input class="form-check-input stage" type="radio" name="cda_stage" value="S3">
+                                    <label class="form-check-label mb-0" for="flexRadioDark">
+                                        S3 (8-15)
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-primary mb-0">
+                                    <input class="form-check-input stage" type="radio" name="cda_stage" value="S4">
+                                    <label class="form-check-label mb-0" for="flexRadioDark">
+                                        S4 (16-30)
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-primary mb-0">
+                                    <input class="form-check-input stage" type="radio" name="cda_stage" value="M1">
+                                    <label class="form-check-label mb-0" for="flexRadioDark">
+                                        M1 (31+)
+                                    </label>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary btn-outline-dark ms-5" data-bs-toggle='modal'
+                                    data-bs-target='#addModal'>Add Operator
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr/>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0" id="operators_table">
+                            <thead class="table-light">
+                            <tr>
+                                <th>S/N</th>
+                                <th>Name</th>
+                                <th>Stage</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                            </tr>
+                            </thead>
+                            <tbody id="operators_history" style="padding-bottom: 4em !important">
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--end page wrapper -->
+    <input type="hidden" id="selected_user_id">
+
+
+
+
+    <div id="operatorModal" tabindex="-1" class="modal fade show" style="display: none; " aria-modal="true"
+         role="dialog">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Operator Profile</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"
+                            id="close_user"></button>
+                </div>
+
+
+                <div class="modal-body">
+                    <div id="user-modal"></div>
+
+
+                    <div class="page-content">
+                        <router-outlet></router-outlet>
+                        <app-user-profile>
+                            <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
+                                <div class="ps-3">
+                                    <nav aria-label="breadcrumb">
+                                        <ol class="breadcrumb mb-0 p-0">
+                                            <li class="breadcrumb-item"><a href="#"><i class="bx bx-home-alt"></i></a>
+                                            </li>
+                                            <li aria-current="page" class="breadcrumb-item active">Account: <span
+                                                    class="details_text_username">John Doe</span></li>
+                                        </ol>
+                                    </nav>
+                                </div>
+
+                                <!---------------TOP ACTIONS------------------->
+                                <div class="ms-auto">
+                                    <div class="btn-group">
+                                        <button data-bs-toggle="dropdown" type="button" class="btn btn-primary">More
+                                            Actions
+                                        </button>
+                                        <button type="button" data-bs-toggle="dropdown"
+                                                class="btn btn-primary split-bg-primary dropdown-toggle dropdown-toggle-split">
+                                            <span class="visually-hidden">Toggle Dropdown</span></button>
+                                        <div class="dropdown-menu dropdown-menu-right dropdown-menu-lg-end">
+
+                                            <a href="#" class="dropdown-item view_timeline text-info-emphasis"
+                                               data-bs-toggle='modal' data-bs-target='#TimelineModal'><i
+                                                    class="lni lni-video"></i> Timeline</a>
+
+
+                                            <div class="dropdown-divider"></div>
+
+
+                                            <a href="#0" class="dropdown-item text-primary can_collect"
+                                               style="font-weight: bold"><i class="lni lni-link"></i> Set/Unset
+                                                Collector</a>
+
+
+                                            <div class="dropdown-divider"></div>
+                                            <a href="#0" class="dropdown-item text-warning"
+                                               style="font-weight: bold" data-bs-toggle='modal'
+                                               data-bs-target='#modifyModal'><i class="lni lni-ban"></i>
+                                                Modify Account</a>
+                                            <a href="#0" class="dropdown-item" style="color: red; font-weight: bold"
+                                               data-bs-toggle='modal' data-bs-target='#EraseModal'><i
+                                                    class="lni lni-trash"></i> Delete Account</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                            <div class="container">
+                                <div class="main-body">
+                                    <div class="row">
+                                        <div class="col-lg-4">
+                                            <div class="card">
+                                                <div class="card-body">
+
+
+                                                    <!--------------------AVATAR AND USER NAMES---------------------->
+                                                    <div class="d-flex flex-column align-items-center text-center">
+                                                        <img src="{% static 'admin_panel/images/avatars/user.png' %}"
+                                                             alt="Admin" width="110"
+                                                             class="rounded-circle p-1 bg-primary details_avatar">
+                                                        <div class="mt-3">
+                                                            <h4 class="details_fullname"></h4>
+                                                            <p class="mb-1 details_status_show"
+                                                               style="text-transform: capitalize; font-weight: bold">
+                                                                <span class='badge rounded-pill'>AA</span></p>
+                                                            <p class="font-size-sm fw-bold">Registered: <span
+                                                                    class="details_registered"></span></p>
+
+                                                            <button type="button" class="btn btn-dark view_note"
+                                                                    data-bs-toggle='modal' data-bs-target='#NoteModal'>
+                                                                <i class="fadeIn animated bx bx-note"></i> Notes <span
+                                                                    class="badge bg-secondary notes_count count">0</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr class="my-4">
+
+
+                                                    <!--------------------MINI TRANSACTION HISTORY---------------------->
+                                                    <div class="d-flex flex-column align-items-center text-center">
+                                                        <h5 style="font-size:1.2em; font-weight: bold">Quick
+                                                            Actions</h5>
+
+                                                        <div class="col mb-4 mt-3">
+                                                            <button type="button" class="btn btn-outline-primary px-5">
+                                                                <i class="bx bx-user mr-1"></i>Check Eligibility
+                                                            </button>
+                                                        </div>
+
+                                                        <div class="col">
+                                                            <div class="btn-group" role="group"
+                                                                 aria-label="Basic example">
+                                                                <button type="button"
+                                                                        class="btn btn-outline-primary device_details"
+                                                                        data-bs-toggle='modal'
+                                                                        data-bs-target='#deviceDetailsModal'
+                                                                        data-action="contacts" data-name="Contacts">
+                                                                    Contacts
+                                                                </button>
+
+                                                                <button type="button"
+                                                                        class="btn btn-outline-primary device_details"
+                                                                        data-bs-toggle='modal'
+                                                                        data-bs-target='#deviceDetailsModal'
+                                                                        data-action="sms_log" data-name="SMS Log">SMS
+                                                                    Log
+                                                                </button>
+
+                                                                <button type="button"
+                                                                        class="btn btn-outline-primary device_details"
+                                                                        data-bs-toggle='modal'
+                                                                        data-bs-target='#deviceDetailsModal'
+                                                                        data-action="call_log" data-name="Call Log">Call
+                                                                    Log
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+
+                                                    </div>
+
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+                                        <!--------------------MAIN PROFILE---------------------->
+                                        <style>
+                                            .nav-tabs {
+                                                display: flex;
+                                                width: 100%;
+                                                overflow-x: auto; /* Enable horizontal scrolling if necessary */
+                                                white-space: nowrap; /* Prevent line breaks */
+                                            }
+
+                                            .nav-item {
+                                                flex: 1;
+                                                min-width: 0; /* Allow items to shrink */
+                                            }
+                                        </style>
+
+                                        <div class="col-lg-8">
+
+                                            {# --------------------SELECTED USER PROFILE AND OTHER INFO ---------------------------------#}
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <ul class="nav nav-tabs nav-primary py-2" role="tablist">
+                                                        <li class="nav-item" role="presentation">
+                                                            <a class="nav-link active" data-bs-toggle="tab"
+                                                               href="#loansTab" role="tab" aria-selected="true">
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="tab-icon"><i
+                                                                            class="bx bx-user font-18 me-1"></i>
+                                                                    </div>
+                                                                    <div class="tab-title">Assigned Loans <span
+                                                                            class="badge bg-primary loans_count count">0</span>
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+                                                        </li>
+
+                                                        <li class="nav-item" role="presentation">
+                                                            <a class="nav-link" data-bs-toggle="tab"
+                                                               href="#repaymentsTab"
+                                                               role="tab" aria-selected="false" tabindex="-1">
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="tab-icon"><i
+                                                                            class="bx bxs-bank font-18 me-1"></i>
+                                                                    </div>
+                                                                    <div class="tab-title">Repayments <span
+                                                                            class="badge bg-primary repayments_count count">0</span>
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+
+
+                                                    {#       -------------------------  CONTACT INFO ----------------------#}
+                                                    <div class="tab-content py-3">
+                                                        <div class="tab-pane fade active show" id="loansTab"
+                                                             role="tabpanel">
+
+                                                            <div class="table-responsive">
+                                                                <table class="table align-middle mb-5" id="loan_table">
+                                                                    <thead class="table-light">
+                                                                    <tr>
+                                                                        <th>LID <i class="bx bx-info-circle"
+                                                                                   data-toggle="tooltip"
+                                                                                   data-placement="top"
+                                                                                   title="Loan ID"></i></th>
+                                                                        <th>User</th>
+                                                                        <th>PA <i class="bx bx-info-circle"
+                                                                                  data-toggle="tooltip"
+                                                                                  data-placement="top"
+                                                                                  title="Principal Amount"></i></th>
+                                                                        <th>DA <i class="bx bx-info-circle"
+                                                                                  data-toggle="tooltip"
+                                                                                  data-placement="top"
+                                                                                  title="Disbursed Amount"></i></th>
+                                                                        <th>Due <i class="bx bx-info-circle"
+                                                                                   data-toggle="tooltip"
+                                                                                   data-placement="top"
+                                                                                   title="Amount Due"></i></th>
+                                                                        <th>Repaid <i class="bx bx-info-circle"
+                                                                                      data-toggle="tooltip"
+                                                                                      data-placement="top"
+                                                                                      title="Total Repaid so far"></i>
+                                                                        </th>
+                                                                        <th>Disb Date <i class="bx bx-info-circle"
+                                                                                         data-toggle="tooltip"
+                                                                                         data-placement="top"
+                                                                                         title="Disburse Date"></i></th>
+                                                                        <th>Due Date <i class="bx bx-info-circle"
+                                                                                        data-toggle="tooltip"
+                                                                                        data-placement="top"
+                                                                                        title="Due Date"></i></th>
+                                                                        <th>Overdue Days</th>
+                                                                        <th>Status</th>
+                                                                        <th>Action</th>
+                                                                    </tr>
+                                                                    </thead>
+                                                                    <tbody id="loan_history"
+                                                                           style="padding-bottom: 4em !important">
+
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+
+                                                        </div>
+
+
+                                                        {#       -------------------------  BANK DETAILS ----------------------#}
+
+                                                        <div class="tab-pane fade" id="repaymentsTab" role="tabpanel">
+
+                                                            <div class="table-responsive">
+                                                                <table class="table align-middle mb-5"
+                                                                       id="repayment_table">
+                                                                    <thead class="table-light">
+                                                                    <tr>
+                                                                        <th>LID <i class="bx bx-info-circle"
+                                                                                   data-toggle="tooltip"
+                                                                                   data-placement="top"
+                                                                                   title="Loan ID"></i></th>
+                                                                        <th>User</th>
+                                                                        <th>PA <i class="bx bx-info-circle"
+                                                                                  data-toggle="tooltip"
+                                                                                  data-placement="top"
+                                                                                  title="Principal Amount"></i></th>
+                                                                        <th>Due <i class="bx bx-info-circle"
+                                                                                   data-toggle="tooltip"
+                                                                                   data-placement="top"
+                                                                                   title="Amount Due"></i></th>
+                                                                        <th>Paid</th>
+                                                                        <th>Stage <i class="bx bx-info-circle"
+                                                                                     data-toggle="tooltip"
+                                                                                     data-placement="top"
+                                                                                     title="Stage at repayment"></i>
+                                                                        </th>
+                                                                        <th>Repaid <i class="bx bx-info-circle"
+                                                                                      data-toggle="tooltip"
+                                                                                      data-placement="top"
+                                                                                      title="Total repaid so far"></i>
+                                                                        </th>
+                                                                        <th>Status</th>
+                                                                        <th>Date <i class="bx bx-info-circle"
+                                                                                    data-toggle="tooltip"
+                                                                                    data-placement="top"
+                                                                                    title="Date Paid"></i></th>
+                                                                    </tr>
+                                                                    </thead>
+                                                                    <tbody id="repayment_history"
+                                                                           style="padding-bottom: 4em !important">
+
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+
+
+                                                        </div>
+
+
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <div class="card">
+
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+                                </div>
+                            </div>
+
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+    <!--CLEAR AGENT LOGS	-->
+    <div id="ClearLogsModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light">Clear Agent Logs</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body text-white"><p>This action will clear all logs for <b class="agent_name"></b>.
+                </p>
+                    <p><b>Operation can not be undone.</b> Proceed?</p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" data-bs-dismiss="modal" class="btn btn-light">Close</button>
+                    <button data-bs-dismiss="modal" type="button" class="btn btn-dark top_actions"
+                            data-action="clear_logs">Yes, clear!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+    <!--ERASE AGENT DIALOG	-->
+    <div id="EraseModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-danger">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light">Remove Agent</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body text-white"><p>You are about to delete the operator <b class="agent_name"></b>. </p>
+                    <p>All information/privileges associated/assigned to this operator's profile will be permanently
+                        deleted/reversed. <b>This operation can not be undone.</b> Proceed?</p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" data-bs-dismiss="modal" class="btn btn-light">Close</button>
+                    <button data-bs-dismiss="modal" type="button" class="btn btn-dark delete_operator">
+                        Yes, remove!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <!--ASSIGN MODAL-->
+
+    <div id="privilegeModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light">Set <b class="agent_name"></b>'s Privileges</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <div class="card">
+                        <div class="card-body">
+                            <table class="table mb-0">
+                                <thead class="table-primary">
+                                <tr>
+                                    <th scope="col">Privileges</th>
+                                    <th scope="col">Allow</th>
+                                </tr>
+                                </thead>
+                                <tbody id="privs_body">
+
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!--ADD MODAL-->
+
+    <div id="addModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light"> Add New Account</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <div class="card">
+                        <div class="card-body p-4">
+                            <form class="row g-3" id="addForm">
+                                <div class="col-md-6">
+                                    <label for="input1" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="add_fname" placeholder="First Name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="input2" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="add_lname" placeholder="Last Name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="input3" class="form-label">Login Phone</label>
+                                    <input type="tel" class="form-control" id="add_phone" placeholder="Phone">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="input5" class="form-label">Login Password</label>
+                                    <input type="text" class="form-control" id="add_pass" placeholder="unmasked*">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="input3" class="form-label">Role</label>
+                                    <select class="form-control select" id="add_level">
+                                        <option value="" disabled selected>--select here--</option>
+                                        {% if user.level == 'super admin' %}
+                                            <option value="super admin">Super Admin</option>{% endif %}
+                                        <option value="admin">Admin</option>
+                                        <option value="approval admin">Approval Admin</option>
+                                        <option value="team leader">Team Leader</option>
+                                        <option value="staff">Staff</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="input3" class="form-label">Stage</label>
+                                    <select class="form-control select" id="add_stage" disabled>
+                                        <option value="" disabled selected>--select here--</option>
+                                        <option value="S-1">S-1</option>
+                                        <option value="S0">S0</option>
+                                        <option value="S1">S1</option>
+                                        <option value="S2">S2</option>
+                                        <option value="S3">S3</option>
+                                        <option value="S4">S4</option>
+                                        <option value="M1">M1</option>
+                                    </select>
+                                    <span class="text-danger" style="display: none"
+                                          id="add_stage_alert">not applicable</span>
+                                </div>
+
+
+                                <div class="col-md-12">
+                                    <div class="d-md-flex d-grid align-items-end gap-3">
+                                        <button type="button" class="btn btn-primary px-4" id="add_sbmt">Submit</button>
+                                        <button type="button" class="btn btn-light px-4" onclick="add_reset()">Reset
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!--MODIFY MODAL-->
+
+    <div id="modifyModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light"> Modify Account</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <div class="card">
+                        <div class="card-body p-4">
+                            <form class="row g-3" id="modifyForm">
+                                <div class="col-md-6">
+                                    <label for="input1" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="modify_fname" placeholder="First Name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="input2" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="modify_lname" placeholder="Last Name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="input3" class="form-label">Login Phone</label>
+                                    <input type="tel" class="form-control" id="modify_phone" placeholder="Phone">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="input5" class="form-label">Login Password</label>
+                                    <input type="text" class="form-control" id="modify_pass"
+                                           placeholder="leave empty to remain unchanged">
+                                </div>
+
+
+                                <div class="col-md-6">
+                                    <label for="input3" class="form-label">Role</label>
+                                    <select class="form-control select" id="modify_level" disabled="">
+                                        <option value="">--select here--</option>
+                                        {% if user.level == 'super admin' %}
+                                            <option value="super admin">Super Admin</option>{% endif %}
+                                        <option value="admin">Admin</option>
+                                        <option value="approval admin">Approval Admin</option>
+                                        <option value="team leader">Team Leader</option>
+                                        <option value="staff">Staff</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="input3" class="form-label">Stage</label>
+                                    <select class="form-control select" id="modify_stage" disabled="">
+                                        <option value="">--select here--</option>
+                                        <option value="S-1">S-1</option>
+                                        <option value="S0">S0</option>
+                                        <option value="S1">S1</option>
+                                        <option value="S2">S2</option>
+                                        <option value="S3">S3</option>
+                                        <option value="S4">S4</option>
+                                        <option value="M1">M1</option>
+                                    </select>
+                                </div>
+
+
+                                <div class="col-md-12">
+                                    <div class="d-md-flex d-grid align-items-end gap-3">
+                                        <button type="button" class="btn btn-primary px-4" id="modify_sbmt">Submit
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!--WAIVE MODAL	-->
+    <div id="WaiveModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light device_details_name">Waive Loan</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <input id="selected_loan" type="hidden">
+                    <div class="card">
+                        <div class="card-body">
+
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">&#x20A6;</span>
+                                <input type="number" class="form-control" placeholder="Amount to waive"
+                                       aria-label="Amount (to the nearest naira)" id="waive_amount">
+                                <span class="input-group-text">.00</span>
+                            </div>
+                            <button class="btn btn-primary" id="waive_sbmt">
+                                {% if user.level == 'super admin' or user.level == 'approval admin' %}
+                                    Waive Now
+                                {% else %}
+                                    Submit waive request
+                                {% endif %}
+                            </button>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!--TIMELINE MODAL	-->
+    <div id="TimelineModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light">Operator's Timelines</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3 mb-4">
+                                <div class="form-check form-check-primary ms-4">
+                                    <input class="form-check-input timeline_names" type="checkbox" value="transfer"
+                                           id="flexCheckCheckedSuccess" checked="">
+                                    <label class="form-check-label" for="flexCheckCheckedSuccess">
+                                        Transfer
+                                    </label>
+                                </div>
+
+                                <div class="form-check form-check-primary">
+                                    <input class="form-check-input timeline_names" type="checkbox" value="manual assign"
+                                           id="flexCheckCheckedDanger" checked="">
+                                    <label class="form-check-label" for="flexCheckCheckedDanger">
+                                        Manual Assign
+                                    </label>
+                                </div>
+
+                                <div class="form-check form-check-primary">
+                                    <input class="form-check-input timeline_names" type="checkbox"
+                                           value="collection record" id="flexCheckCheckedDanger" checked="">
+                                    <label class="form-check-label" for="flexCheckCheckedDanger">
+                                        Collection Record
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-primary">
+                                    <input class="form-check-input timeline_names" type="checkbox" value="repayment"
+                                           id="flexCheckCheckedWarning" checked="">
+                                    <label class="form-check-label" for="flexCheckCheckedWarning">
+                                        Repayment
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-primary">
+                                    <input class="form-check-input timeline_names" type="checkbox" value="disbursement"
+                                           id="flexCheckCheckedDark" checked="">
+                                    <label class="form-check-label" for="flexCheckCheckedDark">
+                                        Disbursement
+                                    </label>
+                                </div>
+
+
+                            </div>
+                            <ul class="timeline show_timeline">
+
+
+                            </ul>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <script>
+        const success_audio = new Audio("{% static 'admin_panel/audio/correct.mp3' %}");
+        const error_audio = new Audio("{% static 'admin_panel/audio/wrong.mp3' %}");
+
+
+        var overlay = $("#overlay");
+        var loader = $("#loader");
+        var loader_trans = $("#loader-trans");
+
+        function loadOn() {
+            overlay.css('display', 'block');
+            loader.css('display', 'block');
+        }
+
+        function onProgress(elem) {
+            $('#' + elem).addClass('thin-loader')
+        }
+
+        function offProgress(elem) {
+            $('#' + elem).removeClass('thin-loader')
+        }
+
+        function loadOff() {
+            overlay.css('display', 'none');
+            loader.css('display', 'none');
+        }
+
+        function notify(status, message) {
+            if (status === "success" || status === "info") {
+                success_audio.play();
+            } else {
+                error_audio.play();
+            }
+            toastr[status](message)
+        }
+
+
+        function start(refresh = false) {
+            var stage = $('input[name="cda_stage"]:checked').val();
+            loadOn()
+            $.ajax({
+                url: "{% url 'operators' %}",
+                type: "POST",
+                data: {
+                    action: 'fetch_operators',
+                    stage: stage
+                },
+                dataType: "json",
+                success: function (data) {
+                    loadOff()
+                    if (refresh) {
+                        $('#operators_table').DataTable().destroy()
+                    }
+                    setTimeout(function () {
+                        $("#operators_history").html(data.content);
+                        var operators_table = $('#operators_table').DataTable({
+                            lengthChange: false,
+                            pageLength: 15,
+                            buttons: ['copy', 'excel', 'pdf', 'print']
+                        });
+                        operators_table.buttons().container().appendTo('#loan_history_wrapper .col-md-6:eq(0)');
+
+                    }, 10)
+                },
+                error: function (jqXHR, errorThrown) {
+                    loadOff()
+                    notify('error', 'An error occurred. Page will be refreshed in 3s')
+                    setTimeout(function () {
+                        {#window.location.update()#}
+                    }, 3000)
+                },
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                }
+            })
+        }
+
+        $('.stage').change(function () {
+            start(true)
+        })
+
+
+        {#For Add Account#}
+        $('#add_level').change(function () {
+            var level = $(this).val()
+            if (level !== 'team leader' && level !== 'staff') {
+                $('#add_stage').attr('disabled', true).val('').change()
+                $('#add_stage_alert').show()
+            } else {
+                $('#add_stage').attr('disabled', false)
+                $('#add_stage_alert').hide()
+            }
+        })
+
+        function add_reset() {
+            $('#addForm input').each(function () {
+                $(this).val('')
+            })
+            $('#addForm select').each(function () {
+                $(this).val('').change()
+                $('#add_stage_alert').hide()
+            })
+        }
+
+        $('#add_sbmt').click(function () {
+            var first_name = $('#add_fname').val()
+            var last_name = $('#add_lname').val()
+            var phone = $('#add_phone').val()
+            var password = $('#add_pass').val()
+            var level = $('#add_level').val()
+            var stage = $('#add_stage').val()
+            if (first_name === "" || last_name === "" || phone === "" || password === "" || level === "" || stage === "") {
+                notify('warning', 'All fields are required')
+            } else {
+                loadOn();
+                $.ajax({
+                    url: '{% url "operators" %}',
+                    data: {
+                        action: 'add_account',
+                        first_name: first_name,
+                        last_name: last_name,
+                        phone: phone,
+                        password: password,
+                        level: level,
+                        stage: stage
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        notify('success', data.message)
+                        add_reset()
+                        $('#addModal').modal('hide')
+                        start(true)
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            }
+        })
+
+        $('#modify_sbmt').click(function () {
+            var first_name = $('#modify_fname').val()
+            var last_name = $('#modify_lname').val()
+            var phone = $('#modify_phone').val()
+            var password = $('#modify_pass').val()
+            if (first_name === "" || last_name === "" || phone === "") {
+                notify('warning', 'All fields are required')
+            } else {
+                loadOn();
+                $.ajax({
+                    url: '{% url "operators" %}',
+                    data: {
+                        action: 'modify_account',
+                        first_name: first_name,
+                        last_name: last_name,
+                        phone: phone,
+                        password: password,
+                        user_id: $("#selected_user_id").val()
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        notify('success', data.message)
+                        add_reset()
+                        $('#modifyModal').modal('hide')
+                        start(true)
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            }
+        })
+
+
+        {#Can collect#}
+        $('.can_collect').click(function () {
+            loadOn();
+            $.ajax({
+                url: '{% url "operators" %}',
+                data: {
+                    action: 'can_collect',
+                    user_id: $("#selected_user_id").val()
+                },
+                dataType: 'json',
+                type: 'post',
+                success: function (data) {
+                    loadOff()
+                    notify(data.status, data.message)
+                    $('#operatorModal').modal('hide')
+                    start(true)
+                },
+                error: function (err1, err2) {
+                    loadOff()
+                    notify('error', JSON.stringify(err1))
+                },
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                }
+            })
+        })
+
+    </script>
+
+
+
+    <script>
+        $(function () {
+            start(false)
+
+            $('body').on('click', '.user_trs', function () {
+                var row = $(this);
+                var first_name = row.data('first_name');
+                var last_name = row.data('last_name');
+                var phone = row.data('phone');
+                var level = row.data('level');
+                var stage = row.data('stage');
+                var avatar = row.data('avatar');
+                var created_at = row.data('created_at');
+                var id = row.data('id');
+                var status_pill = row.data('status_pill');
+
+
+                $(".details_status_show").html(status_pill);
+                $(".details_avatar").attr('src', avatar);
+                $(".details_registered").text(created_at);
+                $(".details_text_username").text(first_name + ' ' + last_name + ' (' + id + ')');
+                $('#modify_fname').val(first_name)
+                $('#modify_lname').val(last_name)
+                $('#modify_phone').val(phone)
+                $('#modify_level').val(level).change()
+                $('#modify_stage').val(stage).change()
+
+                $("#selected_user_id").val(id);
+                $('.agent_name').text(first_name)
+
+                {#RESET COUNTERS AND ELEMENTS#}
+                $('.count').text('0')
+                $('#show_notes').html('')
+
+                onProgress('user-modal')
+
+                // HANDLE OTHER DETAILS FETCH
+                setTimeout(function () {
+                    $.ajax({
+                        url: "{% url 'operators' %}",
+                        dataType: "json",
+                        type: "POST",
+                        async: false,
+                        data: {
+                            id: id,
+                            action: 'operator_details'
+                        },
+                        success: function (data) {
+                            offProgress('user-modal')
+                            if ($('#selected_user_id').val() !== '') {
+                                $('#loan_table').DataTable().destroy()
+                                $('#repayment_table').DataTable().destroy()
+                            }
+                            setTimeout(function () {
+                                $("#loan_history").html(data.content['loans']);
+                                $("#repayment_history").html(data.content['repayments']);
+                                $('.loans_count').text(data.content['loans_count'])
+                                $('.repayments_count').text(data.content['repayments_count'])
+                                $('.notes_count').text(data.content['notes_count'])
+                                var loan_table = $('#loan_table').DataTable({
+                                    lengthChange: false,
+                                    pageLength: 15,
+                                    buttons: ['copy', 'excel', 'pdf', 'print']
+                                });
+                                loan_table.buttons().container().appendTo('#loan_history_wrapper .col-md-6:eq(0)');
+
+                                var repayment_table = $('#repayment_table').DataTable({
+                                    lengthChange: false,
+                                    pageLength: 15,
+                                    buttons: ['copy', 'excel', 'pdf', 'print']
+                                });
+                                repayment_table.buttons().container().appendTo('#loan_history_wrapper .col-md-6:eq(0)');
+                            }, 10)
+                        },
+                        error: function () {
+                            offProgress('user-modal')
+                            notify('error', 'Fetch failed, Retry')
+                        },
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                        }
+                    })
+
+                }, 1100)
+
+
+            })
+
+
+            $('body').on('click', '.top_actions', function () {
+                var action = $(this).data('action');
+                loadOn();
+                $.post('', {
+                    top_actions: "set",
+                    username: $("#selected_user_id").val(),
+                    action: action
+                }, function (data, status) {
+                    loadOff();
+                    if (data.err === 0) {
+                        notify('success', data.msg)
+                        start(refresh = true)
+                        if (action === "erase") {
+                            $("#close_user").trigger('click');
+                            notify('info', 'Please refresh page to update balances')
+                        }
+                    } else {
+                        notify('error', data.msg)
+                    }
+                }, "JSON")
+            })
+
+
+            // LOANS BLOCK
+            $(".view_loan_history").click(function () {
+                var user_id = $("#selected_user_id").val();
+                loadOn();
+                $.ajax({
+                    url: '{% url "loans" %}',
+                    data: {
+                        user_id: user_id,
+                        action: 'fetch_loans'
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        $('#loan_history').html(data.content)
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            })
+
+
+            $("body").on('click', '.loan_actions', function () {
+                var id = $(this).data('id');
+                var user_id = $(this).data('user_id');
+                var action = $(this).data('action');
+                var size = $(this).data('size');
+                loadOn();
+
+                $.ajax({
+                    url: '{% url "loans" %}',
+                    data: {
+                        action: 'status_update',
+                        loan_id: id,
+                        main_action: action,
+                        size: size,
+                        user_id: user_id
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        $('#loan_history').html(data.content)
+                        notify(data.status, data.message)
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            })
+
+
+            {#TIMELINE#}
+            $('.view_timeline').click(function () {
+                var user_id = $("#selected_user_id").val();
+                loadOn();
+                $.ajax({
+                    url: '{% url "operators" %}',
+                    data: {
+                        user_id: user_id,
+                        action: 'get_timeline'
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        $('.show_timeline').html(data.content)
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            })
+
+            function updateCheckedList() {
+                const checkedValues = [];
+                $('.timeline_names:checked').each(function () {
+                    checkedValues.push($(this).val());
+                });
+                return checkedValues
+            }
+
+            $('.timeline_names').on('change', function () {
+                var names = updateCheckedList()
+                $('.timeline-item').each(function () {
+                    var name = $(this).data('name')
+                    if ($.inArray(name, names) !== -1) {
+                        $(this).fadeIn()
+                    } else {
+                        $(this).fadeOut()
+                    }
+                })
+            });
+
+
+            // NOTE BLOCK
+            $("#add_note").click(function () {
+                var user_id = $("#selected_user_id").val();
+                var input = $("#note_input").val();
+                if (input === "") {
+                    toastr["warning"]('Input cannot be empty');
+                } else {
+                    loadOn();
+                    $.ajax({
+                        url: '{% url "users" %}',
+                        data: {
+                            note: input,
+                            user_id: user_id,
+                            action: 'add_note'
+                        },
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (data) {
+                            loadOff()
+                            $('#note_input').val('')
+                            $('#show_notes').html(data.content)
+                            notify(data.status, data.message)
+                        },
+                        error: function (err1, err2) {
+                            loadOff()
+                            notify('error', JSON.stringify(err1))
+                        },
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                        }
+                    })
+                }
+            })
+
+
+            $("body").on('click', '.delete_note', function () {
+                var user_id = $("#selected_user_id").val();
+                var id = $(this).data('id');
+                loadOn()
+                $.ajax({
+                    url: '{% url "users" %}',
+                    data: {
+                        note_id: id,
+                        user_id: user_id,
+                        action: 'delete_note'
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        $('#show_notes').html(data.content)
+                        notify(data.status, data.message)
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            })
+
+
+            $("body").on('blur', '.old_note', function () {
+                var user_id = $("#selected_user_id").val();
+                var id = $(this).data('id');
+                var input = $(this).val();
+                if (input !== "") {
+                    $.ajax({
+                        url: '{% url "users" %}',
+                        data: {
+                            note: input,
+                            user_id: user_id,
+                            action: 'modify_note',
+                            note_id: id
+                        },
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (data) {
+                            loadOff()
+                            notify(data.status, data.message)
+                        },
+                        error: function (err1, err2) {
+                            loadOff()
+                            notify('error', JSON.stringify(err1))
+                        },
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                        }
+                    })
+                } else {
+                    toastr["error"]("Input cannot be empty. Note was not saved");
+                }
+            })
+
+
+            {#Waive#}
+            $('body').on('click', '.waive', function () {
+                var id = $(this).data('id')
+                $('#selected_loan').val(id)
+            })
+
+            $('#waive_sbmt').click(function () {
+                var id = $('#selected_loan').val()
+                var amount = $('#waive_amount').val()
+                if (amount === 0 || amount === '') {
+                    notify('warning', 'Please enter valid amount')
+                } else {
+                    loadOn();
+                    $.ajax({
+                        url: '{% url "loans" %}',
+                        data: {
+                            action: 'waive_loan',
+                            loan_id: id,
+                            size: 'single',
+                            user_id: $('#selected_user_id').val(),
+                            amount: amount
+                        },
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (data) {
+                            loadOff()
+                            notify(data.status, data.message)
+                            $('#WaiveModal').modal('close')
+                            if (data.status === "success") {
+                                $('#mini_loan_history').html(data.content)
+                                start(true)
+                            }
+                        },
+                        error: function (err1, err2) {
+                            loadOff()
+                            notify('error', JSON.stringify(err1))
+                        },
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                        }
+                    })
+                }
+            })
+
+
+            // ASSIGN
+            $(".assign").click(function () {
+                var username = $("#selected_user_id").val();
+                $("#assign_body").html('<tr colspan=3><td style="font-weight: bold">Loading agents ...</td></tr>');
+                $.post('', {
+                    assign: "set",
+                    username: username
+                }, function (data, status) {
+                    $("#assign_body").html(data);
+                })
+            })
+
+
+            $("body").on('change', '.assign_check', function () {
+                var username = $("#selected_user_id").val();
+                var agent_id = $(this).data('agent_id');
+                $.post('', {
+                    assign_check: "set",
+                    username: username,
+                    agent_id: agent_id
+                }, function (data, status) {
+                    $("#assign_body").html(data);
+                    notify('success', 'Action success!');
+                })
+            })
+
+
+            {#DELETE OPERATOR#}
+            $('.delete_operator').click(function (){
+                loadOn();
+                    $.ajax({
+                        url: '{% url "operators" %}',
+                        data: {
+                            action: 'delete_operator',
+                            user_id: $("#selected_user_id").val()
+                        },
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (data) {
+                            loadOff()
+                            notify('success', data.message)
+                            $('#operatorModal').modal('hide')
+                            start(true)
+                        },
+                        error: function (err1, err2) {
+                            loadOff()
+                            notify('error', JSON.stringify(err1))
+                        },
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                        }
+                    })
+            })
+
+
+
+
+            $('body').on('mouseover', '.user_trs', function () {
+                $(this).css({'background-color': '#E2EDFF', 'color': '#267DFD', 'cursor': 'pointer'})
+            })
+            $('body').on('mouseout', '.user_trs', function () {
+                $(this).css({'background': 'white', 'color': 'black', 'cursor': 'pointer'})
+            })
+
+
+        })
+    </script>
+
+
+
+{% endblock %}

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, AbstractBaseUser, BaseUserManager
 from django.utils import timezone
 from loan_app.models import AppUser, Loan
+from project_pack.models import Project, current_project, ProjectManager, ProjectQuerySet
 
 
 class CustomUserManager(BaseUserManager):
@@ -24,12 +25,15 @@ class CustomUserManager(BaseUserManager):
 
         return self.create_user(phone, password, **extra_fields)
 
+    def get_queryset(self):
+        return ProjectQuerySet(self.model, using=self._db).select_project()
 
-# Create your models here.
+
 class User(AbstractUser):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    email = models.EmailField(max_length=100, unique=True)
+    email = models.EmailField(max_length=100)
     phone = models.CharField(max_length=15, unique=True)
     password = models.CharField(max_length=100)
     level = models.CharField(max_length=50, default='admin')
@@ -37,6 +41,9 @@ class User(AbstractUser):
     stage = models.CharField(default='', max_length=100, blank=True, null=True)
     stage_id = models.IntegerField(default=1)
     can_collect = models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    status = models.BooleanField(default=True)
+    last_login = models.DateTimeField(default=timezone.now)
 
     USERNAME_FIELD = 'phone'
 
@@ -46,6 +53,11 @@ class User(AbstractUser):
 
     def __str__(self):
         return f'{self.first_name} - {self.level.title()}: {self.stage}({self.stage_id}) ({self.pk})'
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.project = current_project
+        super().save(*args, **kwargs)
 
     class Meta:
         app_label = 'admin_panel'
@@ -111,6 +123,13 @@ class Repayment(models.Model):
 
 
 class Progressive(models.Model):
+    objects = ProjectManager()
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.project = current_project
+        super().save(*args, **kwargs)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     disbursed_at = models.DateTimeField(null=True, blank=True)
     total_count = models.IntegerField(default=0)
     total_sum = models.FloatField(default=0)
@@ -274,4 +293,25 @@ class Timeline(models.Model):
     detail = models.CharField(max_length=100, default='', blank=True)
     overdue_days = models.CharField(max_length=100, default='', blank=True)
     # 'Overdue 10 Days', 'Due Day'
+
     created_at = models.DateTimeField(default=timezone.now)
+
+
+class Recovery(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(default=timezone.now)
+    total_count = models.IntegerField(default=0)
+    # total_count: total count of loans assigned to the collector
+
+    amount_held = models.FloatField(default=0)
+    # amount_held: total amount held by beginning of the day
+
+    amount_paid = models.FloatField(default=0)
+    # amount_paid: total amount paid by the end of the day
+
+    paid_count = models.IntegerField(default=0)
+    # paid_count: total count of loans repaid by the end of the day
+
+    rate = models.FloatField(default=0)
+    # rate: = (paid_count/total_count) * 100
+

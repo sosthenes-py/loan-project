@@ -1,9 +1,10 @@
 from django.db import models
 from django.utils import timezone
+from project_pack.models import Project, ProjectManager, current_project
 
 
-# Create your models here.
 class AppUser(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     middle_name = models.CharField(max_length=100, blank=True, null=True)
@@ -22,17 +23,20 @@ class AppUser(models.Model):
     gender = models.CharField(max_length=100, default='male')
     state = models.CharField(max_length=100, default='', blank=True, null=True)
     lga = models.CharField(max_length=100, default='', blank=True, null=True)
+    eligible_amount = models.FloatField(default=6000)
 
     def __str__(self):
         return f'{self.first_name} ({self.user_id})'
 
-    class Meta:
-        app_label = 'loan_app'
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.project = current_project
+        super().save(*args, **kwargs)
 
 
 class Document(models.Model):
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
-    file = models.ImageField(upload_to='loan_app/docs/')
+    file = models.FileField(upload_to='loan_app/docs/')
     description = models.CharField(max_length=100)
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(auto_now=True)
@@ -40,9 +44,6 @@ class Document(models.Model):
 
     def __str__(self):
         return f"{self.user.first_name}'s Doc"
-
-    class Meta:
-        app_label = 'loan_app'
 
 
 class Avatar(models.Model):
@@ -52,56 +53,8 @@ class Avatar(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        app_label = 'loan_app'
-
     def __str__(self):
         return f"{self.user.first_name}'s Avatar"
-
-
-class Employment(models.Model):
-    user = models.OneToOneField(AppUser, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100, blank=True, null=True, default=None)
-    state = models.CharField(max_length=100, default='', blank=True, null=True)
-    address = models.CharField(max_length=100, blank=True, null=True, default=None)
-    complex = models.CharField(max_length=100, blank=True, null=True, default=None)
-    role = models.CharField(max_length=100, blank=True, null=True, default=None)
-    duration = models.CharField(max_length=100, blank=True, null=True, default=None)
-    salary = models.CharField(max_length=100, blank=True, null=True, default=None)
-    hr_name = models.CharField(max_length=100, blank=True, null=True, default=None)
-    hr_phone = models.CharField(max_length=100, blank=True, null=True, default=None)
-    hr_email = models.CharField(max_length=100, blank=True, null=True, default=None)
-
-    def __str__(self):
-        return f"{self.user.first_name}'s Employment"
-
-
-class Emergency(models.Model):
-    user = models.OneToOneField(AppUser, on_delete=models.CASCADE)
-    family_name = models.CharField(max_length=100, blank=True, null=True, default=None)
-    family_phone = models.CharField(max_length=100, blank=True, null=True)
-    family_relationship = models.CharField(max_length=100, blank=True, null=True)
-    family_email = models.CharField(max_length=100, blank=True, null=True)
-    family_occupation = models.CharField(max_length=100, blank=True, null=True)
-    colleague_name = models.CharField(max_length=100, blank=True, null=True, default=None)
-    colleague_phone = models.CharField(max_length=100, blank=True, null=True)
-    colleague_email = models.CharField(max_length=100, blank=True, null=True)
-    colleague_occupation = models.CharField(max_length=100, blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.user.first_name}'s Emergency"
-
-
-class Guarantor(models.Model):
-    user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100, blank=True, null=True)
-    phone = models.CharField(max_length=100, blank=True, null=True)
-    email = models.CharField(max_length=100, blank=True, null=True)
-    occupation = models.CharField(max_length=100, blank=True, null=True)
-    address = models.CharField(max_length=100, blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.user.first_name}'s Guarantors"
 
 
 class DisbursementAccount(models.Model):
@@ -115,16 +68,32 @@ class DisbursementAccount(models.Model):
 
 
 class VirtualAccount(models.Model):
-    user = models.OneToOneField(AppUser, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
     number = models.CharField(max_length=100, blank=True, null=True)
     bank_name = models.CharField(max_length=100, blank=True, null=True)
     bank_code = models.CharField(max_length=100, blank=True, null=True)
+
+    objects = ProjectManager()
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.project = current_project
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.user.first_name}'s Account Details"
 
 
+class Contact(models.Model):
+    user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100, blank=True, null=True)
+    phone = models.CharField(max_length=100)
+    category = models.CharField(max_length=100, blank=True, null=True)
+
+
 class Loan(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     loan_id = models.CharField(max_length=100)
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
     principal_amount = models.FloatField(max_length=10, default=0)
@@ -141,7 +110,15 @@ class Loan(models.Model):
     reloan = models.IntegerField(default=1)
     # for reloan, 1 for first loan, 2 > for reloan, value being actual number of reloans
 
+    objects = ProjectManager()
+
     def __str__(self):
         return f"N{self.principal_amount:,}; ID: {self.loan_id}; S: {self.status}"
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.project = current_project
+        super().save(*args, **kwargs)
+
 
 

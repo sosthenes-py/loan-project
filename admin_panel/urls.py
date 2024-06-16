@@ -13,7 +13,8 @@ urlpatterns = [
     path('repayments/', views.repayments, name='repayments'),
     path('analysis/', views.analysis, name='analysis'),
     path('logout/', views.logout_user, name='logout'),
-    path('waiver/', views.waiver, name='waiver')
+    path('waiver/', views.waiver, name='waiver'),
+    path('operators/', views.operators, name='operators')
 ]
 
 if settings.DEBUG:

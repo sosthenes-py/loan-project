@@ -125,3 +125,15 @@ def analysis(request):
             content['cda'] = cda
         return JsonResponse({'status': 'success', 'content': content})
 
+
+@login_required
+def operators(request):
+    if request.method == "GET":
+        return render(request, 'admin_panel/operators.html')
+    posted_data = {}
+    for key, value in request.POST.items():
+        posted_data[key] = value
+    response = utils.AdminUtils(request, **posted_data)
+    response.process()
+    return JsonResponse({'status': response.status, 'content': response.content, 'message': response.message})
+

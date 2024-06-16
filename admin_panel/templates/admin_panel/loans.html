@@ -8,11 +8,12 @@
 {% block content %}
 
     <style>
-    .timeline {
+        .timeline {
             position: relative;
             padding: 20px 0;
             list-style: none;
         }
+
         .timeline:before {
             position: absolute;
             top: 0;
@@ -22,11 +23,13 @@
             content: "";
             background-color: #dee2e6;
         }
+
         .timeline > .timeline-item {
             position: relative;
             margin-bottom: 20px;
             padding-left: 60px;
         }
+
         .timeline > .timeline-item:before {
             position: absolute;
             left: 30px;
@@ -39,6 +42,7 @@
             border: 5px solid #0D6EFD;
             content: "";
         }
+
         .timeline > .timeline-item .timeline-content {
             padding: 10px;
             background-color: #fff;
@@ -48,80 +52,76 @@
     </style>
 
 
-<!--start page wrapper -->
-		<div class="page-wrapper">
-			<div class="page-content">
+    <!--start page wrapper -->
+    <div class="page-wrapper">
+        <div class="page-content">
 
-				<!--end row-->
+            <!--end row-->
 
-				<div class="card radius-10">
-					<div class="card-body">
+            <div class="card radius-10">
+                <div class="card-body">
 
-						<div class="d-flex align-items-center text-bg-">
-							<div class="pt-3 ps-3 pb-0" style="display: inline-block; width: 100%">
-                                <p style="float: left" class="fw-bold fs-6">Loan History</p>
-                                <div style="float: right; width: 30%; display: inline-block">
-                                    <div style="width: 40%; float: left">
-                                        <label for="history_month_start">From:</label>
-                                        <input  type="date" id="history_month_start"
-                                           class="me-2" value="" >
-                                    </div>
-
-                                    <div style="width: 40%; float: right">
-                                        <label for="history_month_end">To:</label>
-                                        <input  type="date" id="history_month_end"
-                                           class="me-2" value="">
-                                    </div>
-
-                                    <div style="width: 20%; float: right">
-                                        <label for="history_rows">Rows:</label>
-                                        <select id="history_rows" class="">
-                                            <option value="10">10</option>
-                                            <option value="20">20</option>
-                                            <option value="50">50</option>
-                                            <option value="100">100</option>
-                                            <option value="500">500</option>
-                                            <option value="2000">2000</option>
-                                        </select>
-                                    </div>
-
-
-                                    <div class="mt-3" style="width: 30%; float: right">
-                                        <button id="search_rdp" type="button" class="btn btn-primary px-3 radius-30" onclick="start(true)">Search</button>
-                                    </div>
-                                </div>
+                    <div class="d-flex align-items-center bg-light p-3">
+                        <div class="me-auto fw-bold fs-6">Loan History</div>
+                        <div class="d-flex align-items-center">
+                            <div class="me-2">
+                                <label for="history_month_start" class="form-label me-1">From:</label>
+                                <input type="date" id="history_month_start" class="form-control d-inline-block" value=""
+                                       style="width: auto;">
                             </div>
+                            <div class="me-2">
+                                <label for="history_month_end" class="form-label me-1">To:</label>
+                                <input type="date" id="history_month_end" class="form-control d-inline-block" value=""
+                                       style="width: auto;">
+                            </div>
+                            <div class="me-2">
+                                <label for="history_rows" class="form-label me-1">Rows:</label>
+                                <select id="history_rows" class="form-select d-inline-block" style="width: auto;">
+                                    <option value="15">15</option>
+                                    <option value="50">50</option>
+                                    <option value="200">200</option>
+                                    <option value="500">500</option>
+                                    <option value="2000">2000</option>
+                                    <option value="10000">2000+</option>
+                                </select>
+                            </div>
+                            <div>
+                                <button id="search_rdp" type="button" class="btn btn-primary px-3 radius-30"
+                                        onclick="start(true)">Search
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
-						</div>
-						<hr/>
-						<div class="table-responsive">
-							<table class="table align-middle mb-5" id="loan_table">
-								<thead class="table-light">
-									<tr>
-                                        <th>S/N</th>
-                                        <th>Loan ID</th>
-                                        <th>User</th>
-                                        <th>Principal</th>
-                                        <th>Amt Disbursed</th>
-                                        <th>Amount Due</th>
-                                        <th>Repaid</th>
-                                        <th>Request Date</th>
-                                        <th>Disburse Date</th>
-                                        <th>Due Date</th>
-                                        <th>Overdue Days</th>
-                                        <th>Status</th>
-                                    </tr>
-								</thead>
-								<tbody id="loan_history" style="padding-bottom: 4em !important">
+                    <hr/>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-5" id="loan_table">
+                            <thead class="table-light">
+                            <tr>
+                                <th>S/N</th>
+                                <th>Loan ID</th>
+                                <th>User</th>
+                                <th>Principal</th>
+                                <th>Amt Disbursed</th>
+                                <th>Amount Due</th>
+                                <th>Repaid</th>
+                                <th>Request Date</th>
+                                <th>Disburse Date</th>
+                                <th>Due Date</th>
+                                <th>Overdue Days</th>
+                                <th>Status</th>
+                            </tr>
+                            </thead>
+                            <tbody id="loan_history" style="padding-bottom: 4em !important">
 
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<!--end page wrapper -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--end page wrapper -->
 
 
 
@@ -173,12 +173,12 @@
                                                 class="btn btn-primary split-bg-primary dropdown-toggle dropdown-toggle-split">
                                             <span class="visually-hidden">Toggle Dropdown</span></button>
                                         <div class="dropdown-menu dropdown-menu-right dropdown-menu-lg-end">
-                                            <a href="#" class="dropdown-item view_loan_history text-primary"
+                                            <a href="#0" class="dropdown-item view_loan_history text-primary"
                                                data-bs-toggle='modal' data-bs-target='#LoanModal'><i
                                                     class="lni lni-cloud-sync"></i> Loans <span
                                                     class="badge rounded-pill bg-primary m-1 loan_count count">0</span></a>
 
-                                            <a href="#" class="dropdown-item view_repayment_history text-dark"
+                                            <a href="#0" class="dropdown-item view_repayment_history text-dark"
                                                data-bs-toggle='modal' data-bs-target='#RepaymentModal'><i
                                                     class="lni lni-cloud-upload"></i> Repayments <span
                                                     class="badge rounded-pill bg-dark m-1 repayment_count count">0</span></a>
@@ -199,7 +199,8 @@
 
 
                                             <a href="#0" class="dropdown-item text-primary generate_repayment_link"
-                                               style="font-weight: bold" ><i class="lni lni-link"></i> Generate Repayment Link</a>
+                                               style="font-weight: bold"><i class="lni lni-link"></i> Generate Repayment
+                                                Link</a>
 
 
                                             <div class="dropdown-divider"></div>
@@ -264,12 +265,31 @@
                                                         </div>
 
                                                         <div class="col">
-                                                            <div class="btn-group" role="group" aria-label="Basic example">
-                                                                <button type="button" class="btn btn-outline-primary device_details" data-bs-toggle='modal' data-bs-target='#deviceDetailsModal' data-action="contacts" data-name="Contacts">Contacts</button>
+                                                            <div class="btn-group" role="group"
+                                                                 aria-label="Basic example">
+                                                                <button type="button"
+                                                                        class="btn btn-outline-primary device_details"
+                                                                        data-bs-toggle='modal'
+                                                                        data-bs-target='#deviceDetailsModal'
+                                                                        data-action="contacts" data-name="Contacts">
+                                                                    Contacts
+                                                                </button>
 
-                                                                <button type="button" class="btn btn-outline-primary device_details" data-bs-toggle='modal' data-bs-target='#deviceDetailsModal' data-action="sms_log" data-name="SMS Log">SMS Log</button>
+                                                                <button type="button"
+                                                                        class="btn btn-outline-primary device_details"
+                                                                        data-bs-toggle='modal'
+                                                                        data-bs-target='#deviceDetailsModal'
+                                                                        data-action="sms_log" data-name="SMS Log">SMS
+                                                                    Log
+                                                                </button>
 
-                                                                <button type="button" class="btn btn-outline-primary device_details" data-bs-toggle='modal' data-bs-target='#deviceDetailsModal' data-action="call_log" data-name="Call Log">Call Log</button>
+                                                                <button type="button"
+                                                                        class="btn btn-outline-primary device_details"
+                                                                        data-bs-toggle='modal'
+                                                                        data-bs-target='#deviceDetailsModal'
+                                                                        data-action="call_log" data-name="Call Log">Call
+                                                                    Log
+                                                                </button>
                                                             </div>
                                                         </div>
 
@@ -311,39 +331,6 @@
                                                                             class="bx bx-user font-18 me-1"></i>
                                                                     </div>
                                                                     <div class="tab-title">Contact Info</div>
-                                                                </div>
-                                                            </a>
-                                                        </li>
-                                                        <li class="nav-item" role="presentation">
-                                                            <a class="nav-link" data-bs-toggle="tab" href="#employment"
-                                                               role="tab" aria-selected="false" tabindex="-1">
-                                                                <div class="d-flex align-items-center">
-                                                                    <div class="tab-icon"><i
-                                                                            class="bx bxs-briefcase font-18 me-1"></i>
-                                                                    </div>
-                                                                    <div class="tab-title">Employment</div>
-                                                                </div>
-                                                            </a>
-                                                        </li>
-                                                        <li class="nav-item" role="presentation">
-                                                            <a class="nav-link" data-bs-toggle="tab" href="#emergency"
-                                                               role="tab" aria-selected="false" tabindex="-1">
-                                                                <div class="d-flex align-items-center">
-                                                                    <div class="tab-icon"><i
-                                                                            class="bx bxs-phone-call font-18 me-1"></i>
-                                                                    </div>
-                                                                    <div class="tab-title">Emergency</div>
-                                                                </div>
-                                                            </a>
-                                                        </li>
-                                                        <li class="nav-item" role="presentation">
-                                                            <a class="nav-link" data-bs-toggle="tab" href="#guarantor"
-                                                               role="tab" aria-selected="false" tabindex="-1">
-                                                                <div class="d-flex align-items-center">
-                                                                    <div class="tab-icon"><i
-                                                                            class="bx bxs-user-check font-18 me-1"></i>
-                                                                    </div>
-                                                                    <div class="tab-title">Guarantors</div>
                                                                 </div>
                                                             </a>
                                                         </li>
@@ -421,7 +408,8 @@
                                                                     <div class="col-sm-9 text-secondary">
                                                                         <div class="input-group mb-3">
                                                                             <input type="text" placeholder="Middle Name"
-                                                                                   aria-label="Fullname"  aria-describedby="button-addon2"
+                                                                                   aria-label="Fullname"
+                                                                                   aria-describedby="button-addon2"
                                                                                    class="form-control details_middle_name">
                                                                             <button type="button" id="button-addon2"
                                                                                     class="btn btn-outline-primary details_save"
@@ -443,7 +431,8 @@
                                                                         <div class="input-group mb-3">
                                                                             <input type="email"
                                                                                    placeholder="Email Address"
-                                                                                   aria-label="Email" aria-describedby="button-addon2"
+                                                                                   aria-label="Email"
+                                                                                   aria-describedby="button-addon2"
                                                                                    class="form-control details_email">
                                                                             <button type="button" id="button-addon2"
                                                                                     class="btn btn-outline-primary details_save"
@@ -636,215 +625,12 @@
                                                         </div>
 
 
-                                                        {#       -------------------------  EMPLOYMENT INFO ----------------------#}
-
-                                                        <div class="tab-pane fade" id="employment" role="tabpanel">
-                                                            <ul class="list-group list-group-flush">
-                                                                <h5 class="mt-1 text-primary">Employment Info</h5>
-                                                                <div class="w-100 border-top mb-2"></div>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-building font-18 me-1"></i>Company
-                                                                        Name</h6>
-                                                                    <span class="text-secondary employment_name">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-map-pin font-18 me-1"></i>
-                                                                        Company Location</h6>
-                                                                    <span class="text-secondary employment_address">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-buildings font-18 me-1"></i>
-                                                                        Estate or Complex</h6>
-                                                                    <span class="text-secondary employment_complex">@wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-briefcase-alt font-18 me-1"></i>
-                                                                        Role</h6>
-                                                                    <span class="text-secondary employment_role">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-calendar-alt font-18 me-1"></i>
-                                                                        Duration</h6>
-                                                                    <span class="text-secondary employment_duration">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-badge-dollar font-18 me-1"></i>
-                                                                        Salary Range</h6>
-                                                                    <span class="text-secondary employment_salary">wedigital</span>
-                                                                </li>
-
-
-                                                                <h5 class="mt-5 text-primary">Additional Info</h5>
-                                                                <div class="w-100 border-top mb-2"></div>
-
-
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-user-badge font-18 me-1"></i>
-                                                                        Company's Contact Person (HR)</h6>
-                                                                    <span class="text-secondary employment_hr_name">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-envelope-open font-18 me-1"></i>
-                                                                        Company's HR Email</h6>
-                                                                    <span class="text-secondary employment_hr_email">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-phone font-18 me-1"></i>
-                                                                        Company's HR Phone</h6>
-                                                                    <span class="text-secondary employment_hr_phone">wedigital</span>
-                                                                </li>
-
-                                                            </ul>
-                                                        </div>
-
-
-                                                        {#       -------------------------  EMERGENCY INFO ----------------------#}
-
-                                                        <div class="tab-pane fade" id="emergency" role="tabpanel">
-                                                            <ul class="list-group list-group-flush">
-                                                                <h5 class="mt-1 text-primary">Family Emergency
-                                                                    Contact</h5>
-                                                                <div class="w-100 border-top mb-2"></div>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-user font-18 me-1"></i> Name
-                                                                    </h6>
-                                                                    <span class="text-secondary emergency_family_name">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-phone-call font-18 me-1"></i>
-                                                                        Phone Number</h6>
-                                                                    <span class="text-secondary emergency_family_phone">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-envelope-open font-18 me-1"></i>
-                                                                        Email</h6>
-                                                                    <span class="text-secondary emergency_family_email">@wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-briefcase-alt font-18 me-1"></i>
-                                                                        Occupation</h6>
-                                                                    <span class="text-secondary emergency_family_occupation">wedigital</span>
-                                                                </li>
-
-
-                                                                <h5 class="mt-5 text-primary">Colleague Emergency
-                                                                    Contact</h5>
-                                                                <div class="w-100 border-top mb-2"></div>
-
-
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-user font-18 me-1"></i> Name
-                                                                    </h6>
-                                                                    <span class="text-secondary emergency_colleague_name">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-phone-call font-18 me-1"></i>
-                                                                        Phone Number</h6>
-                                                                    <span class="text-secondary emergency_colleague_phone">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-envelope-open font-18 me-1"></i>
-                                                                        Email</h6>
-                                                                    <span class="text-secondary emergency_colleague_email">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-briefcase-alt font-18 me-1"></i>
-                                                                        Occupation</h6>
-                                                                    <span class="text-secondary emergency_colleague_occupation">wedigital</span>
-                                                                </li>
-
-                                                            </ul>
-                                                        </div>
-
-
-                                                        {#       -------------------------  GUARANTORS INFO ----------------------#}
-
-                                                        <div class="tab-pane fade" id="guarantor" role="tabpanel">
-                                                            <ul class="list-group list-group-flush">
-                                                                <h5 class="mt-1 text-primary">First Guarantor</h5>
-                                                                <div class="w-100 border-top mb-2"></div>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-user font-18 me-1"></i> Name
-                                                                    </h6>
-                                                                    <span class="text-secondary guarantor_name1">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-phone-call font-18 me-1"></i>
-                                                                        Phone</h6>
-                                                                    <span class="text-secondary guarantor_phone1">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-envelope-open font-18 me-1"></i>
-                                                                        Email</h6>
-                                                                    <span class="text-secondary guarantor_email1">@wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-map-pin font-18 me-1"></i>
-                                                                        House Address</h6>
-                                                                    <span class="text-secondary guarantor_address1">wedigital</span>
-                                                                </li>
-
-
-                                                                <h5 class="mt-5 text-primary">Second Guarantor</h5>
-                                                                <div class="w-100 border-top mb-2"></div>
-
-
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-user font-18 me-1"></i> Name
-                                                                    </h6>
-                                                                    <span class="text-secondary guarantor_name2">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-phone-call font-18 me-1"></i>
-                                                                        Phone</h6>
-                                                                    <span class="text-secondary guarantor_phone2">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-envelope-open font-18 me-1"></i>
-                                                                        Email</h6>
-                                                                    <span class="text-secondary guarantor_email2">wedigital</span>
-                                                                </li>
-                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                                                    <h6 class="mb-0 fw-bold"><i
-                                                                            class="bx bxs-map-pin font-18 me-1"></i>
-                                                                        House Address</h6>
-                                                                    <span class="text-secondary guarantor_address2">wedigital</span>
-                                                                </li>
-
-
-                                                            </ul>
-                                                        </div>
-
-
                                                         {#       -------------------------  BANK DETAILS ----------------------#}
 
                                                         <div class="tab-pane fade" id="bankdetails" role="tabpanel">
                                                             <ul class="list-group list-group-flush">
-                                                                <h5 class="mt-1 text-primary">Disbursement Bank Details</h5>
+                                                                <h5 class="mt-1 text-primary">Disbursement Bank
+                                                                    Details</h5>
                                                                 <div class="w-100 border-top mb-2"></div>
                                                                 <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
                                                                     <h6 class="mb-0 fw-bold"><i
@@ -864,7 +650,6 @@
                                                                         Account Name</h6>
                                                                     <span class="text-secondary bankdetails_name">@wedigital</span>
                                                                 </li>
-
 
 
                                                                 <h5 class="mt-5 text-primary">Virtual Bank Details</h5>
@@ -888,7 +673,6 @@
                                                                         Account Name</h6>
                                                                     <span class="text-secondary virtual_bankdetails_name">@wedigital</span>
                                                                 </li>
-
 
 
                                                                 <h5 class="mt-5 text-primary">Other Details</h5>
@@ -941,7 +725,7 @@
         <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
             <div class="modal-content bg-primary">
                 <div class="modal-header">
-                    <h5 class="mb-0 text-light">User -> <span class="details_current_user"></span></h5>
+                    <h5 class="mb-0 text-light">Repayment History</h5>
                     <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
                 </div>
                 <div class="modal-body">
@@ -951,26 +735,20 @@
 
 
                         <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div>
-                                    <h5 class="mb-0">Repayment History</h5>
-                                </div>
 
-                                <div class="font-22 ms-auto"><i class='bx bx-dots-horizontal-rounded'></i>
-                                </div>
-                            </div>
-                            <hr/>
                             <div class="table-responsive">
                                 <table class="table align-middle mb-0">
                                     <thead class="table-light">
                                     <tr>
-                                        <th>S/N</th>
-                                        <th>Amount Due</th>
-                                        <th>Amount Paid</th>
-                                        <th>Total Repaid</th>
-                                        <th>Repay Stage</th>
-                                        <th>Date</th>
-                                        <th>Action</th>
+                                        <th>S/N <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Serial Number"></i></th>
+                                        <th>Loan ID <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Unique identifier for the loan"></i></th>
+                                        <th>Principal <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Principal loan amount"></i></th>
+                                        <th>Due <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Amount Due"></i></th>
+                                        <th>PN <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Amount Paid Now"></i></th>
+                                        <th>Stage <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Loan's stage at repayment"></i></th>
+                                        <th>TR <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Total Repaid amount so far"></i></th>
+                                        <th>Status <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Loan status at repayment"></i></th>
+                                        <th>Date <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Date of the record"></i></th>
                                     </tr>
                                     </thead>
                                     <tbody id="repayment_history" style="padding-bottom: 4em !important">
@@ -1011,7 +789,6 @@
 
                         <div class="card-body">
 
-                            <hr/>
                             <div class="table-responsive">
                                 <table class="table align-middle mb-5">
                                     <thead class="table-light">
@@ -1102,7 +879,9 @@
 
                             <div class="row gy-3">
                                 <div class="col-md-10">
-                                    <textarea id="note_input" placeholder="('promise to pay', 'switched off', 'not reachable', 'not picking', 'fraudulent')..." class="form-control"
+                                    <textarea id="note_input"
+                                              placeholder="('promise to pay', 'switched off', 'not reachable', 'not picking', 'fraudulent')..."
+                                              class="form-control"
                                               rows=2></textarea>
                                 </div>
                                 <div class="col-md-2 text-end d-grid">
@@ -1177,7 +956,8 @@
 
                             <div class="input-group mb-3">
                                 <span class="input-group-text">&#x20A6;</span>
-                                <input type="number" class="form-control" placeholder="Amount to waive" aria-label="Amount (to the nearest naira)" id="waive_amount">
+                                <input type="number" class="form-control" placeholder="Amount to waive"
+                                       aria-label="Amount (to the nearest naira)" id="waive_amount">
                                 <span class="input-group-text">.00</span>
                             </div>
                             <button class="btn btn-primary" id="waive_sbmt">
@@ -1213,41 +993,46 @@
                     <div class="card">
                         <div class="card-body">
                             <div class="d-flex align-items-center gap-3 mb-4">
-							<div class="form-check form-check-primary ms-4">
-								<input class="form-check-input timeline_names" type="checkbox" value="transfer" id="flexCheckCheckedSuccess" checked="">
-								<label class="form-check-label" for="flexCheckCheckedSuccess">
-								  Transfer
-								</label>
-							  </div>
+                                <div class="form-check form-check-primary ms-4">
+                                    <input class="form-check-input timeline_names" type="checkbox" value="transfer"
+                                           id="flexCheckCheckedSuccess" checked="">
+                                    <label class="form-check-label" for="flexCheckCheckedSuccess">
+                                        Transfer
+                                    </label>
+                                </div>
 
                                 <div class="form-check form-check-primary">
-								<input class="form-check-input timeline_names" type="checkbox" value="manual assign" id="flexCheckCheckedDanger" checked="">
-								<label class="form-check-label" for="flexCheckCheckedDanger">
-								  Manual Assign
-								</label>
-							  </div>
+                                    <input class="form-check-input timeline_names" type="checkbox" value="manual assign"
+                                           id="flexCheckCheckedDanger" checked="">
+                                    <label class="form-check-label" for="flexCheckCheckedDanger">
+                                        Manual Assign
+                                    </label>
+                                </div>
 
-							  <div class="form-check form-check-primary">
-								<input class="form-check-input timeline_names" type="checkbox" value="collection record" id="flexCheckCheckedDanger" checked="">
-								<label class="form-check-label" for="flexCheckCheckedDanger">
-								  Collection Record
-								</label>
-							  </div>
-							  <div class="form-check form-check-primary">
-								<input class="form-check-input timeline_names" type="checkbox" value="repayment" id="flexCheckCheckedWarning" checked="">
-								<label class="form-check-label" for="flexCheckCheckedWarning">
-								  Repayment
-								</label>
-							  </div>
-							  <div class="form-check form-check-primary">
-								<input class="form-check-input timeline_names" type="checkbox" value="disbursement" id="flexCheckCheckedDark" checked="">
-								<label class="form-check-label" for="flexCheckCheckedDark">
-								  Disbursement
-								</label>
-							  </div>
+                                <div class="form-check form-check-primary">
+                                    <input class="form-check-input timeline_names" type="checkbox"
+                                           value="collection record" id="flexCheckCheckedDanger" checked="">
+                                    <label class="form-check-label" for="flexCheckCheckedDanger">
+                                        Collection Record
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-primary">
+                                    <input class="form-check-input timeline_names" type="checkbox" value="repayment"
+                                           id="flexCheckCheckedWarning" checked="">
+                                    <label class="form-check-label" for="flexCheckCheckedWarning">
+                                        Repayment
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-primary">
+                                    <input class="form-check-input timeline_names" type="checkbox" value="disbursement"
+                                           id="flexCheckCheckedDark" checked="">
+                                    <label class="form-check-label" for="flexCheckCheckedDark">
+                                        Disbursement
+                                    </label>
+                                </div>
 
 
-						</div>
+                            </div>
                             <ul class="timeline show_timeline">
 
 
@@ -1304,139 +1089,139 @@
 
 
     <script>
-         const success_audio = new Audio("{% static 'admin_panel/audio/correct.mp3' %}");
-         const error_audio = new Audio("{% static 'admin_panel/audio/wrong.mp3' %}");
+        const success_audio = new Audio("{% static 'admin_panel/audio/correct.mp3' %}");
+        const error_audio = new Audio("{% static 'admin_panel/audio/wrong.mp3' %}");
 
-            var overlay= $("#overlay");
-            var loader= $("#loader");
+        var overlay = $("#overlay");
+        var loader = $("#loader");
 
-            function loadOn(){
-                overlay.css('display', 'block');
-                loader.css('display', 'block');
+        function loadOn() {
+            overlay.css('display', 'block');
+            loader.css('display', 'block');
+        }
+
+        function loadOff() {
+            overlay.css('display', 'none');
+            loader.css('display', 'none');
+        }
+
+        function onProgress(elem) {
+            $('#' + elem).addClass('thin-loader')
+        }
+
+        function offProgress(elem) {
+            $('#' + elem).removeClass('thin-loader')
+        }
+
+
+        function notify(status, message) {
+            if (status === "success" || status === "info") {
+                success_audio.play();
+            } else {
+                error_audio.play();
             }
-            function loadOff(){
-                overlay.css('display', 'none');
-                loader.css('display', 'none');
+            toastr[status](message)
+        }
+
+
+        function get_current_month(cc = 1) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + cc).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        $('#history_month_end').change(function () {
+            var start_date = new Date($("#history_month_start").val())
+            var end_date = new Date($(this).val())
+            if (start_date > end_date) {
+                $(this).val(get_current_month())
+                $("#history_month_start").val(get_current_month(-1))
+                notify('warning', 'Ending date cannot be less than starting date')
+            }
+        })
+
+        $('#history_month_start').change(function () {
+            var end_date = new Date($("#history_month_end").val())
+            var start_date = new Date($(this).val())
+            if (start_date > end_date) {
+                $(this).val(get_current_month(-1))
+                $("#history_month_end").val(get_current_month())
+                notify('warning', 'Ending date cannot be less than starting date')
             }
 
-            function onProgress(elem) {
-                $('#' + elem).addClass('thin-loader')
-            }
+        })
 
-            function offProgress(elem) {
-                $('#' + elem).removeClass('thin-loader')
-            }
-
-
-            function notify(status, message) {
-                    if (status === "success" || status === "info") {
-                        success_audio.play();
-                    } else {
-                        error_audio.play();
+        function start(refresh = false) {
+            loadOn()
+            $.ajax({
+                url: '{% url "loans" %}',
+                data: {
+                    action: 'fetch_all_loans',
+                    rows: $('#history_rows').val(),
+                    start: $('#history_month_start').val(),
+                    end: $('#history_month_end').val()
+                },
+                dataType: 'json',
+                type: 'post',
+                success: function (data) {
+                    loadOff()
+                    if (refresh) {
+                        $('#loan_table').DataTable().destroy()
                     }
-                    toastr[status](message)
-                }
-
-
-             function get_current_month(cc = 1) {
-                const today = new Date();
-                const year = today.getFullYear();
-                const month = String(today.getMonth() + cc).padStart(2, '0');
-                const day = String(today.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
-            }
-
-            $('#history_month_end').change(function (){
-                var start_date = new Date($("#history_month_start").val())
-                var end_date = new Date($(this).val())
-                if(start_date > end_date){
-                    $(this).val(get_current_month())
-                    $("#history_month_start").val(get_current_month(-1))
-                    notify('warning', 'Ending date cannot be less than starting date')
+                    setTimeout(function () {
+                        $("#loan_history").html(data.content);
+                        var table = $('#loan_table').DataTable({
+                            lengthChange: false,
+                            pageLength: 15,
+                            buttons: ['copy', 'excel', 'pdf', 'print']
+                        });
+                        table.buttons().container().appendTo('#loan_table_wrapper .col-md-6:eq(0)');
+                    }, 10)
+                },
+                error: function (jqXHR, errorThrown) {
+                    loadOff()
+                    notify('error', 'An error occurred. Page will be refreshed in 3s')
+                    setTimeout(function () {
+                        {#window.location.update()#}
+                    }, 3000)
+                },
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
                 }
             })
-
-            $('#history_month_start').change(function (){
-                var end_date = new Date($("#history_month_end").val())
-                var start_date = new Date($(this).val())
-                if(start_date > end_date){
-                    $(this).val(get_current_month(-1))
-                    $("#history_month_end").val(get_current_month())
-                    notify('warning', 'Ending date cannot be less than starting date')
-                }
-
-            })
-
-            function start(refresh = false) {
-                loadOn()
-                $.ajax({
-                    url: '{% url "loans" %}',
-                    data: {
-                        action: 'fetch_all_loans',
-                        rows: $('#history_rows').val(),
-                        start: $('#history_month_start').val(),
-                        end: $('#history_month_end').val()
-                    },
-                    dataType: 'json',
-                    type: 'post',
-                    async: false,
-                    success: function (data) {
-                        loadOff()
-                        if (refresh) {
-                            $('#loan_table').DataTable().destroy()
-                        }
-                        setTimeout(function () {
-                            $("#loan_history").html(data.content);
-                            var table = $('#loan_table').DataTable({
-                                lengthChange: false,
-                                buttons: ['copy', 'excel', 'pdf', 'print']
-                            });
-                            table.buttons().container().appendTo('#loan_table_wrapper .col-md-6:eq(0)');
-                        }, 10)
-                    },
-                    error: function (jqXHR, errorThrown) {
-                        loadOff()
-                        notify('error', 'An error occurred. Page will be refreshed in 3s')
-                        setTimeout(function () {
-                            {#window.location.update()#}
-                        }, 3000)
-                    },
-                    beforeSend: function (xhr, settings) {
-                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
-                    }
-                })
-            }
+        }
 
     </script>
 
 
-   <script>
-	    $(function(){
+    <script>
+        $(function () {
             $('#history_month_start').val(get_current_month(-1))
             $('#history_month_end').val(get_current_month())
 
             start()
 
-
-            $('.device_details').click(function (){
+            $('.device_details').click(function () {
                 $('.device_details_name').text($(this).data('name'))
             })
 
-            $('.generate_repayment_link').click(function (){
+            $('.generate_repayment_link').click(function () {
                 notify('error', 'Error generating link')
             })
 
-            $('body').on('click', '.waive', function (){
+            $('body').on('click', '.waive', function () {
                 var id = $(this).data('id')
                 $('#selected_loan').val(id)
             })
 
-            $('#waive_sbmt').click(function (){
+            $('#waive_sbmt').click(function () {
                 var id = $('#selected_loan').val()
                 var amount = $('#waive_amount').val()
-                if(amount === 0 || amount === ''){
+                if (amount === 0 || amount === '') {
                     notify('warning', 'Please enter valid amount')
-                }else{
+                } else {
                     loadOn();
                     $.ajax({
                         url: '{% url "loans" %}',
@@ -1453,7 +1238,7 @@
                             loadOff()
                             notify(data.status, data.message)
                             $('#WaiveModal').modal('close')
-                            if(data.status === "success"){
+                            if (data.status === "success") {
                                 $('#mini_loan_history').html(data.content)
                                 start(true)
                             }
@@ -1473,7 +1258,7 @@
             $('.assign').click(function () {
                 loadOn()
                 $.ajax({
-                    url: '{% url "loans" %}',
+                    url: '{% url "operators" %}',
                     data: {
                         action: 'fetch_assigned',
                         loan_id: $('#selected_loan_id').val(),
@@ -1496,18 +1281,18 @@
                 })
             })
 
-            $('body').on('change', '.assign_check', function (){
+            $('body').on('change', '.assign_check', function () {
                 var collector_id = $(this).data('collector_id')
                 var clicked_elem = $(this)
                 var checked = ''
-                if($(this).prop('checked') === true){
+                if ($(this).prop('checked') === true) {
                     checked = 'add'
-                }else{
+                } else {
                     checked = 'remove'
                 }
                 loadOn()
                 $.ajax({
-                    url: '{% url "loans" %}',
+                    url: '{% url "operators" %}',
                     data: {
                         action: 'assign',
                         loan_id: $('#selected_loan_id').val(),
@@ -1522,9 +1307,9 @@
                         if (data.status === "success") {
                             $('#assign_body').html(data.content)
                         }
-                        if(data.status === "error" && checked === 'add'){
+                        if (data.status === "error" && checked === 'add') {
                             clicked_elem.prop('checked', false)
-                        }else if(data.status === 'error' && checked === 'remove'){
+                        } else if (data.status === 'error' && checked === 'remove') {
                             clicked_elem.prop('checked', true)
                         }
                     },
@@ -1539,12 +1324,13 @@
             })
 
 
-	        $("body").on('click', '.loan_actions', function(){
-	            var id= $(this).data('id');
-                var user_id= $(this).data('user_id');
-	            var action= $(this).data('action');
-                var size= $(this).data('size');
-	            loadOn();
+
+            $("body").on('click', '.loan_actions', function () {
+                var id = $(this).data('id');
+                var user_id = $(this).data('user_id');
+                var action = $(this).data('action');
+                var size = $(this).data('size');
+                loadOn();
 
                 $.ajax({
                     url: '{% url "loans" %}',
@@ -1571,9 +1357,7 @@
                         xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
                     }
                 })
-	        })
-
-
+            })
 
 
             $('body').on('click', '.loan_rows', function () {
@@ -1720,56 +1504,79 @@
             })
 
 
-
-
-            $('.view_timeline').click(function (){
+            $(".view_repayment_history").click(function () {
                 var user_id = $("#selected_user_id").val();
                 loadOn();
-                    $.ajax({
-                        url: '{% url "users" %}',
-                        data: {
-                            user_id: user_id,
-                            action: 'get_timeline'
-                        },
-                        dataType: 'json',
-                        type: 'post',
-                        success: function (data) {
-                            loadOff()
-                            $('.show_timeline').html(data.content)
-                        },
-                        error: function (err1, err2) {
-                            loadOff()
-                            notify('error', JSON.stringify(err1))
-                        },
-                        beforeSend: function (xhr, settings) {
-                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
-                        }
-                    })
+                $.ajax({
+                    url: '{% url "loans" %}',
+                    data: {
+                        user_id: user_id,
+                        action: 'fetch_repayments'
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        $('#repayment_history').html(data.content)
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            })
+
+
+            $('.view_timeline').click(function () {
+                var user_id = $("#selected_user_id").val();
+                loadOn();
+                $.ajax({
+                    url: '{% url "users" %}',
+                    data: {
+                        user_id: user_id,
+                        action: 'get_timeline'
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        $('.show_timeline').html(data.content)
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
             })
 
             function updateCheckedList() {
                 const checkedValues = [];
-                $('.timeline_names:checked').each(function() {
+                $('.timeline_names:checked').each(function () {
                     checkedValues.push($(this).val());
                 });
                 return checkedValues
             }
 
-            $('.timeline_names').on('change', function (){
+            $('.timeline_names').on('change', function () {
                 var names = updateCheckedList()
-                $('.timeline-item').each(function (){
+                $('.timeline-item').each(function () {
                     var name = $(this).data('name')
-                    if($.inArray(name, names) !== -1){
+                    if ($.inArray(name, names) !== -1) {
                         $(this).fadeIn()
-                    }else{
+                    } else {
                         $(this).fadeOut()
                     }
                 })
             });
 
 
-
-             // NOTE BLOCK
+            // NOTE BLOCK
             $("#add_note").click(function () {
                 var user_id = $("#selected_user_id").val();
                 var input = $("#note_input").val();
@@ -1866,17 +1673,15 @@
             })
 
 
+            $('body').on('mouseover', '.loan_rows', function () {
+                $(this).css({'background': '#E2EDFF', 'color': '#267DFD', 'cursor': 'pointer'})
+            })
+            $('body').on('mouseout', '.loan_rows', function () {
+                $(this).css({'background': 'white', 'color': 'black', 'cursor': 'pointer'})
+            })
 
 
-            $('body').on('mouseover', '.loan_rows', function(){
-	            $(this).css({'background':'#E2EDFF', 'color':'#267DFD', 'cursor':'pointer'})
-	        })
-	        $('body').on('mouseout', '.loan_rows', function(){
-	            $(this).css({'background':'white', 'color':'black', 'cursor':'pointer'})
-	        })
-
-
-	    })
-	</script>
+        })
+    </script>
 
 {% endblock %}
