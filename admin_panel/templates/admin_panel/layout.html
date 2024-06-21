@@ -152,51 +152,36 @@
 						</li>
 					</ul>
 
-					<ul>
-						<li> <a href="{% url 'loans' %}"><i class="bx bx-right-arrow-alt"></i>Loan Tracker</a>
-						</li>
-					</ul>
-
-                    <ul>
-						<li> <a href="{% url 'waiver' %}"><i class="bx bx-right-arrow-alt"></i>Waiver</a>
-						</li>
-					</ul>
-
-                <ul>
-						<li> <a href="{% url 'repayments' %}"><i class="bx bx-right-arrow-alt"></i>Repayment History</a>
-						</li>
-					</ul>
-
-                    {% if user.level == "super admin" or user.level == "admin" %}
-					<ul>
-						<li> <a href="{% url 'operators' %}"><i class="bx bx-right-arrow-alt"></i>Operators</a>
-						</li>
-					</ul>
-                    {% endif %}
-					<ul>
-						<li> <a href="{% url 'users' %}"><i class="bx bx-right-arrow-alt"></i>All Users</a>
-						</li>
-					</ul>
 				</li>
+
                 <li>
 					<a href="javascript:;" class="has-arrow">
 						<div class="parent-icon"><i class="bx bx-category"></i>
 						</div>
-						<div class="menu-title">CRM</div>
+						<div class="menu-title">Loan Tracker</div>
 					</a>
 					<ul>
-						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Leads</a>
+						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>All Loans</a>
 						</li>
 					</ul>
                     <ul>
-						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Developer</a>
+						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Pending Loans</a>
 						</li>
 					</ul>
                     <ul>
-						<li> <a target="_blank" href="https://documenter.getpostman.com/view/28192247/2s9YJgSfhK"><i class="bx bx-right-arrow-alt"></i>Documentation</a>
+						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Approved Loans</a>
+						</li>
+					</ul>
+                    <ul>
+						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Disbursed Loans</a>
+						</li>
+					</ul>
+                    <ul>
+						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Overdue Loans</a>
 						</li>
 					</ul>
 				</li>
+
 				<li>
 					<a href="javascript:;" class="has-arrow">
 						<div class="parent-icon"><i class="bx bx-category"></i>
@@ -204,9 +189,26 @@
 						<div class="menu-title">Application</div>
 					</a>
 					<ul>
-						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Email</a>
+						<li> <a href="{% url 'waiver' %}"><i class="bx bx-right-arrow-alt"></i>Waiver</a>
 						</li>
 					</ul>
+
+                    <ul>
+						<li> <a href="{% url 'repayments' %}"><i class="bx bx-right-arrow-alt"></i>Repayments</a>
+						</li>
+					</ul>
+
+                     {% if user.level == "super admin" or user.level == "admin" %}
+					<ul>
+						<li> <a href="{% url 'operators' %}"><i class="bx bx-right-arrow-alt"></i>Operators</a>
+						</li>
+					</ul>
+                    {% endif %}
+					<ul>
+						<li> <a href="{% url 'users' %}"><i class="bx bx-right-arrow-alt"></i>Users</a>
+						</li>
+					</ul>
+
 				</li>
 				<li>
 					<a href="#0">

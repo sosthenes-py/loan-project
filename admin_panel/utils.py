@@ -271,6 +271,7 @@ class Func:
     def set_collectors():
         """
         To be run at the beginning of every day
+        Remember that AdminUser must contain at least one staff at each stage
         :return:
         """
         # First clear collections
@@ -311,7 +312,7 @@ class Func:
     @staticmethod
     def clear_collections():
         """
-        Must be run before set_collectors
+        Must be run before set_collectors (this method is called in set_collectors already)
         :return: None
         """
         collections = Collection.objects.all()
@@ -331,9 +332,69 @@ class Func:
 
     @staticmethod
     def set_recovery():
+        """
+        This method must be run at the beginning of each day immediately after set_collection,
+        and also at the end of each day (roughly same time as set_progressive)
+        :return:
+        """
+        # Sort needed fields from collection by user
+        cols = (Collection.objects.values('user').annotate(
+            total_count=Count('id'),
+            amount_held=Sum(
+                F('amount_due') - F('amount_paid'),
+                output_field=django.db.models.FloatField()
+            ),
+            paid_count=Count('id', filter=Q(amount_paid__gte=F('amount_due')))
+        ).annotate(
+            amount_paid=Sum(
+                F('amount_paid'),
+                output_field=django.db.models.FloatField()
+            ),
+        ).values('user', 'total_count', 'amount_held', 'amount_paid', 'paid_count'))
+        results = {
+            AdminUser.objects.get(pk=col['user']): {
+                'total_count': col['total_count'],
+                'amount_held': col['amount_held'],
+                'amount_paid': col['amount_paid'],
+                'paid_count': col['paid_count']
+            }
+            for col in cols
+        }
+
+        # if method was run in the beginning of the day, create new objects for collectors
         if dt.datetime.now().hour == 0:
-            # if method was run in the beginning of the day, create new objects for collectors
-            admins = AdminUser.objects.filter(level='staff', status=True).all()
+            for user, details in results.items():
+                Recovery(
+                    user=user,
+                    total_count=details['total_count'],
+                    amount_held=details['amount_held'],
+                    amount_paid=details['amount_paid'],
+                    paid_count=details['paid_count']
+                ).save()
+            remaining_staff = AdminUser.objects.filter(~Q(pk__in=[col['user'] for col in cols]) & Q(level='staff')).all()
+            for staff in remaining_staff:
+                Recovery(user=staff).save()  # add staff to recovery with default values of 0
+        else:
+            # if run at the end of the day, get and update records made at the beginning of same day
+            today_recovery = Recovery.objects.filter(created_at__date=dt.date.today())
+            today_collectors = {recovery.user: recovery for recovery in today_recovery}
+            for user, details in results.items():
+                if user in today_collectors.keys():
+                    recovery = today_collectors[user]
+                    recovery.amount_paid = details['amount_paid'] - recovery.amount_paid
+                    recovery.paid_count = details['paid_count'] - recovery.paid_count
+                    recovery.total_count = details['total_count']
+                    recovery.rate = (recovery.paid_count / recovery.total_count) * 100
+                    recovery.save()
+                else:
+                    Recovery(
+                        user=user,
+                        total_count=details['total_count'],
+                        amount_held=details['amount_held'],
+                        amount_paid=details['amount_paid'],
+                        paid_count=details['paid_count'],
+                        rate=(details['paid_count']/details['total_count']) * 100
+                    ).save()
 
 
 class UserUtils:
@@ -728,11 +789,22 @@ class AdminUtils:
                 output_field=django.db.models.IntegerField()
             )
         ).order_by('sort_index').all()
+
+        recs = Recovery.objects.values('user').annotate(
+            total_rate=Sum('rate'),
+            total_count=Count('id')
+        ).values('user', 'total_rate', 'total_count')
+
+        recoverys = {
+            AdminUser.objects.get(pk=rec['user']): (rec['total_rate'] / (100*rec['total_count']))*100
+            for rec in recs
+        }
+
         sn = 0
         self._content = ''
         for agent in agents:
             sn += 1
-            self.add_table_content(_for='operators', sn=sn, agent=agent)
+            self.add_table_content(_for='operators', sn=sn, agent=agent, recovery=int(recoverys[agent]) if agent in recoverys.keys() else '')
 
     def operator_details(self):
         operator = AdminUser.objects.get(pk=self.kwargs['id'])
@@ -748,10 +820,52 @@ class AdminUtils:
         self._content = ''
         for repay in repayments:
             self.add_table_content(_for='operator_repayments', repay=repay)
+
+        cols = Collection.objects.filter(user=operator).annotate(
+            total_count=Count('id', output_field=django.db.models.FloatField()),
+            total_held=Sum(
+                F('amount_due') - F('amount_paid'),
+                output_field=django.db.models.FloatField()
+            ),
+            new_count=Count(
+                Case(
+                    When(created_at__date=dt.date.today(), then='id'),
+                    default=Value(None)
+                ),
+                output_field=django.db.models.IntegerField()
+            ),
+            paid_sum=Sum(
+                Case(
+                    When(amount_paid__gte=F('amount_due'), then='amount_paid'),
+                    default=Value(0)
+                ),
+                output_field=django.db.models.FloatField()
+            ),
+            new_held=Sum(
+                Case(
+                    When(created_at__date=dt.date.today(), then=F('amount_due') - F('amount_paid')),
+                    default=Value(0)
+                ),
+                output_field=django.db.models.FloatField()
+            ),
+        ).values('total_count', 'total_held', 'new_count', 'new_held', 'paid_sum')
+
+        print(cols)
+
         response['repayments'] = self._content
         response['loans_count'] = Collection.objects.filter(user=operator).count()
         response['repayments_count'] = Repayment.objects.filter(admin_user=operator).count()
         response['notes_count'] = Note.objects.filter(user=operator).count()
+        response['mini_show'] = f"""
+                <ul class="list-group">
+					<li class="list-group-item d-flex justify-content-between align-items-center">Total Assigned  <span class="badge bg-primary p-2">{cols['total_count']}</span> <span class="badge bg-secondary p-2">{cols['total_held']}</span>
+					</li>
+					<li class="list-group-item d-flex justify-content-between align-items-center">Newly Assigned	<span class="badge bg-primary p-2">{cols['new_count']}</span> <span class="badge bg-secondary p-2">{cols['new_held']}</span>
+					</li>
+					<li class="list-group-item d-flex justify-content-between align-items-center">Paid<span class="badge bg-primary p-2">-</span> <span class="badge bg-secondary p-2">{cols['paid_sum']}</span>
+					</li>
+				</ul>
+        """
         self._content = response
 
     def add_admin(self):
@@ -821,12 +935,44 @@ class AdminUtils:
             if not agent.status:
                 status_class = 'danger'
                 status_text = 'Suspended'
-            elif agent.status and agent.can_collect:
-                status_class = 'success'
-                status_text = 'Active, C-C'
+            elif agent.level == 'staff':
+                if agent.status and agent.can_collect:
+                    status_class = 'success'
+                    status_text = 'Active, C-C'
+                else:
+                    status_class = 'info'
+                    status_text = 'Active, N-C'
             else:
-                status_class = 'info'
-                status_text = 'Active, N-C'
+                status_class = 'success'
+                status_text = 'Active'
+
+            if agent.level == 'super admin':
+                level_class = 'primary'
+            elif agent.level == 'admin':
+                level_class = 'secondary'
+            elif agent.level == 'approval admin':
+                level_class = 'warning'
+            elif agent.level == 'team leader':
+                level_class = 'info'
+            else:
+                level_class = 'dark'
+
+            rate = kwargs['recovery']
+            if rate != '':
+                rate += 5
+                if rate < 10:
+                    rate_class = 'danger'
+                elif 10 <= rate < 40:
+                    rate_class = 'warning'
+                elif 40 <= rate < 70:
+                    rate_class = 'primary'
+                else:
+                    rate_class = 'success'
+                show_rate = f""" <div class="progress radius-10 mt-4" style="height:9px;">
+							<div class="progress-bar bg-{rate_class}" role="progressbar" style="width: {rate}%"></div> <small style="font-size: 9px" class='fw-bold ps-1'>{rate}%</small>
+						</div>"""
+            else:
+                show_rate = '-'
 
             self._content += f"""
                 <tr class='user_trs' 
@@ -846,10 +992,16 @@ class AdminUtils:
 				    </td>
 				    <td>{agent.first_name}</td>
 				    <td>
+					    <div class='badge rounded-pil w-50 text-bg-{level_class}'>{agent.level.title()}</div>
+				    </td>
+				    <td>
 					    <div class='badge rounded-pill w-50 text-bg-dark'>{agent.stage} - {Func.format_agent_id(agent.stage_id)}</div>
 				    </td>
 				    <td>
 					    <div class='badge rounded-pill w-50 text-bg-{status_class}'>{status_text}</div>
+				    </td>
+				    <td>
+				        {show_rate}
 				    </td>
 				    <td>{agent.last_login:%d %b, %H:%M}</td>	
 			    </tr>

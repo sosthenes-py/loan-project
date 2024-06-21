@@ -135,8 +135,10 @@
                             <tr>
                                 <th>S/N</th>
                                 <th>Name</th>
+                                <th>Role</th>
                                 <th>Stage</th>
                                 <th>Status</th>
+                                <th>R-Rate <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Overall Recovery Rate"></i></th>
                                 <th>Last Login</th>
                             </tr>
                             </thead>
@@ -241,7 +243,7 @@
                                                             <p class="mb-1 details_status_show"
                                                                style="text-transform: capitalize; font-weight: bold">
                                                                 <span class='badge rounded-pill'>AA</span></p>
-                                                            <p class="font-size-sm fw-bold">Registered: <span
+                                                            <p class="font-size-sm fw-bold">Created: <span
                                                                     class="details_registered"></span></p>
 
                                                             <button type="button" class="btn btn-dark view_note"
@@ -256,48 +258,11 @@
 
 
                                                     <!--------------------MINI TRANSACTION HISTORY---------------------->
-                                                    <div class="d-flex flex-column align-items-center text-center">
-                                                        <h5 style="font-size:1.2em; font-weight: bold">Quick
-                                                            Actions</h5>
-
-                                                        <div class="col mb-4 mt-3">
-                                                            <button type="button" class="btn btn-outline-primary px-5">
-                                                                <i class="bx bx-user mr-1"></i>Check Eligibility
-                                                            </button>
-                                                        </div>
-
-                                                        <div class="col">
-                                                            <div class="btn-group" role="group"
-                                                                 aria-label="Basic example">
-                                                                <button type="button"
-                                                                        class="btn btn-outline-primary device_details"
-                                                                        data-bs-toggle='modal'
-                                                                        data-bs-target='#deviceDetailsModal'
-                                                                        data-action="contacts" data-name="Contacts">
-                                                                    Contacts
-                                                                </button>
-
-                                                                <button type="button"
-                                                                        class="btn btn-outline-primary device_details"
-                                                                        data-bs-toggle='modal'
-                                                                        data-bs-target='#deviceDetailsModal'
-                                                                        data-action="sms_log" data-name="SMS Log">SMS
-                                                                    Log
-                                                                </button>
-
-                                                                <button type="button"
-                                                                        class="btn btn-outline-primary device_details"
-                                                                        data-bs-toggle='modal'
-                                                                        data-bs-target='#deviceDetailsModal'
-                                                                        data-action="call_log" data-name="Call Log">Call
-                                                                    Log
-                                                                </button>
-                                                            </div>
-                                                        </div>
+                                                    <div class="card-body mini_show">
 
 
-                                                    </div>
 
+							                        </div>
 
                                                 </div>
                                             </div>
@@ -1104,6 +1069,9 @@
                 {#RESET COUNTERS AND ELEMENTS#}
                 $('.count').text('0')
                 $('#show_notes').html('')
+                $("#loan_history").html('');
+                $("#repayment_history").html('');
+                $('.mini_show').html('')
 
                 onProgress('user-modal')
 
@@ -1130,6 +1098,7 @@
                                 $('.loans_count').text(data.content['loans_count'])
                                 $('.repayments_count').text(data.content['repayments_count'])
                                 $('.notes_count').text(data.content['notes_count'])
+                                $('.mini_show').html(data.content['mini_show'])
                                 var loan_table = $('#loan_table').DataTable({
                                     lengthChange: false,
                                     pageLength: 15,

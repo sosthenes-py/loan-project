@@ -90,7 +90,7 @@ class Note(models.Model):
 class Collection(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     loan = models.OneToOneField(Loan, on_delete=models.CASCADE)
-    amount_due = models.FloatField(max_length=15)
+    amount_due = models.FloatField(max_length=15, default=0)
     amount_paid = models.FloatField(max_length=10, default=0)
     stage = models.CharField(default='', max_length=10)
     created_at = models.DateTimeField(default=timezone.now)
