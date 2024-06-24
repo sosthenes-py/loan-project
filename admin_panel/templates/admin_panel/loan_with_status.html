@@ -62,7 +62,7 @@
                 <div class="card-body">
 
                     <div class="d-flex align-items-center bg-light p-3">
-                        <div class="me-auto fw-bold fs-6">Loan Tracker</div>
+                        <div class="me-auto fw-bold fs-6">{{ status|title }} Loans</div>
                         <div class="d-flex align-items-center">
                             <div class="me-2">
                                 <label for="history_month_start" class="form-label me-1">From:</label>
@@ -79,7 +79,7 @@
                                 <select id="history_rows" class="form-select d-inline-block" style="width: auto;">
                                     <option value="15">15</option>
                                     <option value="50">50</option>
-                                    <option value="200">200</option>
+                                    <option selected value="200">200</option>
                                     <option value="500">500</option>
                                     <option value="2000">2000</option>
                                     <option value="10000">2000+</option>
@@ -87,7 +87,6 @@
                             </div>
                         </div>
                     </div>
-
 
 
                     <div class="d-flex align-items-center bg-light p-3">
@@ -119,19 +118,20 @@
                         </div>
                     </div>
 
+
                     <hr/>
                     <div class="table-responsive">
                         <table class="table align-middle mb-5" id="loan_table">
                             <thead class="table-light">
                             <tr>
-                                <th>L.ID <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Loan ID"></i></th>
+                                <th>Loan ID</th>
                                 <th>User</th>
                                 <th>Principal</th>
-                                <th>Amt Disb <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Amount Disbursed"></i></th>
-                                <th>Amt Due</th>
+                                <th>Amt Disbursed</th>
+                                <th>Amount Due</th>
                                 <th>Repaid</th>
-                                <th>Req Date <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Date Requested"></i></th>
-                                <th>Disb Date <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Disburse Date"></i></th>
+                                <th>Request Date</th>
+                                <th>Disburse Date</th>
                                 <th>Due Date</th>
                                 <th>Overdue Days</th>
                                 <th>Status</th>
@@ -1190,6 +1190,8 @@
 
         })
 
+
+
         function start(refresh = false) {
             var overdue_start = $('#overdue_start').val()
             var overdue_end = $('#overdue_end').val()
@@ -1204,7 +1206,7 @@
                         rows: $('#history_rows').val(),
                         start: $('#history_month_start').val(),
                         end: $('#history_month_end').val(),
-                        status: 'pending,approved,disbursed,declined,partpayment,repaid,overdue',
+                        status: '{{ status }}',
                         overdue_start: overdue_start,
                         overdue_end: overdue_end,
                         filters: $('#filters').val(),
@@ -1239,6 +1241,7 @@
                 })
             }
         }
+
 
     </script>
 

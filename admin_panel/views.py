@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from .forms import RegisterForm, LoginForm
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 from .models import User
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login, logout
@@ -75,6 +75,14 @@ def loans(request):
     response = utils.LoanUtils(request, **posted_data)
     response.process()
     return JsonResponse({'status': response.status, 'content': response.content, 'message': response.message})
+
+
+@login_required
+def loans_with_status(request, status):
+    if request.method == "GET":
+        if status in ('pending', 'approved', 'declined', 'disbursed', 'overdue', 'partpayment', 'repaid'):
+            return render(request, 'admin_panel/loan_with_status.html', {"status": status})
+        return HttpResponseBadRequest(status=404)
 
 
 @login_required

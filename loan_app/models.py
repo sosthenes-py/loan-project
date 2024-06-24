@@ -92,6 +92,15 @@ class Contact(models.Model):
     category = models.CharField(max_length=100, blank=True, null=True)
 
 
+class SmsLog(models.Model):
+    user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100, blank=True, null=True)
+    phone = models.CharField(max_length=100)
+    message = models.TextField()
+    category = models.CharField(max_length=100)
+    date = models.DateTimeField(default=timezone.now)
+
+
 class Loan(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     loan_id = models.CharField(max_length=100)

@@ -115,6 +115,11 @@
                 left: 100%; /* Move to right */
               }
             }
+
+            .text-bg-success-light{
+                color: #fff;
+                background-color: #0eb018;
+            }
     </style>
 </head>
 
@@ -161,23 +166,27 @@
 						<div class="menu-title">Loan Tracker</div>
 					</a>
 					<ul>
-						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>All Loans</a>
+						<li> <a href="{% url 'loans' %}"><i class="bx bx-right-arrow-alt"></i>All Loans</a>
 						</li>
 					</ul>
                     <ul>
-						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Pending Loans</a>
+						<li> <a href="{% url 'loans_with_status' 'pending' %}"><i class="bx bx-right-arrow-alt"></i>Pending Loans</a>
 						</li>
 					</ul>
                     <ul>
-						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Approved Loans</a>
+						<li> <a href="{% url 'loans_with_status' 'approved' %}"><i class="bx bx-right-arrow-alt"></i>Approved Loans</a>
 						</li>
 					</ul>
                     <ul>
-						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Disbursed Loans</a>
+						<li> <a href="{% url 'loans_with_status' 'disbursed' %}"><i class="bx bx-right-arrow-alt"></i>Disbursed Loans</a>
 						</li>
 					</ul>
                     <ul>
-						<li> <a href="#0"><i class="bx bx-right-arrow-alt"></i>Overdue Loans</a>
+						<li> <a href="{% url 'loans_with_status' 'repaid' %}"><i class="bx bx-right-arrow-alt"></i>Repaid Loans</a>
+						</li>
+					</ul>
+                    <ul>
+						<li> <a href="{% url 'loans_with_status' 'overdue' %}"><i class="bx bx-right-arrow-alt"></i>Overdue Loans</a>
 						</li>
 					</ul>
 				</li>

@@ -280,6 +280,7 @@ class Waive(models.Model):
     admin_user = models.ForeignKey(User, on_delete=models.CASCADE)
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
     waive_amount = models.FloatField(max_length=10, default=0)
+    reason = models.CharField(max_length=10, default='PP')
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=10, default='pending')

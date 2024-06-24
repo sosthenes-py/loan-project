@@ -10,6 +10,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('users/', views.users, name='users'),
     path('loans/', views.loans, name='loans'),
+    path('loans/<str:status>/', views.loans_with_status, name='loans_with_status'),
     path('repayments/', views.repayments, name='repayments'),
     path('analysis/', views.analysis, name='analysis'),
     path('logout/', views.logout_user, name='logout'),

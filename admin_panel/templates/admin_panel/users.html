@@ -899,9 +899,21 @@
 
                             <div class="row gy-3">
                                 <div class="col-md-10">
+                                    <select id="note_select" class="form-control">
+                                        <option value="" disabled selected> --Select collection status--</option>
+                                        <option value="promise to pay">Promise To Pay</option>
+                                        <option value="break promise">Break Promise</option>
+                                        <option value="switched off">Switched Off</option>
+                                        <option value="not reachable">Not Reachable</option>
+                                        <option value="not picking">Not Picking</option>
+                                        <option value="fraudulent">Fraudulent</option>
+                                        <option value="payment check request">Payment Check Request</option>
+                                        <option value="negotiating">Negotiating</option>
+                                        <option value="0">Enter custom note</option>
+                                    </select>
                                     <textarea id="note_input"
-                                              placeholder="('promise to pay', 'switched off', 'not reachable', 'not picking', 'fraudulent')..."
-                                              class="form-control"
+                                              placeholder="Custom note here.."
+                                              class="form-control mt-3" style="display: none"
                                               rows=2></textarea>
                                 </div>
                                 <div class="col-md-2 text-end d-grid">
@@ -1546,14 +1558,16 @@
             $("#add_note").click(function () {
                 var user_id = $("#selected_user_id").val();
                 var input = $("#note_input").val();
-                if (input === "") {
+                var select = $("#note_select").val();
+                if (input === "" && select === "" || select === "0" && input === "" || select === null) {
                     toastr["warning"]('Input cannot be empty');
                 } else {
+                    let body = (select === '0') ? input : select
                     loadOn();
                     $.ajax({
                         url: '{% url "users" %}',
                         data: {
-                            note: input,
+                            note: body,
                             user_id: user_id,
                             action: 'add_note'
                         },
@@ -1562,6 +1576,7 @@
                         success: function (data) {
                             loadOff()
                             $('#note_input').val('')
+                            $('#note_select').val('').change()
                             $('#show_notes').html(data.content)
                             notify(data.status, data.message)
                         },
@@ -1576,6 +1591,13 @@
                 }
             })
 
+            $('#note_select').change(function (){
+                if($(this).val() === '0'){
+                    $('#note_input').show()
+                }else{
+                    $('#note_input').hide()
+                }
+            })
 
             $("body").on('click', '.delete_note', function () {
                 var user_id = $("#selected_user_id").val();

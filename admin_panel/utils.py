@@ -105,7 +105,7 @@ class Func:
 
         LoanStatic(user=admin_user, loan=loan, status=loan.status).save()
         overdue_days = Func.overdue_days(loan.disbursed_at, loan.duration)
-        Timeline(user=admin_user, app_user=loan.user, name='repayment', body=f'Repayment of #{amount_paid:,} was made',
+        Timeline(user=admin_user, app_user=loan.user, name='repayment', body=f'Repayment of #{amount_paid:,.2f} was made',
                  detail=loan.status,
                  overdue_days=f'Overdue {overdue_days} Days' if overdue_days > 0 and overdue_days != -1 else 'Due Day').save()
 
@@ -477,7 +477,8 @@ class UserUtils:
                  app_user=self.user,
                  name='collection record',
                  body=self.kwargs['note'],
-                 overdue_days=f'Overdue {Func.overdue_days(self.user.loan_set.last().disbursed_at, self.user.loan_set.last().duration)} Days').save()
+                 overdue_days=f'Overdue {Func.overdue_days(self.user.loan_set.last().disbursed_at, self.user.loan_set.last().duration)} Days' if self.user.loan_set.last().status in ('disbursed', 'partpayment') else 'Loan Inactive'
+                 ).save()
         action = f'Added note: ({note.body[:15]}...)'
         AdminUtils.log(user=self.request.user, app_user=self.user, action_type='add_note', action=action)
         note.save()
@@ -632,11 +633,13 @@ class UserUtils:
             	</div>
             """
 
+
         elif _for == 'timeline':
             tl: Timeline = kwargs['tl']
             detail = ''
             body = ''
-            overdue = f'<span class="badge text-bg-danger">{tl.overdue_days}</span>'
+            overdue_class = 'dark' if tl.overdue_days == 'Loan Inactive' else 'danger'
+            overdue = f'<span class="badge text-bg-{overdue_class}">{tl.overdue_days}</span>'
             if tl.name == 'transfer':
                 body = f'Allocated to {tl.user.stage}-{Func.format_agent_id(tl.user.stage_id)}'
             elif tl.name == 'repayment':
@@ -649,7 +652,6 @@ class UserUtils:
                 overdue = ''
             elif tl.name == "manual assign":
                 body = tl.body
-
             self._content2 += f"""
                 <li class="timeline-item" data-name='{tl.name}'>
                     <div class="timeline-content">
@@ -850,7 +852,6 @@ class AdminUtils:
             ),
         ).values('total_count', 'total_held', 'new_count', 'new_held', 'paid_sum')
 
-        print(cols)
 
         response['repayments'] = self._content
         response['loans_count'] = Collection.objects.filter(user=operator).count()
@@ -913,13 +914,6 @@ class AdminUtils:
                 self._status = 'success'
             admin.save()
 
-    def get_timeline(self):
-        admin = AdminUser.objects.get(pk=self.kwargs['user_id'])
-        timelines = Timeline.objects.filter(user=admin).order_by('-created_at').all()
-        self._content = ''
-        for tl in timelines:
-            self.add_table_content(_for='timeline', tl=tl)
-
     def delete_operator(self):
         admin = AdminUser.objects.get(pk=self.kwargs['user_id'])
         if self.admin_user.level in ['super admin', 'admin']:
@@ -959,7 +953,6 @@ class AdminUtils:
 
             rate = kwargs['recovery']
             if rate != '':
-                rate += 5
                 if rate < 10:
                     rate_class = 'danger'
                 elif 10 <= rate < 40:
@@ -1091,43 +1084,6 @@ class AdminUtils:
                             </tr>
                 		"""
 
-        elif _for == 'timeline':
-            tl: Timeline = kwargs['tl']
-            detail = ''
-            body = ''
-            overdue = f'<span class="badge text-bg-danger">{tl.overdue_days}</span>'
-            if tl.name == 'transfer':
-                body = f'Allocated to {tl.user.stage}-{Func.format_agent_id(tl.user.stage_id)}'
-            elif tl.name == 'repayment':
-                detail = f"""<span class="badge text-bg-{'warning' if tl.detail == 'partpayment' else 'success'}">{tl.detail.title()}</span>"""
-                body = tl.body
-            elif tl.name == "collection record":
-                body = tl.body
-            elif tl.name == "disbursement":
-                body = tl.body
-                overdue = ''
-            elif tl.name == "manual assign":
-                body = tl.body
-
-            self._content += f"""
-                <li class="timeline-item" data-name='{tl.name}'>
-                    <div class="timeline-content">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{tl.created_at:%d-%m-%Y}</strong><br>
-                                <small>{tl.created_at:%H:%M:%S}</small>
-                            </div>
-                            <div class="badge rounded-pill text-bg-info">{tl.name.title()}</div>
-                        </div>
-                        <div class="mt-2">
-                            {overdue}
-                            <span class="badge text-bg-primary">{tl.user.stage}-{Func.format_agent_id(tl.user.stage_id)}</span>
-                            {detail}
-                        </div>
-                        <div class="mt-1">{body}</div>
-                    </div>
-                </li>
-            """
 
     def process(self):
         if self.action == "fetch_operators":
@@ -1148,8 +1104,6 @@ class AdminUtils:
             self.modify_admin()
         elif self.action == "can_collect":
             self.can_collect()
-        elif self.action == "get_timeline":
-            self.get_timeline()
         elif self.action == "delete_operator":
             self.delete_operator()
 
@@ -1202,7 +1156,7 @@ class LoanUtils:
         self.request = request
         self._status, self._message = 'success', 'success'
 
-    def fetch_loans(self, size="single", rows=10, start=f'{dt.date.today()-dt.timedelta(days=60):%Y-%m-%d}', end=f'{dt.date.today():%Y-%m-%d}'):
+    def fetch_loans(self, size="single", rows=10, start=f'{dt.date.today()-dt.timedelta(days=60):%Y-%m-%d}', end=f'{dt.date.today():%Y-%m-%d}', status='pending,approved,disbursed,declined,partpayment,repaid,overdue', overdue_start=0, overdue_end=365, filters=''):
         if size != 'single':
             start_date = dt.datetime.strptime(start, '%Y-%m-%d')
             start_date = timezone.make_aware(start_date, timezone.get_current_timezone())
@@ -1210,17 +1164,44 @@ class LoanUtils:
             end_date = dt.datetime.strptime(end, '%Y-%m-%d') + dt.timedelta(days=1)
             end_date = timezone.make_aware(end_date, timezone.get_current_timezone())
 
-            loans = Loan.objects.filter(created_at__gte=start_date, created_at__lte=end_date).order_by(
-                '-created_at').all()
+            loans = Loan.objects.filter(
+                (
+                        Q(created_at__gte=start_date) & Q(created_at__lte=end_date)
+                )
+                &
+                (
+                        Q(loan_id__startswith=filters) | Q(user__phone__startswith=filters) |
+                        Q(user__bvn__startswith=filters) | Q(user__first_name__startswith=filters) |
+                        Q(user__last_name__startswith=filters)
+                )
+            ).order_by('-created_at').all()
+
+            overdue_from = 0 if overdue_start == '' else int(overdue_start)
+            overdue_to = 365 if overdue_end == '' else int(overdue_end)
+            rows = int(rows)
 
             self._content = ''
             sn = 0
-            for loan in loans[:int(rows)]:
-                disbursed = '-'
-                if loan.disbursed_at is not None:
-                    disbursed = f'{loan.disbursed_at:%b %d, %Y}'
-                sn += 1
-                self.add_table_content(_for='loans', disbursed=disbursed, single=False, loan=loan, sn=sn, size=size)
+            for loan in loans:
+                if rows > 0:
+                    if loan.status not in ('disbursed', 'partpayment') and overdue_start == '':
+                        overdue_days = overdue_from  # When filter not given, show loan even if not disbursed yet
+                    elif loan.status not in ('disbursed', 'partpayment') and overdue_start != '':
+                        overdue_days = -10  # Don't show this loan if filter is given
+                    else:
+                        overdue_days = Func.overdue_days(loan.disbursed_at, loan.duration)
+
+                    if loan.status == 'repaid' and overdue_start != '':
+                        overdue_days = -10
+                    if overdue_from <= overdue_days <= overdue_to:
+                        statuses = status.split(',')
+                        sn += 1
+                        if len(statuses) == 1 and 'overdue' in statuses:
+                            if Func.get_loan_status(loan)[0] == 'overdue':
+                                self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
+                        elif loan.status in statuses:
+                            self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
+                        rows -= 1
         else:
             self.user = AppUser.objects.get(user_id=self.kwargs['user_id'])
             # IF SIZE IS SINGLE
@@ -1228,11 +1209,8 @@ class LoanUtils:
             self._content = ''
             sn = 0
             for loan in loans:
-                disbursed = '-'
-                if loan.disbursed_at is not None:
-                    disbursed = f'{loan.disbursed_at:%b %d, %Y}'
                 sn += 1
-                self.add_table_content(_for='loans', disbursed=disbursed, single=True, loan=loan, sn=sn, size=size)
+                self.add_table_content(_for='loans', single=True, loan=loan, sn=sn, size=size)
 
     def fetch_waives(self, rows=10, start=f'{dt.date.today() - dt.timedelta(days=60):%Y-%m-%d}',
                     end=f'{dt.date.today():%Y-%m-%d}'):
@@ -1284,8 +1262,7 @@ class LoanUtils:
                 self._message = 'Action could not be completed, refresh page and try again'
                 self._status = 'error'
                 return
-            note = f'Super Admin ({self.request.user.first_name}) has waived loan with ID ({loan.loan_id})'
-            UserUtils(self.request, action='add_note', user_id=self.user.user_id, note=note, super=True).process()
+            Func.repayment(loan=loan, amount_paid=loan.amount_due-loan.amount_paid)
         else:
             # IF TO == 'APPROVED' OR 'DECLINED' OR 'DISBURSED'
             if to == "disbursed" and loan.status != "approved":
@@ -1303,7 +1280,7 @@ class LoanUtils:
 
         loan_static = LoanStatic(user=self.request.user, loan=loan, status=to)
         loan.status = to
-        loan.repaid_at = timezone.now() if to == "repaid" else None
+
         AdminUtils.log(
             user=self.request.user,
             app_user=loan.user,
@@ -1381,12 +1358,13 @@ class LoanUtils:
             else:
                 attach_user = ''
 
-            try:
-                avatar = loan.user.avatar.file.url
-            except:
-                avatar = '/static/admin_panel/images/avatars/user.png'
+            avatar = loan.user.avatar.file.url if hasattr(loan.user, 'avatar') else '/static/admin_panel/images/avatars/user.png'
 
             status_text, status_class = Func.get_loan_status(loan)
+
+            disbursed = '-'
+            if loan.disbursed_at is not None:
+                disbursed = f'{loan.disbursed_at:%b %d, %Y}'
 
             self._content += f"""
                         <tr data-user_id='{loan.user.user_id}' 
@@ -1409,9 +1387,9 @@ class LoanUtils:
                                     data-style='grey' 
                                     data-last_access='{loan.user.last_access}' class='loan_rows' data-bs-toggle='modal' data-bs-target='#exampleLargeModal1'
                                     data-loan_id='{loan.loan_id}'">
-                            <td>{kwargs['sn']}.</td>
+                           
                             <td>{loan.loan_id}
-                            <span class="badge bg-{'warning' if loan.reloan == 1 else 'info'}">{'1st loan' if loan.reloan == 1 else f'reloan ({loan.reloan})'}</span>
+                            <span style="font-size: 11px" class="fw-bold text-{'warning' if loan.reloan == 1 else 'info'}">{'1st loan' if loan.reloan == 1 else f'reloan ({loan.reloan})'}</span>
                             </td>
                             {attach_user}
                 			<td>&#x20A6;{loan.principal_amount:,}</td>
@@ -1419,7 +1397,7 @@ class LoanUtils:
                 			<td>&#x20A6;{loan.amount_due:,}</td>
                 			<td>&#x20A6;{loan.amount_paid:,.2f} {'<span class="rounded-pill badge text-bg-dark">waive</span>' if loan.waive_set.exists() else ''}</td>
                 			<td>{loan.created_at:%b %d, %Y}</td>
-                			<td>{kwargs['disbursed']}</td>
+                			<td>{disbursed}</td>
                 			<td>{self.get_due_date()}</td>
                 			<td>{self.overdue_days()}</td>
                 			<td>
@@ -1443,7 +1421,7 @@ class LoanUtils:
                     if loan.status == "pending":
                         self._content += f"""
                                         <li data-id='{loan.id}' data-user_id='{loan.user.user_id}' data-size='{kwargs["size"]}' data-action='approved' class='loan_actions text-success'><a class='dropdown-item'><i class='bx bx-check font-22 '></i> Approve</a></li>
-                                        <li data-id='{loan.id}' data-action='declined' class='loan_actions text-danger'><a class='dropdown-item'><i class='bx bx-x font-22 '></i> Decline</a></li>
+                                        <li data-id='{loan.id}' data-user_id='{loan.user.user_id}' data-size='{kwargs["size"]}' data-action='declined' class='loan_actions text-danger'><a class='dropdown-item'><i class='bx bx-x font-22 '></i> Decline</a></li>
                                         """
                     if loan.status == "approved":
                         self._content += f"""
@@ -1572,7 +1550,11 @@ class LoanUtils:
             self.fetch_loans(size='multiple',
                              rows=self.kwargs.get('rows', 10),
                              start=self.kwargs.get('start'),
-                             end=self.kwargs.get('end')
+                             end=self.kwargs.get('end'),
+                             status=self.kwargs.get('status'),
+                             filters=self.kwargs.get('filters'),
+                             overdue_start=self.kwargs.get('overdue_start'),
+                             overdue_end=self.kwargs.get('overdue_end')
                              )
         else:
             if self.action == "fetch_loans":
@@ -1600,8 +1582,8 @@ class LoanUtils:
             due_date = self.loan.disbursed_at + dt.timedelta(days=self.loan.duration)
             diff = timezone.now() - due_date
             if diff.days < -1:
-                return '-' if self.loan.status != 'repaid' else f'repaid: {self.loan.repaid_at:%b %d}'
-            return diff.days if self.loan.status != 'repaid' else f'repaid: {self.loan.repaid_at:%b %d}'
+                return '-' if self.loan.status != 'repaid' else f'<span class="fw-bold text-success">repaid:</span> {self.loan.repaid_at:%b %d}'
+            return diff.days if self.loan.status != 'repaid' else f'<span class="fw-bold text-success">repaid:</span> {self.loan.repaid_at:%b %d}'
         return '-'
 
     def get_due_date(self):
