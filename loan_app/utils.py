@@ -1,4 +1,5 @@
 from loan_app.models import Loan, Document, Avatar, DisbursementAccount, VirtualAccount, AppUser
+from admin_panel.models import LoanStatic
 from django.contrib.auth.hashers import make_password, check_password
 import random
 from django.utils import timezone
@@ -6,6 +7,7 @@ import datetime as dt
 from faker import Faker
 from django.db.models import Q
 from project_pack.models import Project
+import loan_app.api as apis
 
 
 class Auth:
@@ -93,9 +95,15 @@ class Account:
     @staticmethod
     def create_virtual_account(user: AppUser):
         # After creating virtual account, store to db
-        bank_number = 2116038168
-        bank_name = 'UBA'
-        bank_code = 145
+        res = apis.generate_flw_virtual_account(user)
+        if res['status'] == 'success':
+            bank_number = res['data']['account_number']
+            bank_name = res['data']['bank_name']
+            bank_code = 0
+        else:
+            bank_number = '1234567890'
+            bank_name = 'Dummy Bank'
+            bank_code = 0
         VirtualAccount(user=user, number=bank_number, bank_name=bank_name, bank_code=bank_code).save()
 
     @staticmethod
@@ -112,6 +120,7 @@ class Account:
             new_loan.save()
             new_loan.loan_id = f'SL{new_loan.id}{random.randint(100, 1000)}'
             new_loan.save()
+            LoanStatic(loan=new_loan, status='pending').save()
             return {'status': 'success', 'message': 'Loan submitted successfully'}
         return {'status': 'error', 'message': eligibility_message}
 

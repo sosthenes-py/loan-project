@@ -100,7 +100,7 @@ class Collection(models.Model):
 
 
 class LoanStatic(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
     status = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
@@ -108,6 +108,7 @@ class LoanStatic(models.Model):
 
 class Repayment(models.Model):
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
+    tx_id = models.CharField(max_length=50, default='')
     admin_user = models.ForeignKey(User, on_delete=models.CASCADE)
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
     principal_amount = models.FloatField(max_length=10, default=0)
@@ -115,6 +116,7 @@ class Repayment(models.Model):
     amount_paid_now = models.FloatField(max_length=10, default=0)
     total_paid = models.FloatField(max_length=10, default=0)
     stage = models.CharField(max_length=10, default='A')
+    overdue_days = models.IntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(auto_now=True)
 

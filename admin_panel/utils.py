@@ -2,14 +2,17 @@ import django.db.models
 from django.utils import timezone
 import datetime as dt
 from django.db.models import Sum, Count, Case, When, Value, F, DecimalField, Q
-from django.db.models.functions import TruncDay
+from django.db.models.functions import TruncDay, TruncMonth
 from calendar import monthrange
 import random
 import math
 from admin_panel.models import User as AdminUser, AdminLog, Note, Collection, LoanStatic, Repayment, Progressive, Waive, Timeline, Recovery
-from loan_app.models import AppUser, Document, DisbursementAccount, Loan
+from loan_app.models import AppUser, Document, DisbursementAccount, Loan, SmsLog, Contact, Blacklist
 from django.contrib.auth.hashers import make_password, check_password
 LOAN_DURATION = 6
+from faker import Faker
+import loan_app.api as apis
+import json
 
 
 class Func:
@@ -111,7 +114,7 @@ class Func:
 
         Repayment(user=loan.user, admin_user=admin_user, loan=loan, principal_amount=loan.principal_amount,
                   amount_due=loan.amount_due, amount_paid_now=amount_paid, total_paid=loan.amount_paid,
-                  stage=Func.get_stage(loan)).save()
+                  stage=Func.get_stage(loan), overdue_days=overdue_days).save()
 
     @staticmethod
     def generate_dummy_loans(start_date, end_date=f'{dt.date.today():%Y-%m-%d}', count_per_day=random.randint(8, 20)):
@@ -169,14 +172,42 @@ class Func:
                 Func.repayment(loan, amount_paid)
 
     @staticmethod
-    def disburse_loan(loan: Loan, admin_user):
+    def disburse_loan(admin_user, loans=None):
+        """
+
+        :param admin_user: AdminUser object making disbursement
+        :param loans: List of loan(s)
+        :return:
+        """
         # raise 'Disburse function is not yet set'
-        loan.amount_disbursed = (60 / 100) * loan.principal_amount
-        loan.disbursed_at = timezone.now()
-        loan.save()
-        Timeline(user=admin_user, app_user=loan.user, name='disbursement',
-                 body=f'Loan of &#x20A6;{loan.principal_amount} was requested. &#x20A6;{loan.amount_disbursed} was disbursed').save()
-        return
+        bulk_data = [
+            {
+                'bank_code': loan.user.disbursementaccount.bank_code,
+                'account_number': loan.user.disbursementaccount.number,
+                'amount': loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount),
+                'currency': 'NGN',
+                'narration': 'Sportycredit Loan',
+                'reference': f'{loan.loan_id}-{admin_user.id}',
+                'meta': [
+                    {
+                        'email': loan.user.email
+                    }
+                ]
+
+            }
+            for loan in loans
+        ]
+        # print(bulk_data)
+        res = apis.create_bulk_tf(bulk_data, admin_user)
+        if res['status'] != 'success':
+            print(res)
+            return False
+        for loan in loans:
+            loan.status = 'disbursed'
+            loan.amount_disbursed = loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount)
+            loan.disbursed_at = timezone.now()
+            loan.save()
+        return True
 
     @staticmethod
     def set_progressive():
@@ -271,7 +302,7 @@ class Func:
     def set_collectors():
         """
         To be run at the beginning of every day
-        Remember that AdminUser must contain at least one staff at each stage
+        Remember that AdminUser must contain at least one staff at each stage who is enabled to collect
         :return:
         """
         # First clear collections
@@ -396,6 +427,97 @@ class Func:
                         rate=(details['paid_count']/details['total_count']) * 100
                     ).save()
 
+    @staticmethod
+    def generate_dummy_sms(user_phone, count, start_date=(dt.date.today()-dt.timedelta(days=2)).strftime('%Y-%m-%d')):
+        """
+        This method only creates a conversation.
+        You may have to run this method multiple times to create various conversations, according to your need.
+        :param user_phone: Customer's phone
+        :param count: How many messages you want to create in this conversation
+        :param start_date: When to start dating this conversation
+        :return:
+        """
+        user = AppUser.objects.get(phone=user_phone)
+        fake = Faker()
+        phone = fake.phone_number()
+        name = fake.name()
+        start_date = dt.datetime.strptime(start_date, '%Y-%m-%d')
+        for _ in range(count):
+            date = start_date + dt.timedelta(hours=2)
+            fake = Faker()
+            SmsLog(
+                user=user,
+                name=name,
+                phone=phone,
+                message=" ".join(fake.sentences(random.randint(1, 4))),
+                category=random.choice(['incoming', 'outgoing']),
+                date=date
+            ).save()
+
+    @staticmethod
+    def generate_dummy_contacts(user_phone, count):
+        user = AppUser.objects.get(phone=user_phone)
+        for _ in range(count):
+            fake = Faker()
+            Contact(
+                user=user,
+                name=fake.name(),
+                phone=fake.phone_number(),
+                category=''
+            ).save()
+
+    @staticmethod
+    def update_blacklist():
+        """
+        This method will be run at the beginning of each day (or end of day, as manager wishes).
+        It checks for all first day overdue loans and goes on to blacklist the users
+        :return:
+        """
+        loans = Loan.objects.filter(status='disbursed')
+        for loan in loans:
+            loan_status, _ = Func.get_loan_status(loan)
+            if Func.overdue_days(loan.disbursed_at, loan.duration) == 1 and loan.status != 'repaid':
+                Blacklist(user=loan.user).save()
+
+    @staticmethod
+    def webhook(event, data):
+        if event == 'charge.completed':
+            return Func.webhook_charge(data)
+        elif event == 'transfer.completed':
+            return Func.webhook_transfer(data)
+
+    @staticmethod
+    def webhook_charge(data):
+        if apis.is_tx_valid(data['id']):
+            if not Repayment.objects.filter(tx_id=data['id']).exists():
+                user = AppUser.objects.get(phone=data['customer']['phone_number'])
+                if user:
+                    loan = user.loan_set.last()
+                    Func.repayment(loan=loan, amount_paid=data['amount'])
+                    return True
+        return False
+
+    @staticmethod
+    def webhook_transfer(data):
+        tx_id = data['id']
+        loan_id = data['reference'].split('-')[0]
+        admin_id = data['reference'].split('-')[1]
+        loan = Loan.objects.get(loan_id=loan_id)
+        admin = AdminUser.objects.get(pk=admin_id)
+        if loan:
+            if data['status'] == 'SUCCESSFUL':
+                loan.disburse_id = tx_id
+                loan.save()
+                Timeline(user=admin, app_user=loan.user, name='disbursement',
+                         body=f'Loan of &#x20A6;{loan.principal_amount} was requested. &#x20A6;{loan.amount_disbursed} was disbursed').save()
+                LoanStatic(user=admin, loan=loan, status='disbursed').save()
+            else:
+                loan.status = 'approved'
+                loan.amount_disbursed = 0
+                loan.disbursed_at = None
+                loan.save()
+        return True
+
 
 class UserUtils:
     def __init__(self, request, **kwargs):
@@ -409,7 +531,8 @@ class UserUtils:
     def fetch_users_in_table(self,
                              rows=10,
                              start=f'{dt.date.today() - dt.timedelta(days=60):%Y-%m-%d}',
-                             end=f'{dt.date.today():%Y-%m-%d}'
+                             end=f'{dt.date.today():%Y-%m-%d}',
+                             filters=''
                              ):
         start_date = dt.datetime.strptime(start, '%Y-%m-%d')
         start_date = timezone.make_aware(start_date, timezone.get_current_timezone())
@@ -417,18 +540,30 @@ class UserUtils:
         end_date = dt.datetime.strptime(end, '%Y-%m-%d') + dt.timedelta(days=1)
         end_date = timezone.make_aware(end_date, timezone.get_current_timezone())
 
-        self.users = AppUser.objects.filter(created_at__gte=start_date, created_at__lte=end_date).order_by(
-                '-created_at').all()
+        self.users = AppUser.objects.filter(
+                (
+                        Q(created_at__gte=start_date) & Q(created_at__lte=end_date)
+                )
+                &
+                (
+                        Q(user_id__startswith=filters) | Q(phone__startswith=filters) |
+                        Q(bvn__startswith=filters) | Q(first_name__startswith=filters) |
+                        Q(last_name__startswith=filters)
+                )
+            ).order_by('-created_at').all()
         self._content = ''
-        for self.user in self.users[:int(rows)]:
-            avatar = ''
-            try:
-                if self.user.avatar is not None:
-                    avatar = self.user.avatar.file.url
-            except:
-                avatar = '/static/admin_panel/images/avatars/user.png'
+        rows = int(rows)
+        for self.user in self.users:
+            if rows > 0:
+                avatar = ''
+                try:
+                    if self.user.avatar is not None:
+                        avatar = self.user.avatar.file.url
+                except:
+                    avatar = '/static/admin_panel/images/avatars/user.png'
 
-            self.add_table_content(_for='all_users_table', avatar=avatar)
+                self.add_table_content(_for='all_users_table', avatar=avatar)
+                rows -= 1
 
     def fetch_other_details(self):
         self._content = {}
@@ -449,6 +584,18 @@ class UserUtils:
         self._content['tables'] = {'notes': self._content2}
         self.fetch_files_in_table()
         self._content['tables']['files'] = self._content2
+
+        # Prepare data for overdue days chart
+        data_y = []
+        data_x = []
+        for rep in self.user.repayment_set.filter(loan__status='repaid'):
+            data_y.append(rep.overdue_days)
+            data_x.append(f'{rep.created_at:%b %d}')
+        self._content['overdue_chart'] = {
+            'x': data_x,
+            'y': data_y
+        }
+        self._content['max_overdue_days'] = sorted(data_y)[len(data_y)-1] if data_y else '-'
 
     def fetch_notes_in_table(self):
         self._content2 = ''
@@ -473,11 +620,15 @@ class UserUtils:
 
     def add_note(self):
         note = Note(user=self.request.user, app_user=self.user, body=self.kwargs['note'], super=self.kwargs.get('super') or False)
+        if self.user.loan_set.last():
+            overdue_days = f'Overdue {Func.overdue_days(self.user.loan_set.last().disbursed_at, self.user.loan_set.last().duration)} Days' if self.user.loan_set.last().status in ('disbursed', 'partpayment') else 'Loan Inactive'
+        else:
+            overdue_days = 'Loan Inactive'
         Timeline(user=self.request.user,
                  app_user=self.user,
                  name='collection record',
                  body=self.kwargs['note'],
-                 overdue_days=f'Overdue {Func.overdue_days(self.user.loan_set.last().disbursed_at, self.user.loan_set.last().duration)} Days' if self.user.loan_set.last().status in ('disbursed', 'partpayment') else 'Loan Inactive'
+                 overdue_days=overdue_days
                  ).save()
         action = f'Added note: ({note.body[:15]}...)'
         AdminUtils.log(user=self.request.user, app_user=self.user, action_type='add_note', action=action)
@@ -508,17 +659,64 @@ class UserUtils:
             self.add_table_content(_for='file', file=file)
 
     def update_user(self):
-        key = self.kwargs['key']
-        value = self.kwargs['value']
-        if value == getattr(self.user, key):
-            self._message = 'No changes was made'
-            self._status = 'info'
+        if self.request.user.level in ('super admin', 'admin'):
+            amount_fields = ['eligible_amount']
+            key = self.kwargs['key']
+            value = self.kwargs['value']
+            if key in amount_fields:
+                value = float(value.replace(',', ''))
+            if value == getattr(self.user, key):
+                self._message = 'No changes was made'
+                self._status = 'info'
+                return None
+            log_detail = f"Updated user's {key} from {getattr(self.user, key)} to {value}"
+
+            setattr(self.user, key, value)
+            self.user.save()
+            AdminUtils.log(self.request.user, app_user=self.user, action_type='profile update', action=log_detail)
+            self._message = f'{key} updated successfully'
+        else:
+            self._message = 'No permission'
+            self._status = 'error'
             return None
-        log_detail = f"Updated user's {key} from {getattr(self.user, key)} to {value}"
-        setattr(self.user, key, value)
-        self.user.save()
-        AdminUtils.log(self.request.user, app_user=self.user, action_type='profile update', action=log_detail)
-        self._message = f'{key} updated successfully'
+
+    def blacklist(self):
+        if hasattr(self.user, 'blacklist'):
+            self.user.blacklist.delete()
+            self._message = 'User whitelisted'
+        else:
+            Blacklist(user=self.user).save()
+            self._message = 'User blacklisted'
+
+    def fetch_blacklist(self,
+                        rows=10,
+                        start=f'{dt.date.today() - dt.timedelta(days=60):%Y-%m-%d}',
+                        end=f'{dt.date.today():%Y-%m-%d}',
+                        filters=''
+                        ):
+        start_date = dt.datetime.strptime(start, '%Y-%m-%d')
+        start_date = timezone.make_aware(start_date, timezone.get_current_timezone())
+
+        end_date = dt.datetime.strptime(end, '%Y-%m-%d') + dt.timedelta(days=1)
+        end_date = timezone.make_aware(end_date, timezone.get_current_timezone())
+
+        items = Blacklist.objects.filter(
+            (
+                    Q(created_at__gte=start_date) & Q(created_at__lte=end_date)
+            )
+            &
+            (
+                    Q(user__user_id__startswith=filters) | Q(user__phone__startswith=filters) |
+                    Q(user__bvn__startswith=filters) | Q(user__first_name__startswith=filters) |
+                    Q(user__last_name__startswith=filters)
+            )
+        ).order_by('-created_at').all()
+        self._content = ''
+        rows = int(rows)
+        for item in items:
+            if rows > 0:
+                self.add_table_content(_for='blacklist', row=item)
+                rows -= 1
 
     def get_timeline(self):
         timelines = Timeline.objects.filter(app_user=self.user).order_by('-created_at').all()
@@ -527,12 +725,105 @@ class UserUtils:
             self.add_table_content(_for='timeline', tl=tl)
         self._content = self._content2
 
+    def fetch_sms(self, which):
+        self.user: AppUser
+        logs = self.user.smslog_set.order_by('date').all()
+        if logs:
+            logs_dict = {}
+            for log in logs:
+                if log.phone not in logs_dict.keys():
+                    logs_dict[log.phone] = [log]
+                else:
+                    logs_dict[log.phone].append(log)
+
+            content = {}
+            if which == 'sidebar':
+                self._content = ''
+                for phone, logs_list in logs_dict.items():
+                    last_log = logs_list[len(logs_list)-1]
+                    self.add_table_content(_for='sms_sidebar', log=last_log)
+                content['sidebar'] = self._content
+                content['content'] = """
+                    <div style="justify-content: center; height: 100%; align-items: center; display: flex;">
+                        <i>Click on a conversation to view...</i>
+                    </div>
+                """
+            else:
+                self._content = ''
+                logs_list = logs_dict[which]
+                for log in logs_list:
+                    self.add_table_content(_for='sms_content', log=log)
+                content['content'] = self._content
+                last_log = logs_list[len(logs_list)-1]
+                content['last_updated'] = f'{last_log.date:%b %d, %I:%M %p}'
+                content['name'] = last_log.name
+                content['phone'] = last_log.phone
+            self._content = content
+            self._status = 'success'
+        else:
+            self._content = {
+                'sidebar': """
+                    <a href="javascript:;" class="list-group-item active">
+						<div class="d-flex">
+							<div class="flex-grow-1 ms-2">
+								<h6 class="mb-0 chat-title">No Data</h6>
+								<p class="mb-0 chat-msg">No conversations here yet..</p>
+							</div>
+							<div class="chat-time"></div>
+						</div>
+					</a>
+                """,
+                'content': """
+                    <div style="justify-content: center; height: 100%; align-items: center; display: flex;">
+                        <i>Click on a conversation to view...</i>
+                    </div>
+                """
+            }
+            self._status = 'error'
+            self._message = 'No data available'
+
+    def fetch_contact(self):
+        self.user: AppUser
+        contacts = self.user.contact_set.order_by('name').all()
+        content = {}
+        self._content = ''
+        if contacts:
+            for contact in contacts:
+                self.add_table_content(_for='contact', contact=contact)
+            content['sidebar'] = self._content
+        else:
+            content['sidebar'] = """
+                    <a href="javascript:;" class="list-group-item active">
+						<div class="d-flex">
+							<div class="flex-grow-1 ms-2">
+								<h6 class="mb-0 chat-title">No Data</h6>
+								<p class="mb-0 chat-msg">No contacts here yet..</p>
+							</div>
+							<div class="chat-time"></div>
+						</div>
+					</a>
+                """
+        content['content'] = """
+                    <div style="justify-content: center; height: 100%; align-items: center; display: flex;">
+                        <i>Nothing to show here...</i>
+                    </div>
+                """
+        self._content = content
+
     def process(self):
         if self.action == "get_all_users":
             self.fetch_users_in_table(
                 rows=self.kwargs.get('rows', 10),
                 start=self.kwargs.get('start'),
-                end=self.kwargs.get('end')
+                end=self.kwargs.get('end'),
+                filters=self.kwargs.get('filters')
+            )
+        elif self.action == 'fetch_blacklist':
+            self.fetch_blacklist(
+                rows=self.kwargs.get('rows', 10),
+                start=self.kwargs.get('start'),
+                end=self.kwargs.get('end'),
+                filters=self.kwargs.get('filters')
             )
         else:
             self.user = AppUser.objects.get(user_id=self.kwargs['user_id'])
@@ -551,6 +842,12 @@ class UserUtils:
                 self.fetch_files_in_table()
             elif self.action == "get_timeline":
                 self.get_timeline()
+            elif self.action == 'fetch_sms':
+                self.fetch_sms(self.kwargs['which'])
+            elif self.action == 'fetch_contact':
+                self.fetch_contact()
+            elif self.action == 'blacklist':
+                self.blacklist()
 
     def add_table_content(self, _for='', **kwargs):
         if _for == 'all_users_table':
@@ -558,6 +855,7 @@ class UserUtils:
                                 <tr 
                                     data-user_id='{self.user.user_id}' 
                                     data-first_name='{self.user.first_name}' 
+                                    data-eligible_amount='{self.user.eligible_amount:,}' 
                                     data-last_name='{self.user.last_name}' 
                                     data-phone='{self.user.phone}' 
                                     data-phone2='{self.user.phone2}' 
@@ -571,14 +869,14 @@ class UserUtils:
                                     data-dob='{self.user.dob}' 
                                     data-created_at="{self.user.created_at:%a %b %d, %Y}" 
                                     data-avatar="{kwargs['avatar']}" 
-                                    data-status='{self.user.status}' 
-                                    data-status_pill='<span class="badge rounded-pill text-bg-{'success' if self.user.status else 'danger'}">{'Active' if self.user.status else 'Suspended'}</span>' 
+                                    data-status='{'Active' if not self.user.is_blacklisted() else f'Blacklisted: {getattr(self.user, "blacklist").created_at:%b %d}'}' 
+                                    data-status_pill='<span class="badge rounded-pill text-bg-{'success' if not self.user.is_blacklisted() else 'danger'}">{'Active' if not self.user.is_blacklisted() else f'Blacklisted: {getattr(self.user, "blacklist").created_at:%b %d}'}</span>' 
                                     data-style='grey' 
                                     data-last_access='{self.user.last_access}' class='user_rows' data-bs-toggle='modal' data-bs-target='#exampleLargeModal1'>
 
                                     <td>
                                 		<div class='d-flex align-items-center'>
-                                		<div class="user-presence user-{'online' if self.user.status else 'offline'}" data-user_id="{self.user.user_id}">
+                                		<div class="user-presence user-{'online' if not self.user.is_blacklisted() else 'offline'}" data-user_id="{self.user.user_id}">
                                 			<img src="{kwargs['avatar']}" width="10" height="10" alt="" class="rounded-circle"></div>
                                 		</div>
                                 	</td>
@@ -592,6 +890,7 @@ class UserUtils:
                                 	<td>{self.user.last_access:%a %b %d, %Y}</td>	
                                 </tr>
                             """
+
         elif _for == 'note':
             note = kwargs['note']
             self._content2 += f"""
@@ -633,6 +932,65 @@ class UserUtils:
             	</div>
             """
 
+        elif _for == 'sms_sidebar':
+            log = kwargs['log']
+            self._content += f"""
+                <a href="javascript:;" class="list-group-item sms_sidebar_item phonebook_item" data-name="{log.name}" data-message="{log.message}" data-phone="{log.phone}">
+					<div class="d-flex">
+						<div class="chat-user-offline">
+							<img src="/static/admin_panel/images/avatars/user.png" width="42" height="42" class="rounded-circle" alt="">
+						</div>
+						<div class="flex-grow-1 ms-2">
+							<h6 class="mb-0 chat-title">{log.name}</h6>
+							<p class="mb-0 chat-msg">{log.message if len(log.message) < 15 else f'{log.message[:15]}...'}</p>
+						</div>
+						<div class="chat-time">{log.date:%I:%M %p}</div>
+					</div>
+				</a>
+            """
+
+        elif _for == 'sms_content':
+            log = kwargs['log']
+            if log.category == 'incoming':
+                self._content += f"""
+                    <div class="chat-content-leftside">
+							<div class="d-flex">
+								<img src="/static/admin_panel/images/avatars/user.png" width="30" height="30" class="rounded-circle" alt="">
+								<div class="flex-grow-1 ms-2">
+									<p class="mb-0 chat-time">{log.name}, {log.date:%I:%M %p}</p>
+									<p class="chat-left-msg">{log.message}</p>
+								</div>
+							</div>
+						</div>
+                """
+            else:
+                self._content += f"""
+                    <div class="chat-content-rightside">
+							<div class="d-flex ms-auto">
+								<div class="flex-grow-1 me-2">
+									<p class="mb-0 chat-time text-end">Customer, {log.date:%I:%M %p}</p>
+									<p class="chat-right-msg">{log.message}</p>
+								</div>
+							</div>
+						</div>
+                """
+
+        elif _for == 'contact':
+            contact = kwargs['contact']
+            self._content += f"""
+                            <a href="javascript:;" class="list-group-item contact_item phonebook_item" data-name="{contact.name}" data-message="" data-phone="{contact.phone}">
+            					<div class="d-flex">
+            						<div class="chat-user-offline">
+            							<img src="/static/admin_panel/images/avatars/user.png" width="42" height="42" class="rounded-circle" alt="">
+            						</div>
+            						<div class="flex-grow-1 ms-2">
+            							<h6 class="mb-0 chat-title">{contact.name}</h6>
+            							<p class="mb-0 chat-msg" >{contact.phone}</p>
+            						</div>
+            						<div class="chat-time"><span class='badge text-bg-primary' onclick="copy_to_clipboard('{contact.phone}')"><i class='bx bx-copy'></i> copy</span></div>
+            					</div>
+            				</a>
+                        """
 
         elif _for == 'timeline':
             tl: Timeline = kwargs['tl']
@@ -670,6 +1028,21 @@ class UserUtils:
                         <div class="mt-1">{body}</div>
                     </div>
                 </li>
+            """
+
+        elif _for == 'blacklist':
+            row = kwargs['row']
+            self._content += f"""
+                <tr>
+                    <td>{row.user.user_id}</td>
+                    <td>{row.user.last_name} {row.user.first_name}</td>
+                    <td>{row.user.phone}</td>
+                    <td>{row.user.email}</td>
+                    <td>{row.created_at:%a %b %d, %Y}</td>
+                    <td><a href="#0" class="blacklist" data-user_id="{row.user.user_id}">Whitelist</a></td>
+                    
+                </tr>
+                
             """
 
     @property
@@ -810,6 +1183,8 @@ class AdminUtils:
 
     def operator_details(self):
         operator = AdminUser.objects.get(pk=self.kwargs['id'])
+        if operator.level != 'staff':
+            return
         collections = Collection.objects.filter(user=operator).all()
 
         response = {}
@@ -823,35 +1198,42 @@ class AdminUtils:
         for repay in repayments:
             self.add_table_content(_for='operator_repayments', repay=repay)
 
-        cols = Collection.objects.filter(user=operator).annotate(
-            total_count=Count('id', output_field=django.db.models.FloatField()),
+        cols = Collection.objects.filter(user=operator).values('user').annotate(
+            total_count=Count('id'),
             total_held=Sum(
-                F('amount_due') - F('amount_paid'),
+                F('amount_due'),
                 output_field=django.db.models.FloatField()
             ),
             new_count=Count(
                 Case(
                     When(created_at__date=dt.date.today(), then='id'),
-                    default=Value(None)
-                ),
-                output_field=django.db.models.IntegerField()
+                    default=Value(None),
+                    output_field=django.db.models.IntegerField()
+                )
             ),
             paid_sum=Sum(
                 Case(
                     When(amount_paid__gte=F('amount_due'), then='amount_paid'),
-                    default=Value(0)
-                ),
-                output_field=django.db.models.FloatField()
+                    default=Value(0),
+                    output_field=django.db.models.FloatField()
+                )
             ),
             new_held=Sum(
                 Case(
                     When(created_at__date=dt.date.today(), then=F('amount_due') - F('amount_paid')),
-                    default=Value(0)
-                ),
-                output_field=django.db.models.FloatField()
+                    default=Value(0),
+                    output_field=django.db.models.FloatField()
+                )
             ),
-        ).values('total_count', 'total_held', 'new_count', 'new_held', 'paid_sum')
-
+            paid_count=Count(
+                Case(
+                    When(amount_paid__gte=F('amount_due'), then='id'),
+                    default=Value(None),
+                    output_field=django.db.models.IntegerField()
+                )
+            )
+        ).values('total_count', 'total_held', 'new_count', 'new_held', 'paid_sum', 'paid_count')
+        print(cols)
 
         response['repayments'] = self._content
         response['loans_count'] = Collection.objects.filter(user=operator).count()
@@ -859,13 +1241,29 @@ class AdminUtils:
         response['notes_count'] = Note.objects.filter(user=operator).count()
         response['mini_show'] = f"""
                 <ul class="list-group">
-					<li class="list-group-item d-flex justify-content-between align-items-center">Total Assigned  <span class="badge bg-primary p-2">{cols['total_count']}</span> <span class="badge bg-secondary p-2">{cols['total_held']}</span>
-					</li>
-					<li class="list-group-item d-flex justify-content-between align-items-center">Newly Assigned	<span class="badge bg-primary p-2">{cols['new_count']}</span> <span class="badge bg-secondary p-2">{cols['new_held']}</span>
-					</li>
-					<li class="list-group-item d-flex justify-content-between align-items-center">Paid<span class="badge bg-primary p-2">-</span> <span class="badge bg-secondary p-2">{cols['paid_sum']}</span>
-					</li>
-				</ul>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="col-6 pe-0">Total</div>
+                            <div class="col-6 text-end">
+                                <span class="badge bg-primary p-2">{cols[0]['total_count']}</span>
+                                <span class="badge bg-secondary p-2">&#x20A6; {cols[0]['total_held']:,}</span>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="col-6 pe-0">New</div>
+                            <div class="col-6 text-end">
+                                <span class="badge bg-primary p-2">{cols[0]['new_count']}</span>
+                                <span class="badge bg-secondary p-2">&#x20A6; {cols[0]['new_held']:,}</span>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="col-6 pe-0">Repaid</div>
+                            <div class="col-6 text-end">
+                                <span class="badge bg-primary p-2">{cols[0]['paid_count']}</span>
+                                <span class="badge bg-secondary p-2">&#x20A6; {cols[0]['paid_sum']:,}</span>
+                            </div>
+                        </li>
+                    </ul>
         """
         self._content = response
 
@@ -951,6 +1349,10 @@ class AdminUtils:
             else:
                 level_class = 'dark'
 
+            stage = f'{agent.stage} - {Func.format_agent_id(agent.stage_id)}'
+            if agent.level == 'team leader':
+                stage = f'TL - {agent.stage}.{agent.stage_id}'
+
             rate = kwargs['recovery']
             if rate != '':
                 if rate < 10:
@@ -988,7 +1390,7 @@ class AdminUtils:
 					    <div class='badge rounded-pil w-50 text-bg-{level_class}'>{agent.level.title()}</div>
 				    </td>
 				    <td>
-					    <div class='badge rounded-pill w-50 text-bg-dark'>{agent.stage} - {Func.format_agent_id(agent.stage_id)}</div>
+					    <div class='badge rounded-pill w-50 text-bg-dark'>{stage}</div>
 				    </td>
 				    <td>
 					    <div class='badge rounded-pill w-50 text-bg-{status_class}'>{status_text}</div>
@@ -1005,12 +1407,40 @@ class AdminUtils:
             loan = col.loan
 
             status_text, status_class = Func.get_loan_status(loan)
+            avatar = loan.user.avatar.file.url if hasattr(loan.user, 'avatar') else '/static/admin_panel/images/avatars/user.png'
             self._content += f"""
-                <tr data-user_id='{loan.user.id}'">
-                        <td>{loan.loan_id}
-                        <span class="badge bg-{'warning' if loan.reloan == 1 else 'info'}">{'1st loan' if loan.reloan == 1 else f'reloan ({loan.reloan})'}</span>
-                        </td>
-                        <td>{loan.user.user_id}</td>
+                <tr data-user_id='{loan.user.user_id}' 
+                                    data-eligible_amount='{loan.user.eligible_amount:,}' 
+                                    data-first_name='{loan.user.first_name}' 
+                                    data-last_name='{loan.user.last_name}' 
+                                    data-phone='{loan.user.phone}' 
+                                    data-phone2='{loan.user.phone2}' 
+                                    data-middle_name='{loan.user.middle_name}' 
+                                    data-email='{loan.user.email}' 
+                                    data-gender='{loan.user.gender}' 
+                                    data-state='{loan.user.state}' 
+                                    data-lga='{loan.user.lga}' 
+                                    data-email2='{loan.user.email2}' 
+                                    data-address='{loan.user.address}' 
+                                    data-dob='{loan.user.dob}' 
+                                    data-created_at="{loan.user.created_at:%a %b %d, %Y}" 
+                                    data-avatar="{avatar}" 
+                                    data-status='{'Active' if not loan.user.is_blacklisted() else 'Blacklisted'}' 
+                                    data-status_pill='<span class="badge rounded-pill text-bg-{'success' if not loan.user.is_blacklisted() else 'danger'}">{'Active' if not loan.user.is_blacklisted() else f'Blacklisted: {getattr(loan.user, "blacklist").created_at:%b %d}'}</span>'
+                                    data-style='grey' 
+                                    data-last_access='{loan.user.last_access}' class='loan_rows'
+                                    data-loan_id='{loan.loan_id}'">
+                        <td>
+								<div class="d-flex align-items-center">
+									
+									<div class="ms-2">
+										<h6 class="mb-0 font-14 fw-bold">{loan.loan_id}
+										<span style="font-size: 11px" class="fw-bold text-{'warning' if loan.reloan == 1 else 'info'}">{'1st' if loan.reloan == 1 else f'({loan.reloan})'}</span>
+										</h6>
+										<p class="mb-0 font-13 text-{'danger' if loan.user.is_blacklisted() else 'secondary'}">{loan.user.last_name} {loan.user.first_name}</p>
+									</div>
+								</div>
+							</td>
                         <td>&#x20A6;{loan.principal_amount:,}</td>
                         <td>&#x20A6;{loan.amount_disbursed:,}</td>
                         <td>&#x20A6;{loan.amount_due:,}</td>
@@ -1031,7 +1461,7 @@ class AdminUtils:
                 			</div>
                 			<ul class='dropdown-menu' style='cursor: pointer;'>
                         """
-            if self.admin_user.level in ['super admin', 'approval admin']:
+            if self.admin_user.level in ['super admin', 'approval admin', 'staff']:
                 if loan.status not in ['repaid', 'declined', 'pending', 'approved']:
                     self._content += f"""
                         <li data-id='{loan.id}' data-user_id='{loan.user.user_id}' data-action='repaid' class='loan_actions text-success'><a class='dropdown-item'><i class='bx bx-check font-22 '></i> Write Off</a></li>
@@ -1047,9 +1477,10 @@ class AdminUtils:
                         <li data-id='{loan.id}' data-user_id='{loan.user.user_id}' data-action='disbursed' class='loan_actions text-primary'><a class='dropdown-item'><i class='bx bx-check font-22 '></i> Disburse</a></li>
                     """
 
-                self._content += f"""
-                    <li data-id='{loan.id}' data-user_id='{loan.user.user_id}' data-action='trash_loan' class='loan_actions'><a class='dropdown-item'><i class='bx bx-trash font-22 '></i> Trash Loan</a></li>
-                    """
+                if self.admin_user.level == 'super admin':
+                    self._content += f"""
+                        <li data-id='{loan.id}' data-user_id='{loan.user.user_id}' data-action='trash_loan' class='loan_actions'><a class='dropdown-item'><i class='bx bx-trash font-22 '></i> Trash Loan</a></li>
+                        """
             self._content += f"""
                             </ul>
                         </div>
@@ -1070,8 +1501,17 @@ class AdminUtils:
 
             self._content += f"""
                         <tr data-user_id='{loan.user.user_id}'">
-                            <td>{loan.loan_id}</td>
-                            <td>{loan.user.user_id}</td>
+                            <td>
+								<div class="d-flex align-items-center">
+									
+									<div class="ms-2">
+										<h6 class="mb-0 font-14 fw-bold">{loan.loan_id}
+										<span style="font-size: 11px" class="fw-bold text-{'warning' if loan.reloan == 1 else 'info'}">{'1st' if loan.reloan == 1 else f'({loan.reloan})'}</span>
+										</h6>
+										<p class="mb-0 font-13 text-{'danger' if loan.user.is_blacklisted() else 'secondary'}">{loan.user.last_name} {loan.user.first_name}</p>
+									</div>
+								</div>
+							</td>
                 			<td>&#x20A6;{loan.principal_amount:,}</td>
                 			<td>&#x20A6;{loan.amount_due:,}</td>
                 			<td>&#x20A6;{repay.amount_paid_now:,}</td>
@@ -1083,7 +1523,6 @@ class AdminUtils:
                             <td>{repay.created_at:%b %d, %Y}</td>
                             </tr>
                 		"""
-
 
     def process(self):
         if self.action == "fetch_operators":
@@ -1156,7 +1595,7 @@ class LoanUtils:
         self.request = request
         self._status, self._message = 'success', 'success'
 
-    def fetch_loans(self, size="single", rows=10, start=f'{dt.date.today()-dt.timedelta(days=60):%Y-%m-%d}', end=f'{dt.date.today():%Y-%m-%d}', status='pending,approved,disbursed,declined,partpayment,repaid,overdue', overdue_start=0, overdue_end=365, filters=''):
+    def fetch_loans(self, size="single", rows=10, start=f'{dt.date.today()-dt.timedelta(days=60):%Y-%m-%d}', end=f'{dt.date.today():%Y-%m-%d}', status='pending,approved,disbursed,declined,partpayment,repaid,overdue', overdue_start=-LOAN_DURATION, overdue_end=365, filters=''):
         if size != 'single':
             start_date = dt.datetime.strptime(start, '%Y-%m-%d')
             start_date = timezone.make_aware(start_date, timezone.get_current_timezone())
@@ -1176,32 +1615,33 @@ class LoanUtils:
                 )
             ).order_by('-created_at').all()
 
-            overdue_from = 0 if overdue_start == '' else int(overdue_start)
+            overdue_from = -LOAN_DURATION if overdue_start == '' else int(overdue_start)
             overdue_to = 365 if overdue_end == '' else int(overdue_end)
             rows = int(rows)
 
             self._content = ''
             sn = 0
             for loan in loans:
-                if rows > 0:
-                    if loan.status not in ('disbursed', 'partpayment') and overdue_start == '':
-                        overdue_days = overdue_from  # When filter not given, show loan even if not disbursed yet
-                    elif loan.status not in ('disbursed', 'partpayment') and overdue_start != '':
-                        overdue_days = -10  # Don't show this loan if filter is given
-                    else:
-                        overdue_days = Func.overdue_days(loan.disbursed_at, loan.duration)
+                if self.request.user.level in ('super admin', 'approval admin') or (self.request.user.level == 'team leader' and self.request.user.stage == Func.get_stage(loan)):
+                    if rows > 0:
+                        if loan.status not in ('disbursed', 'partpayment') and overdue_start == '':
+                            overdue_days = overdue_from  # When filter not given, show loan even if not disbursed yet
+                        elif loan.status not in ('disbursed', 'partpayment') and overdue_start != '':
+                            overdue_days = -10  # Don't show this loan if filter is given
+                        else:
+                            overdue_days = Func.overdue_days(loan.disbursed_at, loan.duration)
 
-                    if loan.status == 'repaid' and overdue_start != '':
-                        overdue_days = -10
-                    if overdue_from <= overdue_days <= overdue_to:
-                        statuses = status.split(',')
-                        sn += 1
-                        if len(statuses) == 1 and 'overdue' in statuses:
-                            if Func.get_loan_status(loan)[0] == 'overdue':
+                        if loan.status == 'repaid' and overdue_start != '':
+                            overdue_days = -10
+                        if overdue_from <= overdue_days <= overdue_to:
+                            statuses = status.split(',')
+                            sn += 1
+                            if len(statuses) == 1 and 'overdue' in statuses:
+                                if Func.get_loan_status(loan)[0] == 'overdue':
+                                    self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
+                            elif loan.status in statuses:
                                 self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
-                        elif loan.status in statuses:
-                            self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
-                        rows -= 1
+                            rows -= 1
         else:
             self.user = AppUser.objects.get(user_id=self.kwargs['user_id'])
             # IF SIZE IS SINGLE
@@ -1240,10 +1680,15 @@ class LoanUtils:
             repayments = Repayment.objects.filter(created_at__gte=start_date, created_at__lte=end_date).order_by('-id').all()
 
             self._content = ''
+            rows = int(rows)
+
             sn = 0
-            for repay in repayments[:int(rows)]:
-                sn += 1
-                self.add_table_content(_for='repayments', single=False, repay=repay, sn=sn, size=size)
+            for repay in repayments:
+                if rows > 0:
+                    if self.request.user.level in ('super admin', 'approval admin') or (repay.admin_user == self.request.user and self.request.user.level == 'staff') or (self.request.user.level == 'team leader' and self.request.user.stage == repay.admin_user.stage):
+                        sn += 1
+                        self.add_table_content(_for='repayments', single=False, repay=repay, sn=sn, size=size)
+                        rows -= 1
         else:
             self.user = AppUser.objects.get(user_id=self.kwargs['user_id'])
             # IF SIZE IS SINGLE
@@ -1255,42 +1700,100 @@ class LoanUtils:
                 self.add_table_content(_for='repayments', single=True, repay=repay, sn=sn, size=size)
 
     def status_update(self, to):
-        loan = Loan.objects.get(pk=self.kwargs['loan_id'])
-        self.user = AppUser.objects.get(user_id=self.kwargs['user_id'])
-        if to == "repaid":
-            if loan.status in ['repaid', 'declined', 'pending']:
-                self._message = 'Action could not be completed, refresh page and try again'
-                self._status = 'error'
-                return
-            Func.repayment(loan=loan, amount_paid=loan.amount_due-loan.amount_paid)
+        qty = self.kwargs.get('qty', 'single')
+        if qty == 'single':
+            loan = Loan.objects.get(pk=self.kwargs['loan_id'])
+            self.user = AppUser.objects.get(user_id=self.kwargs['user_id'])
+            if to == "repaid":
+                if loan.status in ['repaid', 'declined', 'pending']:
+                    self._message = 'Action could not be completed, refresh page and try again'
+                    self._status = 'error'
+                    return
+                elif self.request.user.level not in ('super admin', 'approval admin'):
+                    self._message = 'Permission error. Please contact an approval admin'
+                    self._status = 'error'
+                    return
+                Func.repayment(loan=loan, amount_paid=loan.amount_due-loan.amount_paid)
+            else:
+                # IF TO == 'APPROVED' OR 'DECLINED' OR 'DISBURSED'
+                if to == "disbursed" and loan.status != "approved":
+                    self._message = 'Please approve request before disbursement'
+                    self._status = 'error'
+                    return
+                if to != "disbursed" and loan.status != "pending":
+                    self._message = 'Action could not be completed, refresh page and try again'
+                    self._status = 'error'
+                    return
+
+            if to == "disbursed":
+                if not Func.disburse_loan(loans=[loan], admin_user=self.request.user):
+                    self._message = 'Disbursement Failed'
+                    self._status = 'error'
+                    return
+
+            if to != 'disbursed':
+                loan_static = LoanStatic(user=self.request.user, loan=loan, status=to)
+                loan_static.save()
+            loan.status = to
+            loan.decline_reason = self.kwargs.get('reason', '')
+
+            AdminUtils.log(
+                user=self.request.user,
+                app_user=loan.user,
+                action_type='loan status',
+                action=f'{to.title()} a loan with ID {loan.loan_id}')
+            loan.save()
+            self._message = f'Loan {to} successfully'
+            self._status = 'success'
+            self.fetch_loans(size=self.kwargs['size'])
         else:
-            # IF TO == 'APPROVED' OR 'DECLINED' OR 'DISBURSED'
-            if to == "disbursed" and loan.status != "approved":
-                self._message = 'Please approve request before disbursement'
-                self._status = 'error'
-                return
-            if to != "disbursed" and loan.status != "pending":
-                self._message = 'Action could not be completed, refresh page and try again'
-                self._status = 'error'
-                return
+            # IF IN BULK
+            loan_ids = json.loads(self.kwargs.get('loans'))
+            loans = [Loan.objects.get(loan_id=lid) for lid in loan_ids]
+            if to != 'disburse':
+                for loan in loans:
+                    if to == "write-off":
+                        if loan.status in ['repaid', 'declined', 'pending']:
+                            self._message = 'Action could not be completed, refresh page and try again'
+                            self._status = 'error'
+                            return
+                        elif self.request.user.level not in ('super admin', 'approval admin'):
+                            self._message = 'Permission error. Please contact an approval admin'
+                            self._status = 'error'
+                            return
+                        Func.repayment(loan=loan, amount_paid=loan.amount_due - loan.amount_paid)
+                    else:
+                        # IF TO == 'APPROVED' OR 'DECLINED'
+                        if to in ['approve', 'decline'] and loan.status != "pending":
+                            self._message = 'Action could not be completed, refresh page and try again'
+                            self._status = 'error'
+                            return
 
-        if to == "disbursed":
-            # DISBURSE LOAN
-            Func.disburse_loan(loan=loan, admin_user=self.request.user)
+                    if to == 'waive':
+                        status = 'repaid'
+                    elif to == 'approve':
+                        status = 'approved'
+                    elif to == 'decline':
+                        status = 'declined'
+                    else:
+                        status = ''
+                    loan_static = LoanStatic(user=self.request.user, loan=loan, status=status)
+                    loan.status = status
+                    loan.decline_reason = self.kwargs.get('reason', '')
 
-        loan_static = LoanStatic(user=self.request.user, loan=loan, status=to)
-        loan.status = to
-
-        AdminUtils.log(
-            user=self.request.user,
-            app_user=loan.user,
-            action_type='loan status',
-            action=f'{to.title()} a loan with ID {loan.loan_id}')
-        loan_static.save()
-        loan.save()
-        self._message = f'Loan {to} successfully'
-        self._status = 'success'
-        self.fetch_loans(size=self.kwargs['size'])
+                    AdminUtils.log(
+                        user=self.request.user,
+                        app_user=loan.user,
+                        action_type='loan status',
+                        action=f'{status.title()} a loan with ID {loan.loan_id}')
+                    loan_static.save()
+                    loan.save()
+            else:
+                # IF TO == 'DISBURSED'
+                if not Func.disburse_loan(loans=loans, admin_user=self.request.user):
+                    self._message = 'Disbursement Failed'
+                    self._status = 'error'
+                    return
 
     def trash_loan(self):
         loan = Loan.objects.get(pk=self.kwargs['loan_id'])
@@ -1354,20 +1857,29 @@ class LoanUtils:
             loan = kwargs['loan']
             self.loan = loan
             if not kwargs['single']:
-                attach_user = f"<td>{loan.user.user_id}</td>"
+                attach_user = f"{loan.user.last_name} {loan.user.first_name}"
             else:
                 attach_user = ''
 
             avatar = loan.user.avatar.file.url if hasattr(loan.user, 'avatar') else '/static/admin_panel/images/avatars/user.png'
 
             status_text, status_class = Func.get_loan_status(loan)
+            if status_text == 'disbursed' and loan.disburse_id == '':
+                status_text = 'disbursing...'
+                status_class = 'info'
 
             disbursed = '-'
+            amt_due = '-'
+            amt_paid = '-'
             if loan.disbursed_at is not None:
                 disbursed = f'{loan.disbursed_at:%b %d, %Y}'
+                amt_due = f'&#x20A6;{loan.amount_due:,}'
+                amt_paid = f'&#x20A6;{loan.amount_paid:,.2f}'
+
 
             self._content += f"""
                         <tr data-user_id='{loan.user.user_id}' 
+                                    data-eligible_amount='{loan.user.eligible_amount:,}' 
                                     data-first_name='{loan.user.first_name}' 
                                     data-last_name='{loan.user.last_name}' 
                                     data-phone='{loan.user.phone}' 
@@ -1382,20 +1894,30 @@ class LoanUtils:
                                     data-dob='{loan.user.dob}' 
                                     data-created_at="{loan.user.created_at:%a %b %d, %Y}" 
                                     data-avatar="{avatar}" 
-                                    data-status='{loan.user.status}' 
-                                    data-status_pill='<span class="badge rounded-pill text-bg-{'success' if loan.user.status else 'danger'}">{'Active' if loan.user.status else 'Suspended'}</span>' 
+                                    data-status='{'Active' if not loan.user.is_blacklisted() else 'Blacklisted'}' 
+                                    data-status_pill='<span class="badge rounded-pill text-bg-{'success' if not loan.user.is_blacklisted() else 'danger'}">{'Active' if not loan.user.is_blacklisted() else f'Blacklisted: {getattr(loan.user, "blacklist").created_at:%b %d}'}</span>'
                                     data-style='grey' 
-                                    data-last_access='{loan.user.last_access}' class='loan_rows' data-bs-toggle='modal' data-bs-target='#exampleLargeModal1'
+                                    data-last_access='{loan.user.last_access}' class='loan_rows'
                                     data-loan_id='{loan.loan_id}'">
                            
-                            <td>{loan.loan_id}
-                            <span style="font-size: 11px" class="fw-bold text-{'warning' if loan.reloan == 1 else 'info'}">{'1st loan' if loan.reloan == 1 else f'reloan ({loan.reloan})'}</span>
-                            </td>
-                            {attach_user}
+                           <td>
+								<div class="d-flex align-items-center">
+									<div class="loan-checkbox-cont">
+										<input class="form-check-input me-3 loan-checkbox border-primary border-2" type="checkbox" value="" aria-label="...">
+									</div>
+									<div class="ms-2">
+										<h6 class="mb-0 font-14 fw-bold">{loan.loan_id}
+										<span style="font-size: 11px" class="fw-bold text-{'warning' if loan.reloan == 1 else 'info'}">{'1st' if loan.reloan == 1 else f'({loan.reloan})'}</span>
+										</h6>
+										<p class="mb-0 font-13 text-{'danger' if loan.user.is_blacklisted() else 'secondary'}">{attach_user}</p>
+									</div>
+								</div>
+							</td>
+                          
                 			<td>&#x20A6;{loan.principal_amount:,}</td>
                 			<td>&#x20A6;{loan.amount_disbursed:,}</td>
-                			<td>&#x20A6;{loan.amount_due:,}</td>
-                			<td>&#x20A6;{loan.amount_paid:,.2f} {'<span class="rounded-pill badge text-bg-dark">waive</span>' if loan.waive_set.exists() else ''}</td>
+                			<td>{amt_due}</td>
+                			<td>{amt_paid} {'<span class="rounded-pill badge text-bg-dark">waive</span>' if loan.waive_set.exists() else ''}</td>
                 			<td>{loan.created_at:%b %d, %Y}</td>
                 			<td>{disbursed}</td>
                 			<td>{self.get_due_date()}</td>
@@ -1426,6 +1948,10 @@ class LoanUtils:
                     if loan.status == "approved":
                         self._content += f"""
                                         <li data-id='{loan.id}' data-user_id='{loan.user.user_id}' data-size='{kwargs["size"]}' data-action='disbursed' class='loan_actions text-primary'><a class='dropdown-item'><i class='bx bx-check font-22 '></i> Disburse</a></li>
+                                        """
+                    if loan.status == "declined":
+                        self._content += f"""
+                                        <li data-reason_head='Reason Loan {loan.loan_id} was declined: ' data-reason_body='{loan.decline_reason}' class='see_reason text-primary'><a class='dropdown-item'><i class='bx bx-question-mark font-22 '></i> See Reason</a></li>
                                         """
 
                     self._content += f"""
@@ -1460,7 +1986,8 @@ class LoanUtils:
                 status_class = 'success'
 
             self._content += f"""
-                        <tr data-user_id='{loan.user.user_id}' 
+                        <tr data-user_id='{loan.user.user_id}'
+                                    data-eligible_amount='{loan.user.eligible_amount:,}' 
                                     data-first_name='{loan.user.first_name}' 
                                     data-last_name='{loan.user.last_name}' 
                                     data-phone='{loan.user.phone}' 
@@ -1480,13 +2007,22 @@ class LoanUtils:
                                     data-style='grey' 
                                     data-last_access='{loan.user.last_access}' class='repay_rows' data-bs-toggle='modal' data-bs-target='#exampleLargeModal1'
                                     data-user_id='{loan.user.user_id}'">
-                            <td>{kwargs['sn']}.</td>
-                            <td>{loan.loan_id}</td>
-                            {attach_user}
+                            <td>
+								<div class="d-flex align-items-center">
+									
+									<div class="ms-2">
+										<h6 class="mb-0 font-14 fw-bold">{loan.loan_id}
+										<span style="font-size: 11px" class="fw-bold text-{'warning' if loan.reloan == 1 else 'info'}">{'1st' if loan.reloan == 1 else f'({loan.reloan})'}</span>
+										</h6>
+										<p class="mb-0 font-13 text-{'danger' if loan.user.is_blacklisted() else 'secondary'}">{loan.user.last_name} {loan.user.first_name}</p>
+									</div>
+								</div>
+							</td>
+                           
                 			<td>&#x20A6;{loan.principal_amount:,}</td>
                 			<td>&#x20A6;{loan.amount_due:,}</td>
                 			<td>&#x20A6;{repay.amount_paid_now:,.2f}</td>
-                			<td>{Func.get_stage(loan)}</td>
+                			<td>{repay.overdue_days}</td>
                 			<td>&#x20A6;{repay.total_paid:,.2f}</td>
                 			<td>
                                 <div class='badge rounded-pill w-100 text-bg-{status_class}'>{status_text.title()} </div>
@@ -1506,6 +2042,7 @@ class LoanUtils:
 
             self._content += f"""
                         <tr data-user_id='{loan.user.user_id}' 
+                                    data-eligible_amount='{loan.user.eligible_amount:,}' 
                                     data-first_name='{loan.user.first_name}' 
                                     data-last_name='{loan.user.last_name}' 
                                     data-phone='{loan.user.phone}' 
@@ -1839,11 +2376,144 @@ class Analysis:
                         """
         return content
 
+    @staticmethod
+    def collection_rates_chart():
+        recs = Recovery.objects.values('user__stage').annotate(
+            total_rate=Sum('rate'),
+            total_count=Count('id')
+        ).values('user__stage', 'total_rate', 'total_count')
+
+        recoverys = {
+            rec['user__stage']: (rec['total_rate'] / (100 * rec['total_count'])) * 100
+            for rec in recs
+        }
+        data_x = []
+        data_y = []
+        for stage, perc in recoverys.items():
+            # overlook M1 for now cos it's the first item
+            if stage != 'M1':
+                data_x.append(stage)
+                data_y.append(f'{perc:.1f}')
+        # now add M1 as the last item
+        data_x.append('M1')
+        data_y.append(f"{recoverys['M1']:.1f}")
+        return {
+            'x': data_x,
+            'y': data_y
+        }
+
     def generate_chart(self, _for=''):
         if _for == 'real_day':
             self._content = ''
             for result in self._result:
                 self.add_table_content(_for='real_day', result=result)
+
+    @staticmethod
+    def generate_data(_for='', fetch='amount'):
+        result = LoanStatic.objects.filter(
+            status=f'{_for}'
+        ).annotate(
+            month=TruncMonth('created_at')
+        ).values('month').annotate(
+            total_count=Count(
+                Case(
+                    When(status=f'{_for}', then='id')
+                )
+            )
+        )
+
+        if _for == 'disbursed':
+            result = result.annotate(
+                total_amount=Sum('loan__amount_disbursed', default=Value(0)),
+            )
+        elif _for == 'repaid':
+            result = result.annotate(
+                total_amount=Sum('loan__amount_paid', default=Value(0)),
+            )
+        elif _for == 'pending' or _for == 'declined':
+            result = result.annotate(
+                total_amount=Sum('loan__principal_amount', default=Value(0)),
+            )
+
+        result.values('month', 'total_amount', 'total_count').order_by('month')
+        result = {
+            res['month'].month: {
+                'amount': res['total_amount'],
+                'count': res['total_count']
+            }
+            for res in result
+        }
+        # Fill in months that are not available
+        for i in range(1, 13):
+            if i not in result.keys():
+                result[i] = {
+                    'amount': 0,
+                    'count': 0
+                }
+        result = dict(sorted(result.items()))
+        if fetch == 'amount':
+            res_list = [detail['amount'] for res, detail in result.items()]
+        else:
+            res_list = [detail['count'] for res, detail in result.items()]
+        return res_list
+
+    @staticmethod
+    def get_dashboard(start, end):
+        start_date = dt.datetime.strptime(start, '%Y-%m-%d')
+        start_date = timezone.make_aware(start_date, timezone.get_current_timezone())
+
+        end_date = dt.datetime.strptime(end, '%Y-%m-%d') + dt.timedelta(days=1)
+        end_date = timezone.make_aware(end_date, timezone.get_current_timezone())
+
+        disbursed_count, repaid_count, declined_count, approved_count, overdue_count, pending_count, due_count, partpayment_count = 0, 0, 0, 0, 0, 0, 0, 0
+        disbursed_amount, repaid_amount, declined_amount, pending_amount = 0, 0, 0, 0
+
+        static_record = LoanStatic.objects.filter(created_at__gte=start_date, created_at__lte=end_date)
+        for rec in static_record:
+            if rec.status == 'disbursed':
+                disbursed_count += 1
+                disbursed_amount += rec.loan.amount_disbursed
+            elif rec.status == 'repaid':
+                repaid_count += 1
+                repaid_amount += rec.loan.amount_paid
+            elif rec.status == 'declined':
+                declined_count += 1
+                declined_amount += rec.loan.principal_amount
+            elif rec.status == 'approved':
+                approved_count += 1
+
+        loans = Loan.objects.filter(created_at__gte=start_date, created_at__lte=end_date, status__in=['disbursed', 'pending'])
+        for loan in loans:
+            if loan.status == 'pending':
+                pending_count += 1
+                pending_amount += (loan.principal_amount - ((loan.interest_perc/100)*loan.principal_amount))
+            elif loan.amount_due > loan.amount_paid > 0:
+                # loan is partpayment
+                partpayment_count += 1
+            else:
+                status, _ = Func.get_loan_status(loan)
+                if status == 'overdue':
+                    overdue_count += 1
+                elif status == 'due':
+                    due_count += 1
+
+        result = {
+            'pending_count': f'{pending_count:,}',
+            'approved_count': f'{approved_count:,}',
+            'disbursed_count': f'{disbursed_count:,}',
+            'due_count': f'{due_count:,}',
+            'overdue_count': f'{overdue_count:,}',
+            'partpayment_count': f'{partpayment_count:,}',
+            'repaid_count': f'{repaid_count:,}',
+            'declined_count': f'{declined_count:,}',
+
+            'pending_amount': f'{pending_amount:,}',
+            'disbursed_amount': f'{disbursed_amount:,}',
+            'declined_amount': f'{declined_amount:,}',
+            'repaid_amount': f'{repaid_amount:,}'
+
+        }
+        return result
 
     def add_table_content(self, _for='', **kwargs):
         if _for == 'real_day':
@@ -1875,7 +2545,7 @@ class Analysis:
                     <td>{fields['partpayment_count']:,}</td>
                     <td>{(fields['paid_count']/fields['ciq'])*100:.1f}%</td>
                     <td>&#x20A6;{fields['amount_paid']:,}</td>
-                    <td>{(fields['amount_paid']/fields['amount_held'])*100:.1f}%</td>
+                    <td>{(fields['amount_paid']/fields['total_amount'])*100:.1f}%</td>
                     <td>{fields['notes']:,}
                 </tr>
             """

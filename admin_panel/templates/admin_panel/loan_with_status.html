@@ -61,7 +61,7 @@
             <div class="card radius-10">
                 <div class="card-body">
 
-                    <div class="d-flex align-items-center bg-light p-3">
+                    <div class="d-flex align-items-center bg-light">
                         <div class="me-auto fw-bold fs-6">{{ status|title }} Loans</div>
                         <div class="d-flex align-items-center">
                             <div class="me-2">
@@ -89,7 +89,7 @@
                     </div>
 
 
-                    <div class="d-flex align-items-center bg-light p-3">
+                    <div class="d-flex align-items-center bg-light">
                         <div class="me-auto fw-bold fs-6"></div>
                         <div class="d-flex align-items-center">
 
@@ -122,16 +122,21 @@
                     <hr/>
                     <div class="table-responsive">
                         <table class="table align-middle mb-5" id="loan_table">
+
                             <thead class="table-light">
                             <tr>
-                                <th>Loan ID</th>
-                                <th>User</th>
+                                <th>
+                                    <div>
+										<input class="form-check-input me-3 all-checkbox border-primary border-2" type="checkbox" value="" aria-label="..." onchange="check_all_loans()">
+                                        Loan ID
+									</div>
+                                </th>
                                 <th>Principal</th>
-                                <th>Amt Disbursed</th>
-                                <th>Amount Due</th>
+                                <th>Amt Disb <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Amount Disbursed"></i></th>
+                                <th>Amt Due</th>
                                 <th>Repaid</th>
-                                <th>Request Date</th>
-                                <th>Disburse Date</th>
+                                <th>Req Date <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Date Requested"></i></th>
+                                <th>Disb Date <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Date Disbursed"></i></th>
                                 <th>Due Date</th>
                                 <th>Overdue Days</th>
                                 <th>Status</th>
@@ -229,9 +234,9 @@
 
 
                                             <div class="dropdown-divider"></div>
-                                            <a href="#" class="dropdown-item top_actions text-warning"
-                                               style="font-weight: bold" data-action="ban"><i class="lni lni-ban"></i>
-                                                Ban/Unban User</a>
+                                            <a href="#0" class="dropdown-item text-warning blacklist"
+                                               style="font-weight: bold"><i class="lni lni-ban"></i>
+                                                Blacklist</a>
                                             <a href="#" class="dropdown-item" style="color: red; font-weight: bold"
                                                data-bs-toggle='modal' data-bs-target='#EraseUserModal'><i
                                                     class="lni lni-trash"></i> Delete Account</a>
@@ -283,37 +288,13 @@
                                                         <h5 style="font-size:1.2em; font-weight: bold">Quick
                                                             Actions</h5>
 
-                                                        <div class="col mb-4 mt-3">
-                                                            <button type="button" class="btn btn-outline-primary px-5">
-                                                                <i class="bx bx-user mr-1"></i>Check Eligibility
-                                                            </button>
-                                                        </div>
-
-                                                        <div class="col">
-                                                            <div class="btn-group" role="group"
-                                                                 aria-label="Basic example">
-                                                                <button type="button"
-                                                                        class="btn btn-outline-primary device_details"
-                                                                        data-bs-toggle='modal'
-                                                                        data-bs-target='#deviceDetailsModal'
-                                                                        data-action="contacts" data-name="Contacts">
-                                                                    Contacts
+                                                         <div class="col mt-3">
+                                                            <div class="btn-group" role="group" aria-label="Basic example">
+                                                                <button type="button" class="btn btn-outline-primary px-3">
+                                                                    Check Eligibility
                                                                 </button>
-
-                                                                <button type="button"
-                                                                        class="btn btn-outline-primary device_details"
-                                                                        data-bs-toggle='modal'
-                                                                        data-bs-target='#deviceDetailsModal'
-                                                                        data-action="sms_log" data-name="SMS Log">SMS
-                                                                    Log
-                                                                </button>
-
-                                                                <button type="button"
-                                                                        class="btn btn-outline-primary device_details"
-                                                                        data-bs-toggle='modal'
-                                                                        data-bs-target='#deviceDetailsModal'
-                                                                        data-action="call_log" data-name="Call Log">Call
-                                                                    Log
+                                                                <button type="button" class="btn btn-outline-primary px-3" data-bs-toggle='modal' data-bs-target='#PhoneModal' onclick="load_sms()">
+                                                                    Phone Book
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -368,6 +349,18 @@
                                                                             class="bx bxs-bank font-18 me-1"></i>
                                                                     </div>
                                                                     <div class="tab-title">Bank Details</div>
+                                                                </div>
+                                                            </a>
+                                                        </li>
+
+                                                        <li class="nav-item" role="presentation">
+                                                            <a class="nav-link" data-bs-toggle="tab" href="#loandetails"
+                                                               role="tab" aria-selected="false" tabindex="-1">
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="tab-icon"><i
+                                                                            class="bx bxs-bank font-18 me-1"></i>
+                                                                    </div>
+                                                                    <div class="tab-title">Loan Details</div>
                                                                 </div>
                                                             </a>
                                                         </li>
@@ -714,6 +707,55 @@
                                                         </div>
 
 
+
+
+                                                         {#       -------------------------  LOAN DETAILS ----------------------#}
+
+                                                        <div class="tab-pane fade" id="loandetails" role="tabpanel">
+                                                            <ul class="list-group list-group-flush">
+                                                                <h5 class="mt-1 text-primary">Loan Setting</h5>
+                                                                <div class="w-100 border-top mb-2"></div>
+                                                                <div class="row mb-3">
+                                                                    <div class="col-sm-3">
+                                                                        <h6 class="mb-0 fw-bold">&#x20A6;
+                                                                            Eligible Amt</h6>
+                                                                    </div>
+                                                                    <div class="col-sm-9 text-secondary">
+                                                                        <div class="input-group mb-3">
+                                                                            <input type="text" placeholder="Amount eligible"
+                                                                                   aria-label="Amount eligible"
+                                                                                   aria-describedby="button-addon2"
+                                                                                   class="form-control details_eligible_amount">
+                                                                            <button type="button" id="button-addon2"
+                                                                                    class="btn btn-outline-primary details_save"
+                                                                                    data-key="eligible_amount"
+                                                                                    data-table="members">Update
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+
+                                                                <h5 class="mt-5 text-primary">Other Details</h5>
+                                                                <div class="w-100 border-top mb-2"></div>
+
+                                                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                                                    <h6 class="mb-0 fw-bold"><i
+                                                                            class="bx bxs-building font-18 me-1"></i>
+                                                                        Max Overdue Days</h6>
+                                                                    <span class="text-secondary max_overdue_days fw-bold text-danger">-</span>
+                                                                </li>
+
+
+                                                                <h5 class="mt-5 text-primary">Overdue Chart</h5>
+
+                                                                <div id="overdue_chart" data-highcharts-chart="0" style="overflow: hidden;"></div>
+
+                                                            </ul>
+                                                        </div>
+
+
+
                                                     </div>
                                                 </div>
                                             </div>
@@ -770,7 +812,7 @@
                                         <th>Principal <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Principal loan amount"></i></th>
                                         <th>Due <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Amount Due"></i></th>
                                         <th>PN <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Amount Paid Now"></i></th>
-                                        <th>Stage <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Loan's stage at repayment"></i></th>
+                                        <th>Over Days <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Overdue Days at repayment"></i></th>
                                         <th>TR <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Total Repaid amount so far"></i></th>
                                         <th>Status <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Loan status at repayment"></i></th>
                                         <th>Date <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Date of the record"></i></th>
@@ -818,7 +860,6 @@
                                 <table class="table align-middle mb-5">
                                     <thead class="table-light">
                                     <tr>
-                                        <th>S/N</th>
                                         <th>Loan ID</th>
                                         <th>Principal</th>
                                         <th>Amt Disbursed</th>
@@ -1124,6 +1165,217 @@
 
 
 
+     <!--PHONE MODAL	-->
+    <div id="PhoneModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light">Phone Book</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+
+
+
+                    <div class="chat-wrapper">
+					<div class="chat-sidebar">
+						<div class="chat-sidebar-header">
+							<div class="d-flex align-items-center">
+								<div class="chat-user-online">
+									<img src="{% static 'admin_panel/images/avatars/user.png' %}" width="35" height="35" class="rounded-circle" alt="">
+								</div>
+								<div class="flex-grow-1 ms-2">
+									<p class="mb-0 details_text_username"></p>
+								</div>
+								<div class="dropdown">
+									<div class="cursor-pointer font-24" id="phonebook_reload"><i class="bx bx-loader-circle"></i>
+									</div>
+								</div>
+							</div>
+							<div class="mb-3"></div>
+							<div class="input-group input-group-sm"> <span class="input-group-text bg-transparent"><i class="bx bx-search"></i></span>
+								<input type="text" class="form-control phonebook_search_input" placeholder="Names, phones &amp; messages"> <span class="input-group-text bg-transparent"><i class="bx bx-dialpad"></i></span>
+							</div>
+
+
+							<div class="chat-tab-menu mt-3">
+								<ul class="nav nav-pills nav-justified" role="tablist">
+									<li class="nav-item" role="presentation">
+										<a class="nav-link phonebook_nav active" onclick="load_sms()" data-bs-toggle="pill" href="javascript:;" aria-selected="true" role="tab">
+											<div class="font-24"><i class="bx bx-conversation"></i>
+											</div>
+											<div><small>SMS</small>
+											</div>
+										</a>
+									</li>
+									<li class="nav-item" role="presentation">
+										<a class="nav-link" data-bs-toggle="pill" href="javascript:;" aria-selected="false" role="tab" tabindex="-1">
+											<div class="font-24"><i class="bx bx-phone"></i>
+											</div>
+											<div><small>Calls</small>
+											</div>
+										</a>
+									</li>
+									<li class="nav-item" role="presentation">
+										<a class="nav-link phonebook_nav" data-bs-toggle="pill" href="javascript:;" aria-selected="false" role="tab" tabindex="-1" onclick="load_contact()">
+											<div class="font-24"><i class="bx bxs-contact"></i>
+											</div>
+											<div><small>Contacts</small>
+											</div>
+										</a>
+									</li>
+									<li class="nav-item" role="presentation">
+										<a class="nav-link" data-bs-toggle="pill" href="javascript:;" aria-selected="false" tabindex="-1" role="tab">
+											<div class="font-24"><i class="bx bx-bell"></i>
+											</div>
+											<div><small>Notifications</small>
+											</div>
+										</a>
+									</li>
+								</ul>
+							</div>
+						</div>
+
+
+
+
+
+						<div class="chat-sidebar-content">
+							<div class="tab-content" id="pills-tabContent">
+								<div class="tab-pane fade show active" id="pills-Chats">
+
+									<div class="chat-list ps ps--active-y overflow-y-scroll" style="height: 52vh !important;">
+										<div class="list-group list-group-flush sms_sidebar" >
+
+                                            <a href="javascript:;" class="list-group-item active">
+												<div class="d-flex">
+													<div class="flex-grow-1 ms-2">
+														<h6 class="mb-0 chat-title">No Data</h6>
+														<p class="mb-0 chat-msg">No conversations here yet..</p>
+													</div>
+													<div class="chat-time"></div>
+												</div>
+											</a>
+
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+
+
+
+					<div class="chat-header d-flex align-items-center">
+						<div class="chat-toggle-btn"><i class="bx bx-menu-alt-left"></i>
+						</div>
+						<div>
+							<h4 class="mb-1 font-weight-bold sms_name">...</h4>
+							<div class="list-inline d-sm-flex mb-0 d-none"> <a href="javascript:;" class="list-inline-item d-flex align-items-center text-secondary"><small class="bx bxs-circle me-1 chart-online"></small>Last Updated: <span class="sms_last_updated">...</span></a>
+
+							</div>
+						</div>
+						<div class="chat-top-header-menu ms-auto">
+							<a href="#0" class="sms_phone copy"><i class="bx bx-phone"></i></a>
+						</div>
+					</div>
+
+
+
+
+					<div class="chat-content ps ps--active-y overflow-y-scroll sms_content" >
+                        <div style="justify-content: center; height: 100%; align-items: center; display: flex;">
+                            <i>Click on a conversation to view...</i>
+                        </div>
+					</div>
+
+
+					<div class="overlay chat-toggle-btn-mobile"></div>
+					<!--end chat overlay-->
+				</div>
+
+
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!--DECLINE DIALOG	-->
+    <div id="DeclineModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-warning">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light">Decline Loan</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body text-white"><p>You are about to decline a loan for the user: <b
+                        class="details_text_username"></b>. </p>
+                    <p>To proceed, please enter reason for declining</p>
+
+                    <div class="input-group"> <span class="input-group-text">Reason</span>
+                        <textarea class="form-control decline_loan_reason" aria-label="Decline Reason" placeholder="You may leave empty to not pass a message"></textarea>
+                        <input class="decline_loan_details" type="hidden">
+                    </div>
+                    <small class="text-danger">*User will be able to view this on their end</small>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" data-bs-dismiss="modal" class="btn btn-light">Close</button>
+                    <button data-bs-dismiss="modal" type="button" class="btn btn-dark decline_loan loan_actions">
+                        Decline!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+     <!--REASON SHOW DIALOG	-->
+    <div id="ReasonModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-info">
+                    <h5 class="mb-0 reason_head"></h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="reason_body">...</p>
+
+                <div class="modal-footer">
+                    <button type="button" data-bs-dismiss="modal" class="btn btn-light">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+
+{#    CHECKBOX SELECTED MODAL#}
+    <div class="modal fade" id="CheckboxSelectedModal" tabindex="-1" aria-modal="true" role="dialog" style="display: none;">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sure to proceed?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">You are about to <span class="fw-bold text-danger"><span class="checkbox-modal-action" style="text-transform: capitalize"></span> All Selected Rows</span>. This action may not be explicitly reversible, proceed?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary checkbox-modal-sbmt" style="text-transform: capitalize" onclick="get_all_checked()">Action</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         const success_audio = new Audio("{% static 'admin_panel/audio/correct.mp3' %}");
@@ -1190,6 +1442,75 @@
 
         })
 
+        function load_sms() {
+            var user_id = $("#selected_user_id").val();
+            loadOn()
+            $.ajax({
+                url: '{% url "users" %}',
+                data: {
+                    user_id: user_id,
+                    action: 'fetch_sms',
+                    which: 'sidebar'
+                },
+                dataType: 'json',
+                type: 'post',
+                success: function (data) {
+                    loadOff()
+                    if (data.status === 'success') {
+                        $('.sms_sidebar').html(data.content['sidebar'])
+                        $('.sms_content').html(data.content['content'])
+                    } else {
+                        notify(data.status, data.message)
+                        $('.sms_sidebar').html(data.content['sidebar'])
+                        $('.sms_content').html(data.content['content'])
+                        $('.sms_name').text('...')
+                        $('.sms_phone').attr('href', 'tel:0000')
+                        $('.sms_last_updated').text('...')
+                    }
+                },
+                error: function (err1, err2) {
+                    loadOff()
+                    notify('error', JSON.stringify(err1))
+                },
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                }
+            })
+        }
+
+        function load_contact() {
+            var user_id = $("#selected_user_id").val();
+            loadOn()
+            $.ajax({
+                url: '{% url "users" %}',
+                data: {
+                    user_id: user_id,
+                    action: 'fetch_contact'
+                },
+                dataType: 'json',
+                type: 'post',
+                success: function (data) {
+                    loadOff()
+                    $('.sms_content').html(data.content['content'])
+                    $('.sms_name').text('...')
+                    $('.sms_phone').attr('href', 'tel:0000')
+                    $('.sms_last_updated').text('...')
+                    if (data.status === 'success') {
+                        $('.sms_sidebar').html(data.content['sidebar'])
+                    } else {
+                        notify(data.status, data.message)
+                        $('.sms_sidebar').html(data.content['sidebar'])
+                    }
+                },
+                error: function (err1, err2) {
+                    loadOff()
+                    notify('error', JSON.stringify(err1))
+                },
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                }
+            })
+        }
 
 
         function start(refresh = false) {
@@ -1221,9 +1542,12 @@
                         setTimeout(function () {
                             $("#loan_history").html(data.content);
                             var table = $('#loan_table').DataTable({
-                                lengthChange: false,
-                                pageLength: 15,
-                                buttons: ['copy', 'excel', 'pdf', 'print']
+                                lengthMenu: [ [20, 70, 150, -1], [20, 70, 150, "All"] ],
+                                pageLength: 20,
+                                buttons: ['copy', 'excel', 'pdf', 'print'],
+                                columnDefs: [
+                                    { "orderable": false, "targets": 0 }
+                                ]
                             });
                             table.buttons().container().appendTo('#loan_table_wrapper .col-md-6:eq(0)');
                         }, 10)
@@ -1241,6 +1565,187 @@
                 })
             }
         }
+
+
+        window.e2_chart = undefined;
+       function update_overdue_chart(overdue_x, overdue_y, refresh=false){
+            if(refresh){
+                if (e2_chart !== undefined && e2_chart && typeof e2_chart.destroy === 'function') {
+                    e2_chart.destroy();
+                }
+            }
+             var e2 = {
+                chart: {
+                    foreColor: '#9ba7b2',
+                    height: 360,
+                    type: 'line',
+                    zoom: {
+                        enabled: false
+                    },
+                    dropShadow: {
+                        enabled: true,
+                        top: 3,
+                        left: 2,
+                        blur: 4,
+                        opacity: 0.1,
+                    }
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: 5
+                },
+                colors: ["#fd3550"],
+                series: [{
+                    name: "Overdue Days",
+                    data: overdue_y
+                }],
+
+                markers: {
+                    size: 4,
+                    strokeWidth: 0,
+                    hover: {
+                        size: 7
+                    }
+                },
+                grid: {
+                    show: true,
+                    padding: {
+                        bottom: 0
+                    }
+                },
+                labels: overdue_x,
+                xaxis: {
+                    tooltip: {
+                        enabled: false
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: 'DAYS'
+                    },
+                    labels: {
+                        formatter: function (val) {
+                            return formatNumber(val, 1)
+                        }
+                    }
+                },
+                legend: {
+                    position: 'top',
+                    horizontalAlign: 'right',
+                    offsetY: -20
+                }
+            }
+            window.e2_chart = new ApexCharts(document.querySelector('#overdue_chart'), e2);
+            e2_chart.render();
+       }
+
+
+       function get_selected_checkbox_action(){
+           var html = '';
+           const status = '{{ status }}'
+           if(status === 'approved'){
+               html = `<li><a class="dropdown-item selected-check-action" data-action='disburse' href="#">Disburse all</a></li>`
+           }else if(status === 'pending'){
+                html = `<li><a class="dropdown-item selected-check-action" data-action='approve' href="#">Approve all</a></li>
+                        <li><a class="dropdown-item selected-check-action" data-action='decline' href="#">Decline all</a></li>`
+           }else if(status === 'disbursed'){
+               html = `<li><a class="dropdown-item selected-check-action" data-action='write-off' href="#">Write-off all</a></li>`
+           }else if(status === 'overdue'){
+               html = `<li><a class="dropdown-item selected-check-action" data-action='write-off' href="#">Write-off all</a></li>`
+           }
+
+           return `
+                <div class="dropdown ms-3 checkbox-btn">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Selected Actions</button>
+                        <ul class="dropdown-menu">
+                            ${html}
+                            <li><a class="dropdown-item selected-check-action" data-action='delete' href="#">Delete all</a>
+                            </li>
+                        </ul>
+                    </div>
+           `
+       }
+
+
+       function check_all_loans(){
+           const all_check = $('.all-checkbox').is(':checked') ? 'checked' : 'unchecked'
+           if(all_check === 'checked'){
+               $('.dt-buttons').append(get_selected_checkbox_action())
+           }else{
+               $('.checkbox-btn').hide()
+           }
+
+           $('.loan-checkbox').each(function(){
+               if(all_check === 'checked'){
+                   $(this).prop('checked', true)
+               }else{
+                   $(this).prop('checked', false)
+               }
+           })
+       }
+
+       var checkbox_btn_appended = false
+       $('body').on('change', '.loan-checkbox', function(){
+           if($('.loan-checkbox:checked').length > 0 && !checkbox_btn_appended){
+               checkbox_btn_appended = true
+               $('.dt-buttons').append(get_selected_checkbox_action())
+           }else if($('.loan-checkbox:checked').length === 0 && checkbox_btn_appended){
+               $('.checkbox-btn').hide()
+               checkbox_btn_appended = false
+           }
+
+        })
+
+
+        $('body').on('click', '.selected-check-action', function (){
+            $('#CheckboxSelectedModal').modal('show')
+            const action = $(this).data('action')
+            $('.checkbox-modal-action').text(action)
+            $('.checkbox-modal-sbmt').data('action', action).text('Yes, '+action)
+        })
+
+        function get_all_checked(){
+           var checked = []
+            $('.loan_rows').each(function (){
+                const check = $(this).find('input')
+                if(check.is(':checked')){
+                    var loan_id = $(this).data('loan_id')
+                    checked.push(loan_id)
+                }
+            })
+            return checked
+        }
+
+        $('.checkbox-modal-sbmt').click(function () {
+            const checked = get_all_checked()
+            loadOn();
+            $.ajax({
+                url: '{% url "loans" %}',
+                data: {
+                    action: 'status_update',
+                    main_action: $(this).data('action'),
+                    qty: 'multiple',
+                    loans: JSON.stringify(checked)
+                },
+                dataType: 'json',
+                type: 'post',
+                success: function (data) {
+                    loadOff()
+                    notify(data.status, data.message)
+                    start(true)
+                    $('#CheckboxSelectedModal').modal('hide')
+                },
+                error: function (err1, err2) {
+                    loadOff()
+                    notify('error', JSON.stringify(err1))
+                },
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                }
+            })
+        })
+
+
 
 
     </script>
@@ -1380,37 +1885,49 @@
                 var user_id = $(this).data('user_id');
                 var action = $(this).data('action');
                 var size = $(this).data('size');
-                loadOn();
 
-                $.ajax({
-                    url: '{% url "loans" %}',
-                    data: {
-                        action: 'status_update',
-                        loan_id: id,
-                        main_action: action,
-                        size: size,
-                        user_id: user_id
-                    },
-                    dataType: 'json',
-                    type: 'post',
-                    success: function (data) {
-                        loadOff()
-                        $('#mini_loan_history').html(data.content)
-                        notify(data.status, data.message)
-                        start(true)
-                    },
-                    error: function (err1, err2) {
-                        loadOff()
-                        notify('error', JSON.stringify(err1))
-                    },
-                    beforeSend: function (xhr, settings) {
-                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
-                    }
-                })
+                if(action === 'declined'){
+                    $('.decline_loan').data({'id': id, 'user_id': user_id, 'size': size, 'action': 'decline'})
+                    $('#DeclineModal').modal('show')
+                }else{
+                    var decline_reason = $('.decline_loan_reason').val()
+                    action = action === 'decline' ? 'declined' : action
+                    loadOn();
+                    $.ajax({
+                        url: '{% url "loans" %}',
+                        data: {
+                            action: 'status_update',
+                            loan_id: id,
+                            main_action: action,
+                            size: size,
+                            user_id: user_id,
+                            reason: decline_reason
+                        },
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (data) {
+                            loadOff()
+                            $('#mini_loan_history').html(data.content)
+                            notify(data.status, data.message)
+                            start(true)
+                        },
+                        error: function (err1, err2) {
+                            loadOff()
+                            notify('error', JSON.stringify(err1))
+                        },
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                        }
+                    })
+                }
             })
 
 
-            $('body').on('click', '.loan_rows', function () {
+
+            $('body').on('click', '.loan_rows', function (event) {
+                if(!$(event.target).hasClass('loan-checkbox')){
+                    $('#exampleLargeModal1').modal('show')
+                }
                 var row = $(this);
                 var first_name = row.data('first_name');
                 var last_name = row.data('last_name');
@@ -1430,6 +1947,7 @@
                 var status_pill = row.data('status_pill');
                 var id = row.data('user_id');
                 var loan_id = row.data('loan_id');
+                var eligible_amount = row.data('eligible_amount');
 
                 $(".details_first_name").val(first_name).data('id', id);
                 $(".details_last_name").val(last_name).data('id', id);
@@ -1445,11 +1963,15 @@
                 $(".details_gender").val(gender).select().data('id', id);
                 $(".details_status_show").html(status_pill);
                 $(".details_status").data('id', id);
+                $(".details_eligible_amount").val(eligible_amount).data('id', id);
 
                 $(".details_avatar").attr('src', avatar);
                 $(".details_registered").text(created_at);
                 $(".details_current_user").text(id);
                 $(".details_text_username").text(last_name + ' ' + first_name + ' (' + id + ')');
+
+                var blacklist_text = status === 'Active' ? 'Blacklist' : 'Whitelist'
+                $('.blacklist').html('<i class="lni lni-ban"></i> '+blacklist_text)
 
 
                 $("#selected_user_id").val(id);
@@ -1476,12 +1998,13 @@
                             offProgress('user-modal')
                             {#POPULATE OTHER DETAILS WITH RESPONSE#}
                             $.each(data.content, function (key, value) {
-                                if (key !== "tables") {
+                                if (key !== "tables" && key !== "overdue_chart") {
                                     $('.' + key).text(value)
                                 }
                             });
                             $('#show_notes').html(data.content['tables']['notes'])
                             $('#show_files').html(data.content['tables']['files'])
+                            update_overdue_chart(data.content['overdue_chart']['x'], data.content['overdue_chart']['y'], true)
                         },
                         error: function () {
                             notify('error', 'Fetch failed, Retry')
@@ -1626,6 +2149,38 @@
             });
 
 
+            {#BLACKLIST#}
+            $('.blacklist').click(function (){
+                var user_id = $("#selected_user_id").val();
+                loadOn();
+                $.ajax({
+                    url: '{% url "users" %}',
+                    data: {
+                        user_id: user_id,
+                        action: 'blacklist'
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        notify(data.status, data.message)
+                        if(data.status === 'success'){
+                            start(true)
+                            $('#exampleLargeModal1').modal('hide')
+                        }
+
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            })
+
+
             // NOTE BLOCK
             $("#add_note").click(function () {
                 var user_id = $("#selected_user_id").val();
@@ -1731,6 +2286,67 @@
                     toastr["error"]("Input cannot be empty. Note was not saved");
                 }
             })
+
+
+            {#PHONEBOOK--------------#}
+            $('.phonebook_search_input').keyup(function (){
+                var key = $(this).val().toLowerCase()
+                $('.phonebook_item').each(function (){
+                    var phone = String($(this).data('phone'))
+                    var message = $(this).data('message').toLowerCase()
+                    var name = $(this).data('name').toLowerCase()
+                    console.log('phone:  '+name)
+                    if(phone.startsWith(key) || message.startsWith(key) || name.startsWith(key)){
+                        $(this).show()
+                    }else{
+                        $(this).hide()
+                    }
+                })
+            })
+
+            $('.phonebook_nav').click(function (){
+                $('.phonebook_nav').removeClass('active')
+                $(this).toggleClass('active')
+            })
+
+            $('body').on('click', '.phonebook_item', function (){
+                $('.phonebook_item').removeClass('active')
+                $(this).toggleClass('active')
+            })
+
+            $("body").on('click', '.sms_sidebar_item', function (){
+                var user_id = $("#selected_user_id").val();
+                var phone = $(this).data('phone')
+                loadOn()
+                $.ajax({
+                    url: '{% url "users" %}',
+                    data: {
+                        user_id: user_id,
+                        action: 'fetch_sms',
+                        which: phone
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        if(data.status === 'success'){
+                            $('.sms_content').html(data.content['content'])
+                            $('.sms_name').text(data.content['name'])
+                            $('.sms_phone').data('item', data.content['phone'])
+                            $('.sms_last_updated').text(data.content['last_updated'])
+                        }
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            })
+
+
 
 
             $('body').on('mouseover', '.loan_rows', function () {

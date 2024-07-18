@@ -7,5 +7,7 @@ admin.site.register(loan_app_models.Document)
 admin.site.register(loan_app_models.Avatar)
 admin.site.register(loan_app_models.DisbursementAccount)
 admin.site.register(loan_app_models.Loan)
-admin.site.register(loan_app_models.VirtualAccount)
+admin.site.register(loan_app_models.VirtualAccount),
+admin.site.register(loan_app_models.SmsLog)
+admin.site.register(loan_app_models.Contact)
 

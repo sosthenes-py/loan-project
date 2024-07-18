@@ -110,29 +110,22 @@
                    <div  class="card-body">
                       <div  class="row align-items-center">
                          <div  class="col-md-3">
-                            <h4  class="mb-3 mb-md-0">Timeframe Setting</h4>
+                            <div class="me-auto fw-bold fs-3">Analyses</div>
                          </div>
-                         <div  class="col-md-9">
-                            <form  class="float-md-end">
-                               <div  class="row row-cols-md-auto g-lg-3">
-                                  <label  for="inputFromDate" class="col-md-2 col-form-label text-md-end">From Date</label>
-                                  <div  class="col-md-4"><input  type="date" id="timeframe_from" class="form-control" value="2024-01-01"></div>
-                                  <label  for="inputToDate" class="col-md-2 col-form-label text-md-end">To Date</label>
-                                  <div  class="col-md-4"><input  type="date" id="timeframe_to" class="form-control"></div>
-                               </div>
-                            </form>
-                         </div>
+
                       </div>
                    </div>
                 </div>
 
 
-{#                REAL DAY ANALYSIS#}
+{% if user.level == 'super admin' or user.level == 'admin' %}
+
+{#                REAL DAY ANALYSIS & COLLECTION RATES#}
                 <div class="row row-cols-1 row-cols-md-2 row-cols-xl-2">
                     <div class="col">
                         <div class="card radius-10">
                             <div class="pt-3 ps-3 pb-0" style="display: inline-block">
-                                <p style="float: left" class="fw-bold fs-6">Real Day Analysis</p>
+                                <p style="float: left" class="fw-bold fs-6">Real Day</p>
                                 <input style="float: right; width: 30%" type="month" id="rd_month_input"
                                        class="form-control me-2" value="" onchange="get_analysis('rda')">
                             </div>
@@ -147,7 +140,11 @@
                     <div class="col">
                         <div class="card radius-10">
                             <div class="card-body">
-                                <div id="chart" data-highcharts-chart="1" style="overflow: hidden;"></div>
+                            <div class="pb-0" style="display: inline-block">
+                                <p style="float: left" class="fw-bold fs-6">Collection Rates</p>
+                            </div>
+                            <hr>
+                                <div id="collection_rates_chart" data-highcharts-chart="0" style="overflow: hidden;"></div>
                             </div>
                         </div>
                     </div>
@@ -162,7 +159,7 @@
 					<div class="">
 						<div class="card radius-10">
                             <div class="pt-3 ps-3 pb-0" style="display: inline-block">
-                                <p style="float: left" class="fw-bold fs-6">Real-Days Progressive Analysis</p>
+                                <p style="float: left" class="fw-bold fs-6">Real-Days Progressive</p>
 
                             </div>
                             <div class="card-body" style="margin-bottom: -1em">
@@ -286,7 +283,7 @@
 					</div>
 				</div>
 
-
+{% endif %}
 
 
 
@@ -296,7 +293,7 @@
 					<div class="">
 						<div class="card radius-10">
                             <div class="pt-3 ps-3 pb-0" style="display: inline-block">
-                                <p style="float: left" class="fw-bold fs-6">Collectors Data Analysis</p>
+                                <p style="float: left" class="fw-bold fs-6">Collectors Data</p>
 
                             </div>
                             <div style="margin-bottom: -1em; width: 100%;">
@@ -323,12 +320,14 @@
                                           Collection Stage:
                                         </label>
                                       </div>
+                                      {% if user.level == 'super admin' %}
                                       <div class="form-check form-check-primary">
                                         <input class="form-check-input" type="radio" name="cda_stage" value="S-1,S0,S1,S2,S3,S4,M1" checked>
                                         <label class="form-check-label" for="flexRadioSuccess">
                                           All
                                         </label>
                                       </div>
+                                      {% endif %}
                                       <div class="form-check form-check-primary">
                                         <input class="form-check-input" type="radio" name="cda_stage" value="S-1">
                                         <label class="form-check-label" for="flexRadioDanger">
@@ -409,340 +408,6 @@
 
 
 
-
-
-				<div class="row row-cols-1 row-cols-md-2 row-cols-xl-5">
-
-					<div class="col">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div class="d-flex align-items-center">
-									<div>
-										<p class="mb-0">Main Balance</p>
-										<h5 class="mb-0">&#x20A6;0</h5>
-									</div>
-									<div class="dropdown ms-auto">
-										<a class="dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown"><i class='bx bx-dots-horizontal-rounded font-22 text-option'></i>
-										</a>
-										<ul class="dropdown-menu">
-											<li><a class="dropdown-item" href="javascript:;">Action</a>
-											</li>
-											<li><a class="dropdown-item" href="javascript:;">Another action</a>
-											</li>
-											<li>
-												<hr class="dropdown-divider">
-											</li>
-											<li><a class="dropdown-item" href="javascript:;">Something else here</a>
-											</li>
-										</ul>
-									</div>
-								</div>
-								<div class="" id="chart2"></div>
-							</div>
-						</div>
-					</div>
-
-					<div class="col">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div class="d-flex align-items-center">
-									<div>
-										<p class="mb-0">Disbursed</p>
-										<h5 class="mb-0">&#x20A6;0</h5>
-									</div>
-									<div class="dropdown ms-auto">
-										<a class="dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown"><i class='bx bx-dots-horizontal-rounded font-22 text-option'></i>
-										</a>
-										<ul class="dropdown-menu">
-											<li><a class="dropdown-item" href="javascript:;">Action</a>
-											</li>
-											<li><a class="dropdown-item" href="javascript:;">Another action</a>
-											</li>
-											<li>
-												<hr class="dropdown-divider">
-											</li>
-											<li><a class="dropdown-item" href="javascript:;">Something else here</a>
-											</li>
-										</ul>
-									</div>
-								</div>
-								<div class="" id="chart3"></div>
-							</div>
-						</div>
-					</div>
-
-					<div class="col">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div class="d-flex align-items-center">
-									<div>
-										<p class="mb-0">Repayment</p>
-										<h5 class="mb-0">&#x20A6;0</h5>
-									</div>
-									<div class="dropdown ms-auto">
-										<a class="dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown"><i class='bx bx-dots-horizontal-rounded font-22 text-option'></i>
-										</a>
-										<ul class="dropdown-menu">
-											<li><a class="dropdown-item" href="javascript:;">Action</a>
-											</li>
-											<li><a class="dropdown-item" href="javascript:;">Another action</a>
-											</li>
-											<li>
-												<hr class="dropdown-divider">
-											</li>
-											<li><a class="dropdown-item" href="javascript:;">Something else here</a>
-											</li>
-										</ul>
-									</div>
-								</div>
-								<div class="" id="chart4"></div>
-							</div>
-						</div>
-					</div>
-
-					<div class="col">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div class="d-flex align-items-center">
-									<div>
-										<p class="mb-0">Pending Loan</p>
-										<h5 class="mb-0">&#x20A6;0</h5>
-									</div>
-									<div class="dropdown ms-auto">
-										<a class="dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown"><i class='bx bx-dots-horizontal-rounded font-22 text-option'></i>
-										</a>
-										<ul class="dropdown-menu">
-											<li><a class="dropdown-item" href="javascript:;">Action</a>
-											</li>
-											<li><a class="dropdown-item" href="javascript:;">Another action</a>
-											</li>
-											<li>
-												<hr class="dropdown-divider">
-											</li>
-											<li><a class="dropdown-item" href="javascript:;">Something else here</a>
-											</li>
-										</ul>
-									</div>
-								</div>
-								<div class="" id="chart5"></div>
-							</div>
-						</div>
-					</div>
-
-                    <div class="col">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div class="d-flex align-items-center">
-									<div>
-										<p class="mb-0">Declined</p>
-										<h5 class="mb-0">&#x20A6;0</h5>
-									</div>
-									<div class="dropdown ms-auto">
-										<a class="dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown"><i class='bx bx-dots-horizontal-rounded font-22 text-option'></i>
-										</a>
-										<ul class="dropdown-menu">
-											<li><a class="dropdown-item" href="javascript:;">Action</a>
-											</li>
-											<li><a class="dropdown-item" href="javascript:;">Another action</a>
-											</li>
-											<li>
-												<hr class="dropdown-divider">
-											</li>
-											<li><a class="dropdown-item" href="javascript:;">Something else here</a>
-											</li>
-										</ul>
-									</div>
-								</div>
-								<div class="" id="chart5"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-
-
-{#   ----------------- PRESENT STATS -------------------------#}
-
-                <h6 class="mb-0 text-uppercase">Present Stats</h6>
-                <hr>
-
-                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4">
-
-					<div class="col">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div class="d-flex align-items-center">
-									<div>
-										<p class="mb-0 text-secondary">Pending Loans</p>
-										<h4 class="my-1">0</h4>
-									</div>
-									<div class="widgets-icons bg-light-warning text-warning ms-auto"><i class="bx bxs-time-five"></i>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="col">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div class="d-flex align-items-center">
-									<div>
-										<p class="mb-0 text-secondary">Approved Loans</p>
-										<h4 class="my-1">0</h4>
-									</div>
-									<div class="widgets-icons bg-light-info text-info ms-auto"><i class="bx bxs-check-circle"></i>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="col">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div class="d-flex align-items-center">
-									<div>
-										<p class="mb-0 text-secondary">Disbursed Loans</p>
-										<h4 class="my-1">0</h4>
-									</div>
-									<div class="widgets-icons bg-light-success text-success ms-auto"><i class="bx bxs-badge-dollar"></i>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="col">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div class="d-flex align-items-center">
-									<div>
-										<p class="mb-0 text-secondary">Declined Loans</p>
-										<h4 class="my-1">0</h4>
-									</div>
-									<div class="widgets-icons bg-light-danger text-danger ms-auto"><i class="bx bx-x-circle"></i>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-                    <div class="col">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div class="d-flex align-items-center">
-									<div>
-										<p class="mb-0 text-secondary">Repaid Loans</p>
-										<h4 class="my-1">0</h4>
-									</div>
-									<div class="widgets-icons bg-light-success text-success ms-auto"><i class="bx bxs-credit-card"></i>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-                    <div class="col">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div class="d-flex align-items-center">
-									<div>
-										<p class="mb-0 text-secondary">Part-payment Loans</p>
-										<h4 class="my-1">0</h4>
-									</div>
-									<div class="widgets-icons bg-light-info text-info ms-auto"><i class="bx bxs-credit-card-alt"></i>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-                    <div class="col">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div class="d-flex align-items-center">
-									<div>
-										<p class="mb-0 text-secondary">Due Today Loans</p>
-										<h4 class="my-1">0</h4>
-									</div>
-									<div class="widgets-icons bg-light-primary text-primary ms-auto"><i class="bx bxs-calendar"></i>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-                    <div class="col">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div class="d-flex align-items-center">
-									<div>
-										<p class="mb-0 text-secondary">Overdue Loans</p>
-										<h4 class="my-1">0</h4>
-									</div>
-									<div class="widgets-icons bg-light-danger text-danger ms-auto"><i class="bx bxs-alarm"></i>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-				</div>
-
-
-
-
- {#   ----------------- PRESENT STATS CHART-------------------------#}
-
-                <div class="row row-cols-1 row-cols-md-12 row-cols-xl-12">
-					<div class="">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div id="present_stats_chart" data-highcharts-chart="0" style="overflow: hidden;"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-
-
-
-{#   ----------------- CATEGORIES CHART-------------------------#}
-                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-2">
-					<div class="col">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div id="categories_chart" data-highcharts-chart="0" style="overflow: hidden;"></div>
-							</div>
-						</div>
-					</div>
-
-					<div class="col">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div id="chart7" data-highcharts-chart="1" style="overflow: hidden;"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-
-
-
- {#   ----------------- DISBURSED VS REPAID CHART-------------------------#}
-                <div class="row row-cols-1 row-cols-md-12 row-cols-xl-12">
-					<div class="">
-						<div class="card radius-10">
-							<div class="card-body">
-								<div id="disbursed_vs_repaid_chart" data-highcharts-chart="0" style="overflow: hidden;"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-
-
 			</div>
 		</div>
 		<!--end page wrapper -->
@@ -801,7 +466,7 @@
                 return `${year}-${month}-${day}`;
             }
 
-            function get_analysis(fetch='rda,rdp,cda'){
+            function get_analysis(fetch='rda,rdp,cda,crc'){
                 var items = fetch.split(',')
                 loadOn()
                 $.ajax({
@@ -823,8 +488,11 @@
                     success: function (data) {
                         loadOff()
                         $.each(items, function (index, value){
-                            $(`#${value}_show`).html(data.content[value])
+                            if(value !== 'crc'){
+                                $(`#${value}_show`).html(data.content[value])
+                            }
                         })
+                        update_crc_chart(data.content['crc']['x'], data.content['crc']['y'])
                     },
                     error: function (err1, err2) {
                         loadOff()
@@ -840,7 +508,14 @@
                 return $('input[name="dimension"]:checked').val();
             }
             function get_cda_stage(){
-                return $('input[name="cda_stage"]:checked').val();
+                const stage = '{{ user.stage }}'
+                const level = '{{ user.level }}'
+                if(level === 'super admin'){
+                    return $('input[name="cda_stage"]:checked').val();
+                }else{
+                    return stage
+                }
+
             }
 
             function get_rdp_loan_type(){
@@ -853,10 +528,84 @@
                     loan_type = 'reloan'
                 }else{
                     loan_type = 'all'
-                    notify('info', 'showing all loans')
+
                 }
                 return loan_type
             }
+
+
+            window.e1_chart = undefined;
+        function update_crc_chart(x, y){
+            {#   ----------------- HISTORICAL STATS CHART -------------------------#}
+            if (e1_chart !== undefined && e1_chart && typeof e1_chart.destroy === 'function') {
+                    e1_chart.destroy();
+                }
+
+            var e1 = {
+                series: [{
+                    name: 'Collection Rate',
+                    data: y
+                }],
+                chart: {
+                    foreColor: '#9ba7b2',
+                    type: 'bar',
+                    height: 470
+                },
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '35%',
+                        endingShape: 'rounded'
+                    },
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                    show: true,
+                    width: 2,
+                    colors: ['transparent']
+                },
+                title: {
+                    text: '',
+                    align: 'left',
+                    style: {
+                        fontSize: '14px'
+                    }
+                },
+                colors: ["#ffc107", '#0d6efd', '#15ca20', '#fd3550'],
+                xaxis: {
+                    categories: x,
+                    title: {
+                        text: 'Categories'
+                    },
+                },
+                yaxis: {
+                    title: {
+                        text: 'Collection Rate'
+                    },
+                    labels: {
+                        formatter: function (val) {
+                            return val + "%"
+                        }
+                    }
+                },
+                fill: {
+                    opacity: 1
+                },
+                tooltip: {
+                    y: {
+                        formatter: function (val) {
+                            return fetch === 'amount' ? "₦ " + formatNumber(val) : formatNumber(val)
+                        }
+                    }
+                }
+	        };
+            window.e1_chart = new ApexCharts(document.querySelector("#collection_rates_chart"), e1);
+            e1_chart.render();
+
+        }
+
 
     </script>
 
@@ -869,6 +618,17 @@
             $('#cda_end').val(get_current_day())
 
             get_analysis()
+
+            $('input[name="cda_stage"]').each(function (){
+                const value = $(this).val()
+                const level = '{{ user.level }}'
+                const stage = '{{ user.stage }}'
+                if(value !== stage && level !== 'super admin'){
+                    $(this).prop('disabled', true)
+                }else{
+                    $(this).prop('checked', true)
+                }
+            })
 
             $('#timeframe_to').change(function (){
                 var start_date = new Date($("#timeframe_from").val())
@@ -892,186 +652,6 @@
             })
 
 
-{#   ----------------- PRESENT STATS CHART -------------------------#}
-
-            var e1 = {
-		series: [{
-			name: 'Net Profit',
-			data: [44, 55, 57, 56, 61, 58, 63, 60, 66]
-		}, {
-			name: 'Revenue',
-			data: [76, 85, 101, 98, 87, 105, 91, 114, 94]
-		}, {
-			name: 'Free Cash Flow',
-			data: [35, 41, 36, 26, 45, 48, 52, 53, 41]
-		}],
-		chart: {
-			foreColor: '#9ba7b2',
-			type: 'bar',
-			height: 360
-		},
-		plotOptions: {
-			bar: {
-				horizontal: false,
-				columnWidth: '55%',
-				endingShape: 'rounded'
-			},
-		},
-		dataLabels: {
-			enabled: false
-		},
-		stroke: {
-			show: true,
-			width: 2,
-			colors: ['transparent']
-		},
-		title: {
-			text: 'Present Stat Chart',
-			align: 'left',
-			style: {
-				fontSize: '14px'
-			}
-		},
-		colors: ["#212529", '#0d6efd', '#ffc107'],
-		xaxis: {
-			categories: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
-		},
-		yaxis: {
-			title: {
-				text: '$ (thousands)'
-			}
-		},
-		fill: {
-			opacity: 1
-		},
-		tooltip: {
-			y: {
-				formatter: function (val) {
-					return "$ " + val + " thousands"
-				}
-			}
-		}
-	};
-            var e1_chart = new ApexCharts(document.querySelector("#present_stats_chart"), e1);
-            e1_chart.render();
-
-
-{#   ----------------- DISBURSED VS REPAID -------------------------#}
-
-            var e2 = {
-		chart: {
-			foreColor: '#9ba7b2',
-			height: 360,
-			type: 'line',
-			zoom: {
-				enabled: false
-			},
-			dropShadow: {
-				enabled: true,
-				top: 3,
-				left: 2,
-				blur: 4,
-				opacity: 0.1,
-			}
-		},
-		stroke: {
-			curve: 'smooth',
-			width: 5
-		},
-		colors: ["#0d6efd", '#212529'],
-		series: [{
-			name: "Music",
-			data: [1, 15, 56, 20, 33, 27]
-		}, {
-			name: "Photos",
-			data: [30, 33, 21, 42, 19, 32]
-		}],
-		title: {
-			text: 'Disbursed VS Repaid',
-			align: 'left',
-			offsetY: 25,
-			offsetX: 20
-		},
-		subtitle: {
-			text: 'Statistics',
-			offsetY: 55,
-			offsetX: 20
-		},
-		markers: {
-			size: 4,
-			strokeWidth: 0,
-			hover: {
-				size: 7
-			}
-		},
-		grid: {
-			show: true,
-			padding: {
-				bottom: 0
-			}
-		},
-		labels: ['01/15/2002', '01/16/2002', '01/17/2002', '01/18/2002', '01/19/2002', '01/20/2002'],
-		xaxis: {
-			tooltip: {
-				enabled: false
-			}
-		},
-		legend: {
-			position: 'top',
-			horizontalAlign: 'right',
-			offsetY: -20
-		}
-	}
-            var e2_chart = new ApexCharts(document.querySelector('#disbursed_vs_repaid_chart'), e2);
-            e2_chart.render();
-
-
-
- {#   ----------------- CATEGORIES CHART-------------------------#}
-
-            var e3 = {
-            series: [44, 55, 13, 43, 22],
-            chart: {
-                foreColor: '#9ba7b2',
-                height: 330,
-                type: 'pie',
-            },
-            colors: ["#0d6efd", "#6c757d", "#17a00e", "#f41127", "#ffc107"],
-            labels: ['Team A', 'Team B', 'Team C', 'Team D', 'Team E'],
-            responsive: [{
-                breakpoint: 480,
-                options: {
-                    chart: {
-                        height: 360
-                    },
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }],
-                title: {
-                    text: 'Categories',
-                    align: 'left',
-                    offsetY: 25,
-                    offsetX: 20
-                },
-        };
-        var e3_chart = new ApexCharts(document.querySelector("#categories_chart"), e3);
-        e3_chart.render();
-
-
-        	 $("#login_as").click(function(){
-		            var user= $("#general_username").val();
-		            var url= "https://"+site_domain+"/admin-signin?username="+user;
-		            $.post('', {
-		                login_as: "set",
-		                username: user
-		            }, function(data, status){
-		                if(data=== "success"){
-		                    notify('error', 'Action could not be completed')
-		                }
-		            })
-		        })
 
 
 	        $("#order_search").keyup(function(){

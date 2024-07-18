@@ -141,16 +141,19 @@
 			</div>
 			<!--navigation-->
 			<ul class="metismenu" id="menu">
+            {% if user.level == 'admin' or user.level == 'super admin' or user.level == 'team leader' %}
 				<li>
 					<a href="javascript:;" class="has-arrow">
 						<div class="parent-icon"><i class="bx bx-home-circle"></i>
 						</div>
-						<div class="menu-title">Dashboard</div>
+						<div class="menu-title">Home</div>
 					</a>
+                    {% if user.level == 'admin' or user.level == 'super admin' %}
 					<ul>
-						<li> <a href="{% url 'dashboard' %}"><i class="bx bx-right-arrow-alt"></i>Home</a>
+						<li> <a href="{% url 'dashboard' %}"><i class="bx bx-right-arrow-alt"></i>Dashboard</a>
 						</li>
 					</ul>
+                    {% endif %}
 
                     <ul>
 						<li> <a href="{% url 'analysis' %}"><i class="bx bx-right-arrow-alt"></i>Analysis</a>
@@ -158,7 +161,9 @@
 					</ul>
 
 				</li>
+            {% endif %}
 
+            {% if user.level != 'admin' %}
                 <li>
 					<a href="javascript:;" class="has-arrow">
 						<div class="parent-icon"><i class="bx bx-category"></i>
@@ -169,6 +174,7 @@
 						<li> <a href="{% url 'loans' %}"><i class="bx bx-right-arrow-alt"></i>All Loans</a>
 						</li>
 					</ul>
+                    {% if user.level == 'super admin' or user.level == 'approval admin' %}
                     <ul>
 						<li> <a href="{% url 'loans_with_status' 'pending' %}"><i class="bx bx-right-arrow-alt"></i>Pending Loans</a>
 						</li>
@@ -189,38 +195,54 @@
 						<li> <a href="{% url 'loans_with_status' 'overdue' %}"><i class="bx bx-right-arrow-alt"></i>Overdue Loans</a>
 						</li>
 					</ul>
+                    <ul>
+						<li> <a href="{% url 'loans_with_status' 'declined' %}"><i class="bx bx-right-arrow-alt"></i>Declined Loans</a>
+						</li>
+					</ul>
+                    {% endif %}
 				</li>
+            {% endif %}
 
 				<li>
 					<a href="javascript:;" class="has-arrow">
 						<div class="parent-icon"><i class="bx bx-category"></i>
 						</div>
-						<div class="menu-title">Application</div>
+						<div class="menu-title">Menu</div>
 					</a>
+
+                    {% if user.level != 'admin' %}
+                     <ul>
+						<li> <a href="{% url 'repayments' %}"><i class="bx bx-right-arrow-alt"></i>Repayments</a>
+						</li>
+					</ul>
+                    {% endif %}
+
+                    {% if user.level == 'admin' or user.level == 'super admin' %}
 					<ul>
 						<li> <a href="{% url 'waiver' %}"><i class="bx bx-right-arrow-alt"></i>Waiver</a>
 						</li>
 					</ul>
 
+
                     <ul>
-						<li> <a href="{% url 'repayments' %}"><i class="bx bx-right-arrow-alt"></i>Repayments</a>
+						<li> <a href="{% url 'blacklist' %}"><i class="bx bx-right-arrow-alt"></i>Blacklist</a>
 						</li>
 					</ul>
 
-                     {% if user.level == "super admin" or user.level == "admin" %}
 					<ul>
 						<li> <a href="{% url 'operators' %}"><i class="bx bx-right-arrow-alt"></i>Operators</a>
 						</li>
 					</ul>
-                    {% endif %}
+
 					<ul>
 						<li> <a href="{% url 'users' %}"><i class="bx bx-right-arrow-alt"></i>Users</a>
 						</li>
 					</ul>
+                    {% endif %}
 
 				</li>
 				<li>
-					<a href="#0">
+					<a href="{% url 'logout' %}">
 						<div class="parent-icon"><i class="bx bx-user-circle"></i>
 						</div>
 						<div class="menu-title">Logout</div>
@@ -366,8 +388,8 @@
 						<a class="d-flex align-items-center nav-link dropdown-toggle dropdown-toggle-nocaret" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
 							<img src="{% static 'admin_panel/images/avatars/user.png' %}" class="user-img" alt="user avatar">
 							<div class="user-info ps-3">
-								<p class="user-name mb-0">{{ user.first_name }}</p>
-								<p class="designattion mb-0">{{ user.level }}</p>
+								<p class="user-name mb-0">{{ user.first_name }} {% if user.level == 'staff' or user.level == 'team leader' %} - {{ user.stage }} {% endif %}</p>
+								<p class="designattion mb-0">{{ user.level|title }}</p>
 							</div>
 						</a>
 					</div>
@@ -534,6 +556,30 @@
 
     <!--app JS-->
 	<script src="{% static 'admin_panel/js/app.js' %}"></script>
+
+<script>
+    function copy_to_clipboard(item){
+        navigator.clipboard.writeText(item);
+        notify('info', 'Copied');
+    }
+
+    function formatNumber(num, decimals) {
+                if (isNaN(num)) return 'Invalid number';
+                // Set the number of decimals to 2 if not provided
+                decimals = decimals || 2;
+
+                // Format the number
+                var parts = parseFloat(num).toFixed(decimals).toString().split('.');
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                return parts.join('.');
+            }
+
+            $('body').on('click', '.see_reason', function (){
+                $('#ReasonModal').modal('show')
+                $('.reason_head').text($(this).data('reason_head'))
+                $('.reason_body').text($(this).data('reason_body'))
+            })
+</script>
 
 
 

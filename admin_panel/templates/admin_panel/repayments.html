@@ -19,7 +19,7 @@
 					<div class="card-body">
 						<div class="d-flex align-items-center text-bg-">
 							<div class="pt-3 ps-3 pb-0" style="display: inline-block; width: 100%">
-                                <p style="float: left" class="fw-bold fs-6">Repayments History</p>
+                                <p style="float: left" class="fw-bold fs-6">{% if user.level == 'staff' or user.level == 'team leader' %}{{ user.stage }}{% endif %}  Repayments</p>
                                 <div style="float: right; width: 30%; display: inline-block">
                                     <div style="width: 40%; float: left">
                                         <label for="history_month_start">From:</label>
@@ -49,12 +49,10 @@
 						</div>
 						<hr/>
 						<div class="table-responsive">
-							<table class="table align-middle mb-5" id="loan_table">
+							<table class="table align-middle mb-5" id="repayment_table">
 								<thead class="table-light">
 									<tr>
-                                        <th>S/N</th>
-                                        <th>Loan ID</th>
-                                        <th>User</th>
+                                        <th>L,U ID</th>
                                         <th>Principal</th>
                                         <th>Amount Due</th>
                                         <th>Record Pay</th>
@@ -129,10 +127,6 @@
                                                     class="lni lni-cloud-sync"></i> Loans <span
                                                     class="badge rounded-pill bg-primary m-1 loan_count count">0</span></a>
 
-                                            <a href="#" class="dropdown-item view_repayment_history text-dark"
-                                               data-bs-toggle='modal' data-bs-target='#RepaymentModal'><i
-                                                    class="lni lni-cloud-upload"></i> Repayments <span
-                                                    class="badge rounded-pill bg-dark m-1 repayment_count count">0</span></a>
 
                                         </div>
                                     </div>
@@ -611,15 +605,15 @@
                                 <table class="table align-middle mb-0">
                                     <thead class="table-light">
                                     <tr>
-                                        <th>S/N</th>
-                                        <th>Loan ID</th>
-                                        <th>Loaned Amount</th>
-                                        <th>Repayment Amount</th>
-                                        <th>Record Pay</th>
-                                        <th>Record Stage</th>
-                                        <th>Total Repaid</th>
-                                        <th>Status</th>
-                                        <th>Record Date</th>
+                                        <th>S/N <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Serial Number"></i></th>
+                                        <th>Loan ID <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Unique identifier for the loan"></i></th>
+                                        <th>Principal <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Principal loan amount"></i></th>
+                                        <th>Due <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Amount Due"></i></th>
+                                        <th>PN <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Amount Paid Now"></i></th>
+                                        <th>Over Days <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Overdue Days at repayment"></i></th>
+                                        <th>TR <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Total Repaid amount so far"></i></th>
+                                        <th>Status <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Loan status at repayment"></i></th>
+                                        <th>Date <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Date of the record"></i></th>
                                     </tr>
                                     </thead>
                                     <tbody id="repayment_history" style="padding-bottom: 4em !important">
@@ -665,10 +659,10 @@
                                 <table class="table align-middle mb-5">
                                     <thead class="table-light">
                                     <tr>
-                                        <th>S/N</th>
                                         <th>Loan ID</th>
-                                        <th>Loaned</th>
-                                        <th>Repayment</th>
+                                        <th>Principal</th>
+                                        <th>Amt Disbursed</th>
+                                        <th>Due Amount</th>
                                         <th>Repaid</th>
                                         <th>Requested</th>
                                         <th>Disbursed</th>
@@ -678,7 +672,7 @@
                                         <th>Action</th>
                                     </tr>
                                     </thead>
-                                    <tbody id="mini_repayment_history" style="padding-bottom: 4em !important">
+                                    <tbody id="mini_loan_history" style="padding-bottom: 4em !important">
 
                                     </tbody>
                                 </table>
@@ -843,40 +837,79 @@
             })
 
             function start(refresh = false) {
-                $.ajax({
-                    url: '{% url "repayments" %}',
-                    data: {
-                        action: 'fetch_all_repayments',
-                        rows: $('#history_rows').val(),
-                        start: $('#history_month_start').val(),
-                        end: $('#history_month_end').val()
-                    },
-                    dataType: 'json',
-                    type: 'post',
-                    async: false,
-                    success: function (data) {
-                        if (refresh) {
-                            $('#loan_table').DataTable().destroy()
+                loadOn()
+                const level = '{{ user.level }}'
+                if (level !== 'staff' || level === 'team leader') {
+                    $.ajax({
+                        url: '{% url "repayments" %}',
+                        data: {
+                            action: 'fetch_all_repayments',
+                            rows: $('#history_rows').val(),
+                            start: $('#history_month_start').val(),
+                            end: $('#history_month_end').val()
+                        },
+                        dataType: 'json',
+                        type: 'post',
+                        success: function (data) {
+                            loadOff()
+                            if (refresh) {
+                                $('#repayment_table').DataTable().destroy()
+                            }
+                            setTimeout(function () {
+                                $("#repayment_history").html(data.content);
+                                var table = $('#repayment_table').DataTable({
+                                    lengthChange: false,
+                                    buttons: ['copy', 'excel', 'pdf', 'print']
+                                });
+                                table.buttons().container().appendTo('#loan_table_wrapper .col-md-6:eq(0)');
+                            }, 10)
+                        },
+                        error: function (jqXHR, errorThrown) {
+                            loadOff()
+                            notify('error', 'An error occurred. Page will be refreshed in 3s')
+                            setTimeout(function () {
+                                {#window.location.update()#}
+                            }, 3000)
+                        },
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
                         }
-                        setTimeout(function () {
-                            $("#repayment_history").html(data.content);
-                            var table = $('#loan_table').DataTable({
-                                lengthChange: false,
-                                buttons: ['copy', 'excel', 'pdf', 'print']
-                            });
-                            table.buttons().container().appendTo('#loan_table_wrapper .col-md-6:eq(0)');
-                        }, 10)
-                    },
-                    error: function (jqXHR, errorThrown) {
-                        notify('error', 'An error occurred. Page will be refreshed in 3s')
-                        setTimeout(function () {
-                            {#window.location.update()#}
-                        }, 3000)
-                    },
-                    beforeSend: function (xhr, settings) {
-                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
-                    }
-                })
+                    })
+                } else {
+                    $.ajax({
+                        url: "{% url 'operators' %}",
+                        dataType: "json",
+                        type: "POST",
+                        async: false,
+                        data: {
+                            id: '{{ user.id }}',
+                            action: 'operator_details'
+                        },
+                        success: function (data) {
+                            loadOff()
+                            if (refresh) {
+                                $('#repayment_table').DataTable().destroy()
+                            }
+                            setTimeout(function () {
+                                $("#repayment_history").html(data.content['repayments']);
+                                var table = $('#repayment_table').DataTable({
+                                    lengthChange: false,
+                                    pageLength: 15,
+                                    buttons: ['copy', 'excel', 'pdf', 'print']
+                                });
+                                table.buttons().container().appendTo('#loan_table_wrapper .col-md-6:eq(0)');
+                            }, 10)
+                        },
+                        error: function () {
+                            offProgress('user-modal')
+                            notify('error', 'Fetch failed, Retry')
+                        },
+                        beforeSend: function (xhr, settings) {
+                            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                        }
+                    })
+                }
+
             }
 
     </script>

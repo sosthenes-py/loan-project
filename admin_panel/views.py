@@ -1,11 +1,15 @@
+import json
+
 from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt
+
 from .forms import RegisterForm, LoginForm
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from .models import User
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from loan_app.models import AppUser, Document, Avatar, Loan
+from admin_panel.models import Repayment
 import admin_panel.utils as utils
 import datetime as dt
 
@@ -104,6 +108,11 @@ def waiver(request):
 
 
 @login_required
+def view_blacklist(request):
+    return render(request, 'admin_panel/blacklist.html')
+
+
+@login_required
 def analysis(request):
     if request.method == "GET":
         return render(request, 'admin_panel/analysis.html')
@@ -131,7 +140,23 @@ def analysis(request):
                 stage=request.POST.get('cda_stage', 'S-1,S0,S1,S2,S3,S4,M1')
             )
             content['cda'] = cda
-        return JsonResponse({'status': 'success', 'content': content})
+        if 'crc' in fetch:
+            crc = analysis_.collection_rates_chart()
+            content['crc'] = crc
+    elif action == 'fetch_dashboard':
+        content = {}
+        analysis_ = utils.Analysis(request.user)
+        obtain_list = ['pending', 'disbursed', 'repaid', 'declined']
+        for obtain in obtain_list:
+            content[obtain] = analysis_.generate_data(
+                _for=f'{obtain}',
+                fetch=request.POST.get('fetch', 'amount')
+            )
+        content['dashboard'] = analysis_.get_dashboard(
+            start=request.POST.get('start', '2024--1'),
+            end=request.POST.get('end', f'{dt.date.today():%Y-%m-%d}')
+        )
+    return JsonResponse({'status': 'success', 'content': content})
 
 
 @login_required
@@ -145,3 +170,16 @@ def operators(request):
     response.process()
     return JsonResponse({'status': response.status, 'content': response.content, 'message': response.message})
 
+
+@csrf_exempt
+def webhook(request):
+    secret_hash = 'mysecrethash'
+    signature = request.headers.get("verif-hash")
+    if signature or (signature != secret_hash):
+        return HttpResponse(status=401)
+
+    payload = json.loads(request.body)
+    event = payload.get('event')
+    data = payload.get('data')
+    handler = utils.Func.webhook(event, data)
+    return HttpResponse(status=200)

@@ -15,7 +15,9 @@ urlpatterns = [
     path('analysis/', views.analysis, name='analysis'),
     path('logout/', views.logout_user, name='logout'),
     path('waiver/', views.waiver, name='waiver'),
-    path('operators/', views.operators, name='operators')
+    path('operators/', views.operators, name='operators'),
+    path('blacklist/', views.view_blacklist, name='blacklist'),
+    path('webhook/', views.webhook, name='webhook')
 ]
 
 if settings.DEBUG:

@@ -25,6 +25,15 @@ class AppUser(models.Model):
     lga = models.CharField(max_length=100, default='', blank=True, null=True)
     eligible_amount = models.FloatField(default=6000)
 
+    def is_blacklisted(self):
+        return hasattr(self, 'blacklist')
+
+    def date_blacklisted(self):
+        if self.is_blacklisted():
+            return f"{getattr(self, 'blacklist').created_at:%b %d}"
+        else:
+            return ''
+
     def __str__(self):
         return f'{self.first_name} ({self.user_id})'
 
@@ -90,6 +99,7 @@ class Contact(models.Model):
     name = models.CharField(max_length=100, blank=True, null=True)
     phone = models.CharField(max_length=100)
     category = models.CharField(max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
 
 
 class SmsLog(models.Model):
@@ -98,7 +108,10 @@ class SmsLog(models.Model):
     phone = models.CharField(max_length=100)
     message = models.TextField()
     category = models.CharField(max_length=100)
-    date = models.DateTimeField(default=timezone.now)
+    date = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Name: {self.name}"
 
 
 class Loan(models.Model):
@@ -117,6 +130,9 @@ class Loan(models.Model):
     repaid_at = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=100, default='pending')
     reloan = models.IntegerField(default=1)
+    interest_perc = models.FloatField(default=40)
+    decline_reason = models.TextField(blank=True, null=True)
+    disburse_id = models.CharField(max_length=20, default='')
     # for reloan, 1 for first loan, 2 > for reloan, value being actual number of reloans
 
     objects = ProjectManager()
@@ -128,6 +144,12 @@ class Loan(models.Model):
         if not self.pk:
             self.project = current_project
         super().save(*args, **kwargs)
+
+
+class Blacklist(models.Model):
+    user = models.OneToOneField(AppUser, on_delete=models.CASCADE)
+    reason = models.CharField(max_length=10, default='overdue')
+    created_at = models.DateTimeField(default=timezone.now)
 
 
 

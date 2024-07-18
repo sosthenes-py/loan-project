@@ -1,0 +1,365 @@
+{% extends "admin_panel/layout.html" %}
+{% load static %}
+
+{% block title %}
+    <title>Members - APP_NAME</title>
+{% endblock %}
+
+{% block search_block %}
+
+
+{% endblock %}
+
+{% block content %}
+
+    <script>
+        var overlay = $("#overlay");
+        var loader = $("#loader");
+
+        function loadOn() {
+            overlay.css('display', 'block');
+            loader.css('display', 'block');
+        }
+
+        function loadOff() {
+            overlay.css('display', 'none');
+            loader.css('display', 'none');
+        }
+    </script>
+
+    <style>
+        .user-online:after, .user-offline:after {
+            content: "";
+            position: absolute;
+            bottom: 1px;
+            right: 1px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            box-shadow: 0 0 0 2px #fff;
+        }
+
+        .user-online:after {
+            background: #16e15e;
+        }
+
+        .user-offline:after {
+            background: #fd3550;
+        }
+
+        .user-online, .user-offline {
+            position: relative;
+        }
+
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+            list-style: none;
+        }
+
+        .timeline:before {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 40px;
+            width: 2px;
+            content: "";
+            background-color: #dee2e6;
+        }
+
+        .timeline > .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding-left: 60px;
+        }
+
+        .timeline > .timeline-item:before {
+            position: absolute;
+            left: 30px;
+            top: 0;
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #fff;
+            border: 5px solid #0D6EFD;
+            content: "";
+        }
+
+        .timeline > .timeline-item .timeline-content {
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: .25rem;
+        }
+    </style>
+    <!--start page wrapper -->
+    <div class="page-wrapper">
+        <div class="page-content">
+
+            <!--end row-->
+
+            <div class="card radius-10">
+                <div class="card-body">
+                    <div class="d-flex align-items-center bg-light p-3">
+                        <div class="me-auto fw-bold fs-6">Blacklist</div>
+
+
+                        <div class="d-flex align-items-center">
+                            <div class="me-2">
+                                <label for="history_month_start" class="form-label me-1">From:</label>
+                                <input type="date" id="history_month_start" class="form-control d-inline-block" value=""
+                                       style="width: auto;">
+                            </div>
+                            <div class="me-2">
+                                <label for="history_month_end" class="form-label me-1">To:</label>
+                                <input type="date" id="history_month_end" class="form-control d-inline-block" value=""
+                                       style="width: auto;">
+                            </div>
+                            <div class="me-2">
+                                <label for="history_rows" class="form-label me-1">Rows:</label>
+                                <select id="history_rows" class="form-select d-inline-block" style="width: auto;">
+                                    <option value="15">15</option>
+                                    <option value="50">50</option>
+                                    <option value="200">200</option>
+                                    <option value="500">500</option>
+                                    <option value="2000">2000</option>
+                                    <option value="10000">2000+</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+
+                        <div class="d-flex align-items-center bg-light">
+                        <div class="me-auto fw-bold fs-6"></div>
+                        <div class="d-flex align-items-center">
+
+                            <div class="me-2">
+                                <label for="filter" class="form-label me-1">Filters:</label>
+                                <input type="text" placeholder="Search by U.ID, Phone, BVN, Fname, Lname" id="filters" class="form-control d-inline-block" value=""
+                                       style="width: 22em;">
+                            </div>
+
+                            <div>
+                                <button type="button" class="btn btn-primary px-3 radius-30"
+                                        onclick="start(true)">Search
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    </div>
+
+                    <hr/>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0" id="example2">
+                            <thead class="table-light">
+                            <tr>
+                                <th>User ID</th>
+                                <th>Full Name</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Date Blacklisted</th>
+                                <th>Action</th>
+
+                            </tr>
+                            </thead>
+                            <tbody id="blacklist">
+                            <tr>
+                                <td colspan="12" style="font-weight: bold">Fetching blacklist, PLEASE WAIT ...</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--end page wrapper -->
+
+    <input type="hidden" id="selected_user_id">
+
+
+
+
+    </div>
+    </div>
+    </div>
+    </div>
+
+
+
+
+    <script>
+        const success_audio = new Audio("{% static 'admin_panel/audio/correct.mp3' %}");
+        const error_audio = new Audio("{% static 'admin_panel/audio/wrong.mp3' %}");
+
+
+        var overlay = $("#overlay");
+        var loader = $("#loader");
+        var loader_trans = $("#loader-trans");
+
+        function loadOn() {
+            overlay.css('display', 'block');
+            loader.css('display', 'block');
+        }
+
+        function onProgress(elem) {
+            $('#' + elem).addClass('thin-loader')
+        }
+
+        function offProgress(elem) {
+            $('#' + elem).removeClass('thin-loader')
+        }
+
+        function loadOff() {
+            overlay.css('display', 'none');
+            loader.css('display', 'none');
+        }
+
+        function notify(status, message) {
+            if (status === "success" || status === "info") {
+                success_audio.play();
+            } else {
+                error_audio.play();
+            }
+            toastr[status](message)
+        }
+
+        $('#history_month_end').change(function () {
+            var start_date = new Date($("#history_month_start").val())
+            var end_date = new Date($(this).val())
+            if (start_date > end_date) {
+                $(this).val(get_current_month())
+                $("#history_month_start").val(get_current_month(-1))
+                notify('warning', 'Ending date cannot be less than starting date')
+            }
+        })
+
+        $('#history_month_start').change(function () {
+            var end_date = new Date($("#history_month_end").val())
+            var start_date = new Date($(this).val())
+            if (start_date > end_date) {
+                $(this).val(get_current_month(-1))
+                $("#history_month_end").val(get_current_month())
+                notify('warning', 'Ending date cannot be less than starting date')
+            }
+
+        })
+
+        function get_current_month(cc = 1) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + cc).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+
+        function start(refresh = false) {
+            loadOn()
+            $.ajax({
+                url: "{% url 'users' %}",
+                type: "POST",
+                data: {
+                    action: 'fetch_blacklist',
+                    rows: $('#history_rows').val(),
+                    start: $('#history_month_start').val(),
+                    end: $('#history_month_end').val(),
+                    filters: $('#filters').val(),
+                },
+                dataType: "json",
+                success: function (data) {
+                    loadOff()
+                    if (refresh) {
+                        $('#example2').DataTable().destroy()
+                    }
+                    setTimeout(function () {
+                        $("#blacklist").html(data.content);
+                        var table = $('#example2').DataTable({
+                            lengthChange: false,
+                            pageLength: 15,
+                            buttons: ['copy', 'excel', 'pdf', 'print']
+                        });
+                        table.buttons().container().appendTo('#example2_wrapper .col-md-6:eq(0)');
+                    }, 10)
+                },
+                error: function (jqXHR, errorThrown) {
+                    loadOff()
+                    notify('error', 'An error occurred. Page will be refreshed in 3s')
+                    setTimeout(function () {
+                        {#window.location.update()#}
+                    }, 3000)
+                },
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                }
+            })
+        }
+
+        $('.copy').click(function (){
+            var item = $(this).data('item')
+            copy_to_clipboard(item)
+        })
+    </script>
+
+
+
+    <script>
+        $(function () {
+            $('#history_month_start').val(get_current_month(-1))
+            $('#history_month_end').val(get_current_month())
+
+            start()
+
+
+            {#BLACKLIST#}
+            $("body").on('click', '.blacklist', function (){
+                var user_id = $(this).data('user_id')
+                loadOn();
+                $.ajax({
+                    url: '{% url "users" %}',
+                    data: {
+                        user_id: user_id,
+                        action: 'blacklist'
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        notify(data.status, data.message)
+                        if (data.status === 'success') {
+                            start(true)
+                        }
+
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            })
+
+
+
+
+            $('body').on('mouseover', '.user_rows', function () {
+                $(this).css({'background-color': '#E2EDFF', 'color': '#267DFD', 'cursor': 'pointer'})
+            })
+            $('body').on('mouseout', '.trs', function () {
+                $(this).css({'background': 'white', 'color': 'black', 'cursor': 'pointer'})
+            })
+
+
+        })
+    </script>
+
+
+
+{% endblock %}
