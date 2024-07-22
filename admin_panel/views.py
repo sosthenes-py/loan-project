@@ -208,3 +208,4 @@ def automations(request, program):
             utils.Func.set_collectors()
         elif program == 'recovery':
             utils.Func.set_recovery()
+        return JsonResponse({'status': 'success'})
