@@ -1,13 +1,13 @@
 import json
 import datetime as dt
 import os
-
+from decouple import config
 import requests
 from rave_python import Rave
 
-NUBAN_API_KEY = os.environ.get('NUBAN_API_KEY')
-RAVE_PUBLIC_KEY = os.environ.get('RAVE_PUBLIC_KEY')
-RAVE_PRIVATE_KEY = os.environ.get('RAVE_PRIVATE_KEY')
+NUBAN_API_KEY = config('NUBAN_API_KEY')
+RAVE_PUBLIC_KEY = config('RAVE_PUBLIC_KEY')
+RAVE_PRIVATE_KEY = config('RAVE_SECRET_KEY')
 
 
 def fetch_account_details(code, number):
@@ -23,7 +23,7 @@ def fetch_account_details(code, number):
     return res.json()
 
 
-rave = Rave(RAVE_PUBLIC_KEY, RAVE_PRIVATE_KEY, usingEnv=True)
+rave = Rave(RAVE_PUBLIC_KEY, RAVE_PRIVATE_KEY, usingEnv=False)
 
 
 def generate_flw_virtual_account(user):
