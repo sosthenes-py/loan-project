@@ -196,3 +196,15 @@ def webhook(request):
     data = payload.get('data')
     handler = utils.Func.webhook(event, data)
     return HttpResponse(status=200)
+
+
+@csrf_exempt
+def automations(request, program):
+    if request.method == "GET":
+        hour = dt.datetime.now().hour
+        if program == 'progressive' and hour >= 23:
+            utils.Func.set_progressive()
+        elif program == 'collection' and hour == 0:
+            utils.Func.set_collectors()
+        elif program == 'recovery':
+            utils.Func.set_recovery()

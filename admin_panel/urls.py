@@ -19,7 +19,8 @@ urlpatterns = [
     path('blacklist/', views.view_blacklist, name='blacklist'),
     path('logs/', views.view_logs, name='logs'),
     path('webhook/', views.webhook, name='webhook'),
-    path('users/filtered/', views.accepted_users, name='accepted_users')
+    path('users/filtered/', views.accepted_users, name='accepted_users'),
+    path('automations/<str:program>', views.automations)
 ]
 
 if settings.DEBUG:
