@@ -113,6 +113,16 @@ def view_blacklist(request):
 
 
 @login_required
+def view_logs(request):
+    return render(request, 'admin_panel/logs.html')
+
+
+@login_required
+def accepted_users(request):
+    return render(request, 'admin_panel/accepted_user.html')
+
+
+@login_required
 def analysis(request):
     if request.method == "GET":
         return render(request, 'admin_panel/analysis.html')
@@ -156,6 +166,9 @@ def analysis(request):
             start=request.POST.get('start', '2024--1'),
             end=request.POST.get('end', f'{dt.date.today():%Y-%m-%d}')
         )
+    elif action == 'fetch_main_bal':
+        analysis_ = utils.Analysis(request.user)
+        content = analysis_.fetch_main_balance()
     return JsonResponse({'status': 'success', 'content': content})
 
 

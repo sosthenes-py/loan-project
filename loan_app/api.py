@@ -1,23 +1,29 @@
 import json
 import datetime as dt
+import os
+
 import requests
 from rave_python import Rave
 
-NUBAN_API_KEY = 'NUBAN-RKYBIBGC2163'
-RAVE_PUBLIC_KEY = 'FLWPUBK-f253ac8668d214bfe067855e421cb9ae-X'
-RAVE_PRIVATE_KEY = 'FLWSECK-90c21d061b428e59ab438e962c507d74-190c239b6e6vt-X'
+NUBAN_API_KEY = os.environ.get('NUBAN_API_KEY')
+RAVE_PUBLIC_KEY = os.environ.get('RAVE_PUBLIC_KEY')
+RAVE_PRIVATE_KEY = os.environ.get('RAVE_PRIVATE_KEY')
 
 
-def get_account_details(bank_code, acc_no):
-    params = {
-        'bank_code': bank_code,
-        'acc_no': acc_no
+def fetch_account_details(code, number):
+    headers = {
+        'Authorization': f'Bearer {RAVE_PRIVATE_KEY}'
     }
-    response = requests.get(url=f'https://app.nuban.com.ng/api/{NUBAN_API_KEY}', params=params)
-    return response.json()
+    data = {
+        'account_number': number,
+        'account_bank': code
+    }
+    url = f'https://api.flutterwave.com/v3/accounts/resolve'
+    res = requests.post(url=url, headers=headers, data=data)
+    return res.json()
 
 
-rave = Rave(RAVE_PUBLIC_KEY, RAVE_PRIVATE_KEY, usingEnv=False)
+rave = Rave(RAVE_PUBLIC_KEY, RAVE_PRIVATE_KEY, usingEnv=True)
 
 
 def generate_flw_virtual_account(user):
@@ -66,3 +72,73 @@ def create_bulk_tf(bdata, admin_user):
     url = 'https://api.flutterwave.com/v3/bulk-transfers'
     res = requests.post(url=url, headers=headers, data=json.dumps(data))
     return res.json()
+
+
+def fetch_main_bal():
+    headers = {
+        'Authorization': f'Bearer {RAVE_PRIVATE_KEY}'
+    }
+    url = f'https://api.flutterwave.com/v3/balances/NGN'
+    res = requests.get(url=url, headers=headers)
+    res = res.json()
+    if res['status'] == 'success':
+        return float(res['data']['available_balance'])
+    else:
+        return 0
+
+
+def fetch_banks():
+    headers = {
+        'Authorization': f'Bearer {RAVE_PRIVATE_KEY}'
+    }
+
+    url = f'https://api.flutterwave.com/v3/banks/NG'
+    res = requests.get(url=url, headers=headers)
+    return res.json()
+
+
+def send_otp(user, length, medium: list):
+    headers = {
+        'Authorization': f'Bearer {RAVE_PRIVATE_KEY}'
+    }
+    data = {
+        'length': length,
+        'sender': 'SportyCredit',
+        'send': True,
+        'medium': medium,
+        'expiry': 10,
+        'customer': {
+            'name': f'{user.last_name} {user.first_name}',
+            'phone': user.phone,
+            'email': user.email
+        }
+    }
+
+    url = f'https://api.flutterwave.com/v3/otps'
+    res = requests.post(url=url, headers=headers, data=data)
+    return res.json()
+
+
+def send():
+    headers = {
+        'Authorization': f'Bearer {RAVE_PRIVATE_KEY}'
+    }
+    data = {
+        'length': 6,
+        'customer': {
+            'name': 'Onyeka',
+            'email': 'sos.sosthenes1@gmail.com',
+            'phone': '2348147173448'
+        },
+        'sender': 'SportyCredit',
+        'send': True,
+        'medium': ['whatsapp'],
+        'expiry': 10,
+    }
+
+    url = f'https://api.flutterwave.com/v3/otps'
+    res = requests.post(url=url, headers=headers, data=data)
+    return res.json()
+
+
+# print(send())

@@ -10,11 +10,13 @@ class AppUser(models.Model):
     middle_name = models.CharField(max_length=100, blank=True, null=True)
     email = models.EmailField()
     phone = models.CharField(unique=True, max_length=15)
+    username = models.CharField(max_length=15, default='')
     phone2 = models.CharField(default='', max_length=15, blank=True, null=True)
     bvn = models.CharField(max_length=20, default='', blank=True, null=True)
     email2 = models.EmailField(default='', blank=True, null=True)
     address = models.CharField(max_length=100, default='', blank=True, null=True)
-    status = models.BooleanField(default=True)
+    status = models.BooleanField(default=False)  # Docs status
+    status_reason = models.TextField(default='')  # Docs rejection reason
     created_at = models.DateTimeField(default=timezone.now)
     last_access = models.DateTimeField(default=timezone.now)
     user_id = models.CharField(max_length=20)
@@ -23,7 +25,13 @@ class AppUser(models.Model):
     gender = models.CharField(max_length=100, default='male')
     state = models.CharField(max_length=100, default='', blank=True, null=True)
     lga = models.CharField(max_length=100, default='', blank=True, null=True)
-    eligible_amount = models.FloatField(default=6000)
+    eligible_amount = models.FloatField(default=10000)
+    marital_status = models.CharField(max_length=100, default='')
+    nationality = models.CharField(max_length=100, default='', blank=True, null=True)
+    children = models.CharField(max_length=100, default='', blank=True, null=True)
+    education = models.CharField(max_length=100, default='')
+    employment = models.CharField(max_length=100, default='', blank=True, null=True)
+    borrow_level = models.IntegerField(default=1)
 
     def is_blacklisted(self):
         return hasattr(self, 'blacklist')
@@ -109,6 +117,7 @@ class SmsLog(models.Model):
     message = models.TextField()
     category = models.CharField(max_length=100)
     date = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f"Name: {self.name}"
@@ -124,16 +133,17 @@ class Loan(models.Model):
     amount_due = models.FloatField(max_length=10, default=0)
     # amount_due = principal amount (overdue charges will accumulate here too)
     amount_paid = models.FloatField(max_length=10, default=0)
-    duration = models.IntegerField(default=6)
+    duration = models.IntegerField(default=5)
     created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
     disbursed_at = models.DateTimeField(blank=True, null=True)
     repaid_at = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=100, default='pending')
     reloan = models.IntegerField(default=1)
     interest_perc = models.FloatField(default=40)
     decline_reason = models.TextField(blank=True, null=True)
-    disburse_id = models.CharField(max_length=20, default='')
-    # for reloan, 1 for first loan, 2 > for reloan, value being actual number of reloans
+    disburse_id = models.CharField(max_length=20, default='')  # flw transfer ID
+    purpose = models.CharField(max_length=100, default='')
 
     objects = ProjectManager()
 
@@ -150,6 +160,19 @@ class Blacklist(models.Model):
     user = models.OneToOneField(AppUser, on_delete=models.CASCADE)
     reason = models.CharField(max_length=10, default='overdue')
     created_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField(blank=True, null=True)
 
 
+class Notification(models.Model):
+    user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
+    message = models.TextField()
+    message_type = models.CharField(max_length=20, default='system')
+    viewed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+
+
+class Otp(models.Model):
+    user = models.OneToOneField(AppUser, on_delete=models.CASCADE)
+    code = models.CharField(max_length=20)
+    expires_at = models.DateTimeField(null=True, blank=True)
 

@@ -119,6 +119,8 @@ class Repayment(models.Model):
     overdue_days = models.IntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=10, default='')
+    allow = models.BooleanField(default=False)  # when admin forgives late repayment, allow = True
 
     def __str__(self):
         return f"{self.user.first_name} ({self.user.user_id}) Repayment"
@@ -318,3 +320,16 @@ class Recovery(models.Model):
     rate = models.FloatField(default=0)
     # rate: = (paid_count/total_count) * 100
 
+
+class Logs(models.Model):
+    action = models.CharField(max_length=100, default='', blank=True)
+    body = models.TextField(default='', blank=True)
+    status = models.CharField(max_length=20, default='info')
+    fee = models.FloatField(default=0)
+    created_at = models.DateTimeField(default=timezone.now)
+
+
+class AcceptedUser(models.Model):
+    admin_user = models.ForeignKey(User, on_delete=models.CASCADE)
+    phone = models.CharField(max_length=20)
+    created_at = models.DateTimeField(default=timezone.now)

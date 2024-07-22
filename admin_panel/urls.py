@@ -17,7 +17,9 @@ urlpatterns = [
     path('waiver/', views.waiver, name='waiver'),
     path('operators/', views.operators, name='operators'),
     path('blacklist/', views.view_blacklist, name='blacklist'),
-    path('webhook/', views.webhook, name='webhook')
+    path('logs/', views.view_logs, name='logs'),
+    path('webhook/', views.webhook, name='webhook'),
+    path('users/filtered/', views.accepted_users, name='accepted_users')
 ]
 
 if settings.DEBUG:

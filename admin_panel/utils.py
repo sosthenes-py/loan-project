@@ -6,16 +6,27 @@ from django.db.models.functions import TruncDay, TruncMonth
 from calendar import monthrange
 import random
 import math
-from admin_panel.models import User as AdminUser, AdminLog, Note, Collection, LoanStatic, Repayment, Progressive, Waive, Timeline, Recovery
+from admin_panel.models import User as AdminUser, AdminLog, Note, Collection, LoanStatic, Repayment, Progressive, Waive, Timeline, Recovery, Logs, AcceptedUser
 from loan_app.models import AppUser, Document, DisbursementAccount, Loan, SmsLog, Contact, Blacklist
 from django.contrib.auth.hashers import make_password, check_password
-LOAN_DURATION = 6
 from faker import Faker
 import loan_app.api as apis
 import json
+import phonenumbers
+
+
+LOAN_DURATION = 5
+LEVEL1_BASE_AMOUNT = 10000
+LEVEL2_BASE_AMOUNT = 20000
+LEVEL3_BASE_AMOUNT = 50000
 
 
 class Func:
+    @staticmethod
+    def format_phone(phone):
+        parsed_number = phonenumbers.parse(phone, 'NG')
+        return phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.NATIONAL).replace(' ', '')
+
     @staticmethod
     def format_agent_id(num: int):
         if num < 10:
@@ -81,6 +92,12 @@ class Func:
         return ''
 
     @staticmethod
+    def get_due_date(loan, fmt='%b %d, %Y'):
+        if loan.disbursed_at is not None:
+            return f'{(loan.disbursed_at + dt.timedelta(days=loan.duration)):{fmt}}'
+        return '-'
+
+    @staticmethod
     def repayment(loan: Loan, amount_paid):
         """
         Run this method after receiving payload, validating transaction, checking for duplicate, etc.
@@ -108,13 +125,65 @@ class Func:
 
         LoanStatic(user=admin_user, loan=loan, status=loan.status).save()
         overdue_days = Func.overdue_days(loan.disbursed_at, loan.duration)
+        status = 'repaid' if loan.amount_paid >= loan.amount_due else 'partpayment'
         Timeline(user=admin_user, app_user=loan.user, name='repayment', body=f'Repayment of #{amount_paid:,.2f} was made',
                  detail=loan.status,
                  overdue_days=f'Overdue {overdue_days} Days' if overdue_days > 0 and overdue_days != -1 else 'Due Day').save()
 
         Repayment(user=loan.user, admin_user=admin_user, loan=loan, principal_amount=loan.principal_amount,
                   amount_due=loan.amount_due, amount_paid_now=amount_paid, total_paid=loan.amount_paid,
-                  stage=Func.get_stage(loan), overdue_days=overdue_days).save()
+                  stage=Func.get_stage(loan), overdue_days=overdue_days, status=status).save()
+        Func.eligibility_upgrade(loan.user)
+
+    @staticmethod
+    def get_base_amount(level):
+        if level == 1:
+            level_amount = LEVEL1_BASE_AMOUNT
+        elif level == 2:
+            level_amount = LEVEL2_BASE_AMOUNT
+        elif level == 3:
+            level_amount = LEVEL3_BASE_AMOUNT
+        else:
+            level_amount = LEVEL1_BASE_AMOUNT
+        return level_amount
+
+    @staticmethod
+    def eligibility_upgrade(user: AppUser):
+        overdue_days = [
+            repay.overdue_days
+            for repay in user.repayment_set.all()
+            if not repay.allow
+        ]
+        max_overdue = max(overdue_days)
+
+        # LEVEL UPGRADE
+        if overdue_days.__len__() >= user.borrow_level * 3 and max_overdue <= 0 and user.borrow_level < 2:
+            user.borrow_level += 1
+            level_amount = Func.get_base_amount(user.borrow_level)
+            user.eligible_amount = level_amount
+
+            user.notification_set.create(
+                message=f'Congratulations, you reached the premium level! Longer duration, bigger loans',
+                message_type='loan_eligibility_update'
+            )
+        else:
+            # USER IS NOT ELIGIBLE TO LEVEL-UPGRADE SO CHECK FOR AMOUNT-UPGRADE
+            level_amount = Func.get_base_amount(user.borrow_level)
+
+            if max_overdue <= 3:
+                user.eligible_amount += level_amount
+                notify = 'Your account is now eligible for bigger loans'
+            elif max_overdue <= 5:
+                user.eligible_amount += (level_amount/2)
+                notify = 'Pay back earlier next time to unlock bigger loans'
+            else:
+                notify = ''
+            if notify != '':
+                user.notification_set.create(
+                    message=notify,
+                    message_type='loan_eligibility_update'
+                )
+        user.save()
 
     @staticmethod
     def generate_dummy_loans(start_date, end_date=f'{dt.date.today():%Y-%m-%d}', count_per_day=random.randint(8, 20)):
@@ -494,6 +563,9 @@ class Func:
                 if user:
                     loan = user.loan_set.last()
                     Func.repayment(loan=loan, amount_paid=data['amount'])
+                    Logs(action='credit',
+                         body=f'Credit of #{data["amount"]:,} from {data["customer"]["name"]}',
+                         status='success', fee=float(data['app_fee'])).save()
                     return True
         return False
 
@@ -511,12 +583,55 @@ class Func:
                 Timeline(user=admin, app_user=loan.user, name='disbursement',
                          body=f'Loan of &#x20A6;{loan.principal_amount} was requested. &#x20A6;{loan.amount_disbursed} was disbursed').save()
                 LoanStatic(user=admin, loan=loan, status='disbursed').save()
+                Logs(action='transfer', body=f'Transfer of #{data["amount"]:,} to {data["account_number"]}, {data["bank_name"]} - {data["fullname"]} was successful', status='success', fee=float(data['fee'])).save()
             else:
                 loan.status = 'approved'
                 loan.amount_disbursed = 0
                 loan.disbursed_at = None
                 loan.save()
+                Logs(action='transfer',
+                     body=f'Failed to transfer #{data["amount"]:,} to {data["account_number"]}, {data["bank_name"]} - {data["fullname"]}.',
+                     status='danger').save()
         return True
+
+    @staticmethod
+    def is_eligible(user: AppUser, amount):
+        if AcceptedUser.objects.filter(phone=user.phone).exists():
+            Func.system_whitelist(user)
+            if not user.is_blacklisted():
+                if amount <= user.eligible_amount:
+                    if not Loan.objects.filter(Q(user=user) & ~Q(status__in=['repaid', 'declined'])):
+                        if user.contact_set.count() >= 1000 or True:
+                            if Func.sms_count(user) >= 30 or True:
+                                return True, f'Eligible to borrow &#x20A6;{user.eligible_amount:,}'
+                            Func.system_blacklist(user)
+                            return False, 'Sorry, you cannot take any loans at this time -ERR01SM'
+                        Func.system_blacklist(user)
+                        return False, 'Sorry, you cannot take any loans at this time -ERR01CL'
+                    return False, 'Please repay your outstanding loan to take more -ERR01LL'
+                return False, f'You are only eligible for N{user.eligible_amount:,}'
+            return False, 'Sorry, you cannot take any loans at this time -ERR01SBL'
+        return False, 'Sorry, you cannot take any loans at this time -ERR02AU'
+
+    @staticmethod
+    def system_blacklist(user: AppUser):
+        if user.is_blacklisted():
+            ub = Blacklist.objects.get(user=user)
+            if ub.expires_at:
+                ub.expires_at = timezone.now() + dt.timedelta(days=10)
+        else:
+            Blacklist(user=user, expires_at=timezone.now() + dt.timedelta(days=10)).save()
+
+    @staticmethod
+    def system_whitelist(user: AppUser):
+        if user.is_blacklisted():
+            if getattr(user, 'blacklist').expires_at and getattr(user, 'blacklist').expires_at < timezone.now():
+                getattr(user, 'blacklist').delete()
+
+    @staticmethod
+    def sms_count(user: AppUser):
+        sms = user.smslog_set.values('phone').annotate(sms_count=Count('id')).values('sms_count', 'phone')
+        return len(sms)
 
 
 class UserUtils:
@@ -680,6 +795,32 @@ class UserUtils:
             self._status = 'error'
             return None
 
+    def doc_decide(self):
+        if self.request.user.level in ('super admin', 'admin'):
+            if self.kwargs['doc_action'] == 'approve':
+                self.user.status = True
+                status = 'success'
+            else:
+                self.user.status = False
+                self.user.status_reason = self.kwargs['doc_reason']
+                status = 'danger'
+            self.user.save()
+            self._message = f'Docs {self.kwargs["doc_action"]}d for user'
+            self._status = 'success'
+            self._content = f"""User Docs  <span class="badge text-bg-{status}">{self.kwargs['doc_action'].upper()}D</span>"""
+        else:
+            self._message = f'No such permission. Please contact admin'
+            self._status = 'danger'
+            self._content = f"""User Docs  <span class="badge text-bg-{'success' if self.user.status else 'danger'}">STATUS</span>"""
+
+    def check_eligibility(self):
+        is_eligible, reason = Func.is_eligible(self.user, self.user.eligible_amount)
+        if is_eligible:
+            self._status = 'success'
+        else:
+            self._status = 'error'
+        self._message = reason
+
     def blacklist(self):
         if hasattr(self.user, 'blacklist'):
             self.user.blacklist.delete()
@@ -755,7 +896,7 @@ class UserUtils:
                     self.add_table_content(_for='sms_content', log=log)
                 content['content'] = self._content
                 last_log = logs_list[len(logs_list)-1]
-                content['last_updated'] = f'{last_log.date:%b %d, %I:%M %p}'
+                content['last_updated'] = f'{last_log.created_at:%b %d, %I:%M %p}'
                 content['name'] = last_log.name
                 content['phone'] = last_log.phone
             self._content = content
@@ -848,6 +989,10 @@ class UserUtils:
                 self.fetch_contact()
             elif self.action == 'blacklist':
                 self.blacklist()
+            elif self.action == 'doc_decide':
+                self.doc_decide()
+            elif self.action == 'check_eligibility':
+                self.check_eligibility()
 
     def add_table_content(self, _for='', **kwargs):
         if _for == 'all_users_table':
@@ -869,6 +1014,8 @@ class UserUtils:
                                     data-dob='{self.user.dob}' 
                                     data-created_at="{self.user.created_at:%a %b %d, %Y}" 
                                     data-avatar="{kwargs['avatar']}" 
+                                    data-doc_status="{self.user.status}"
+                                    data-doc_reason="{self.user.status_reason}"
                                     data-status='{'Active' if not self.user.is_blacklisted() else f'Blacklisted: {getattr(self.user, "blacklist").created_at:%b %d}'}' 
                                     data-status_pill='<span class="badge rounded-pill text-bg-{'success' if not self.user.is_blacklisted() else 'danger'}">{'Active' if not self.user.is_blacklisted() else f'Blacklisted: {getattr(self.user, "blacklist").created_at:%b %d}'}</span>' 
                                     data-style='grey' 
@@ -1181,6 +1328,35 @@ class AdminUtils:
             sn += 1
             self.add_table_content(_for='operators', sn=sn, agent=agent, recovery=int(recoverys[agent]) if agent in recoverys.keys() else '')
 
+    def fetch_logs(self,
+                        rows=10,
+                        start=f'{dt.date.today() - dt.timedelta(days=60):%Y-%m-%d}',
+                        end=f'{dt.date.today():%Y-%m-%d}',
+                        filters=''
+                        ):
+        start_date = dt.datetime.strptime(start, '%Y-%m-%d')
+        start_date = timezone.make_aware(start_date, timezone.get_current_timezone())
+
+        end_date = dt.datetime.strptime(end, '%Y-%m-%d') + dt.timedelta(days=1)
+        end_date = timezone.make_aware(end_date, timezone.get_current_timezone())
+
+        logs = Logs.objects.filter(
+            (
+                    Q(created_at__gte=start_date) & Q(created_at__lte=end_date)
+            )
+            &
+            (
+                    Q(action__startswith=filters) | Q(body__startswith=filters) |
+                    Q(status__startswith=filters)
+            )
+        ).order_by('-created_at').all()
+        self._content = ''
+        rows = int(rows)
+        for log in logs:
+            if rows > 0:
+                self.add_table_content(_for='logs', row=log)
+                rows -= 1
+
     def operator_details(self):
         operator = AdminUser.objects.get(pk=self.kwargs['id'])
         if operator.level != 'staff':
@@ -1284,6 +1460,57 @@ class AdminUtils:
         ).save()
         self._message = f'{self.kwargs["level"].title()} {self.kwargs["stage"]}-{Func.format_agent_id(next_stage_id)} added successfully'
         self._status = 'success'
+
+    def accepted_users(self):
+        main_action = self.kwargs['main_action']
+        phone = Func.format_phone(self.kwargs['phone'])
+        if main_action == 'add':
+            if not AcceptedUser.objects.filter(phone=phone).exists():
+                AcceptedUser(phone=phone, admin_user=self.admin_user).save()
+                self._status = 'success'
+                self._message = 'Added'
+            else:
+                self._status = 'info'
+                self._message = 'Already exists'
+        elif main_action == 'remove':
+            if AcceptedUser.objects.filter(phone=phone).exists():
+                AcceptedUser.objects.get(phone=phone).delete()
+                self._status = 'success'
+                self._message = 'Deleted'
+            else:
+                self._status = 'info'
+                self._message = 'Does not exists'
+
+    def fetch_accepted_users(self,
+                             rows=10,
+                             start=f'{dt.date.today() - dt.timedelta(days=60):%Y-%m-%d}',
+                             end=f'{dt.date.today():%Y-%m-%d}',
+                             filters=''
+                             ):
+        start_date = dt.datetime.strptime(start, '%Y-%m-%d')
+        start_date = timezone.make_aware(start_date, timezone.get_current_timezone())
+
+        end_date = dt.datetime.strptime(end, '%Y-%m-%d') + dt.timedelta(days=1)
+        end_date = timezone.make_aware(end_date, timezone.get_current_timezone())
+
+        users = AcceptedUser.objects.filter(
+                (
+                        Q(created_at__gte=start_date) & Q(created_at__lte=end_date)
+                )
+                &
+                (
+                        Q(phone__startswith=filters)
+                )
+            ).order_by('-created_at').all()
+
+        self._content = ''
+        rows = int(rows)
+        sn = 0
+
+        for user in users:
+            if rows > 0:
+                sn += 1
+                self.add_table_content(_for='accepted_users', row=user, sn=sn)
 
     def modify_admin(self):
         admin = AdminUser.objects.get(pk=self.kwargs['user_id'])
@@ -1524,6 +1751,34 @@ class AdminUtils:
                             </tr>
                 		"""
 
+        elif _for == 'logs':
+            row = kwargs['row']
+            self._content += f"""
+                <tr>
+                    <td>{row.action.title()}</td>
+                    <td>&#x20A6;{row.fee:,}</td>
+                    <td>{row.body}</td>
+                    <td>
+					    <div class='badge rounded-pill w-50 text-bg-{row.status}'>{row.status.title()}</div>
+				    </td>
+                    <td>{row.created_at:%a %b %d, %Y}</td>
+                </tr>
+
+            """
+
+        elif _for == 'accepted_users':
+            row = kwargs['row']
+            sn = kwargs['sn']
+            self._content += f"""
+                            <tr>
+                                <td>{sn}.</td>
+                                <td>{row.phone}</td>
+                                <td>{row.created_at:%a %b %d, %Y}</td>
+                                <td><a href="#0" data-phone="{row.phone}" class="remove">remove</a></td>
+                            </tr>
+
+                        """
+
     def process(self):
         if self.action == "fetch_operators":
             self.fetch_operators()
@@ -1545,6 +1800,12 @@ class AdminUtils:
             self.can_collect()
         elif self.action == "delete_operator":
             self.delete_operator()
+        elif self.action == 'fetch_logs':
+            self.fetch_logs()
+        elif self.action == 'accepted_user':
+            self.accepted_users()
+        elif self.action == 'fetch_accepted_users':
+            self.fetch_accepted_users()
 
     @staticmethod
     def overdue_days(loan):
@@ -1637,7 +1898,10 @@ class LoanUtils:
                             statuses = status.split(',')
                             sn += 1
                             if len(statuses) == 1 and 'overdue' in statuses:
-                                if Func.get_loan_status(loan)[0] == 'overdue':
+                                if Func.get_loan_status(loan)[0] == 'overdue' and loan.status != 'repaid':
+                                    self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
+                            elif loan.status == 'disbursed':
+                                if 'disbursed' in statuses and overdue_days < 0:
                                     self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
                             elif loan.status in statuses:
                                 self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
@@ -1736,6 +2000,12 @@ class LoanUtils:
                 loan_static.save()
             loan.status = to
             loan.decline_reason = self.kwargs.get('reason', '')
+
+            if to == 'declined':
+                loan.user.notification_set.create(
+                    message=f'Your loan request of N{loan.principal_amount:,} was declined',
+                    message_type='loan_request'
+                )
 
             AdminUtils.log(
                 user=self.request.user,
@@ -1895,6 +2165,8 @@ class LoanUtils:
                                     data-created_at="{loan.user.created_at:%a %b %d, %Y}" 
                                     data-avatar="{avatar}" 
                                     data-status='{'Active' if not loan.user.is_blacklisted() else 'Blacklisted'}' 
+                                    data-doc_status="{loan.user.status}"
+                                    data-doc_reason="{loan.user.status_reason}"
                                     data-status_pill='<span class="badge rounded-pill text-bg-{'success' if not loan.user.is_blacklisted() else 'danger'}">{'Active' if not loan.user.is_blacklisted() else f'Blacklisted: {getattr(loan.user, "blacklist").created_at:%b %d}'}</span>'
                                     data-style='grey' 
                                     data-last_access='{loan.user.last_access}' class='loan_rows'
@@ -1920,7 +2192,7 @@ class LoanUtils:
                 			<td>{amt_paid} {'<span class="rounded-pill badge text-bg-dark">waive</span>' if loan.waive_set.exists() else ''}</td>
                 			<td>{loan.created_at:%b %d, %Y}</td>
                 			<td>{disbursed}</td>
-                			<td>{self.get_due_date()}</td>
+                			<td>{Func.get_due_date(loan)}</td>
                 			<td>{self.overdue_days()}</td>
                 			<td>
                                 <div class='badge rounded-pill w-100 text-bg-{status_class}'>{status_text.title()} {Func.get_stage(loan)}</div>
@@ -2075,7 +2347,7 @@ class LoanUtils:
                 			<td>&#x20A6;{waive.loan.amount_due:,}</td>
                 			<td>&#x20A6;{waive.loan.amount_paid:,}</td>
                 			<td>&#x20A6;{waive.waive_amount:,}</td>
-                			<td>{self.get_due_date()}</td>
+                			<td>{Func.get_due_date(waive.loan)}</td>
                 			<td>{self.overdue_days()}</td>
                 			<td>
                                 <div class='badge rounded-pill w-100 text-bg-{"warning" if waive.status == "pending" else "success"}'>{waive.status.title()} </div>
@@ -2121,11 +2393,6 @@ class LoanUtils:
             if diff.days < -1:
                 return '-' if self.loan.status != 'repaid' else f'<span class="fw-bold text-success">repaid:</span> {self.loan.repaid_at:%b %d}'
             return diff.days if self.loan.status != 'repaid' else f'<span class="fw-bold text-success">repaid:</span> {self.loan.repaid_at:%b %d}'
-        return '-'
-
-    def get_due_date(self):
-        if self.loan.disbursed_at is not None:
-            return f'{(self.loan.disbursed_at + dt.timedelta(days=self.loan.duration)):%b %d, %Y}'
         return '-'
 
     @property
@@ -2514,6 +2781,10 @@ class Analysis:
 
         }
         return result
+
+    @staticmethod
+    def fetch_main_balance():
+        return apis.fetch_main_bal()
 
     def add_table_content(self, _for='', **kwargs):
         if _for == 'real_day':

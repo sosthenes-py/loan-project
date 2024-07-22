@@ -46,15 +46,15 @@
 								<div class="d-flex align-items-center">
 									<div>
 										<p class="mb-0">Main Balance</p>
-										<h5 class="mb-0">&#x20A6;0</h5>
+										<h5 class="mb-0">&#x20A6;<span class="main_bal">...</span></h5>
 									</div>
 									<div class="dropdown ms-auto">
 										<a class="dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown"><i class='bx bx-dots-horizontal-rounded font-22 text-option'></i>
 										</a>
 										<ul class="dropdown-menu">
-											<li><a class="dropdown-item" href="javascript:;">Mask Balance</a>
+											<li><a class="dropdown-item mask-btn" href="javascript:;" onclick="mask_balance()">Mask Balance</a>
 											</li>
-											<li><a class="dropdown-item" href="javascript:;">Reload</a>
+											<li><a class="dropdown-item" href="javascript:;" onclick="reload_main_bal()">Reload</a>
 											</li>
 										</ul>
 									</div>
@@ -591,8 +591,13 @@
                     update_chart2(data.content['disbursed'], data.content['repaid'], refresh)
                     var dashboard = data.content['dashboard']
                     $.each(dashboard, function (key, value){
-                        $('.'+key).text(value)
+                        if(key.endsWith('count')){
+                            $('.'+key).text(value)
+                        }else{
+                            $('.'+key).text(formatAmount(Number(value.replaceAll(',', ''))))
+                        }
                     })
+                    update_main_balance(data.content['main_bal'])
                 },
                 error: function (jqXHR, errorThrown) {
                     loadOff()
@@ -777,6 +782,70 @@
                 return `${year}-${month}-${day}`;
             }
 
+
+        function mask_balance(){
+           if(localStorage.getItem('mask_value') != null){
+                if(localStorage.mask_value === 'masked'){
+                    {#Now unmask#}
+                    $('.main_bal').text(formatAmount(Number(localStorage.main_bal)))
+                    $('.mask-btn').text('Mask Balance')
+                    localStorage.mask_value = 'unmasked'
+                }else{
+                    {#Now mask#}
+                    $('.main_bal').text('****.**')
+                    $('.mask-btn').text('Unmask Balance')
+                    localStorage.mask_value = 'masked'
+                }
+           }else{
+               $('.main_bal').text('****.**')
+               $('.mask-btn').text('Unmask Balance')
+               localStorage.mask_value = 'masked'
+           }
+        }
+
+        function update_main_balance(bal){
+           localStorage.main_bal = bal
+           if(localStorage.getItem('mask_value') == null){
+                $('.main_bal').text(formatAmount(Number(bal)))
+               $('.mask-btn').text('Mask Balance')
+               localStorage.mask_value = 'unmasked'
+           }else{
+               if(localStorage.mask_value === 'unmasked'){
+                    $('.main_bal').text(formatAmount(Number(bal)))
+                   $('.mask-btn').text('Mask Balance')
+                }else{
+                   $('.main_bal').text('****.**')
+                   $('.mask-btn').text('Unmask Balance')
+               }
+           }
+        }
+
+        function reload_main_bal(){
+           $('.main_bal').text('...')
+           $.ajax({
+                url: "{% url 'analysis' %}",
+                type: "POST",
+                data: {
+                    action: 'fetch_main_bal',
+                },
+                dataType: "json",
+                success: function (data) {
+                    update_main_balance(data.content)
+                },
+                error: function (jqXHR, errorThrown) {
+                    notify('error', 'An error occurred. Page will be refreshed in 3s')
+                    setTimeout(function () {
+                        {#window.location.update()#}
+                    }, 3000)
+                },
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                }
+            })
+        }
+
+
+
     </script>
 
 
@@ -784,6 +853,7 @@
 	    $(function(){
             $('#timeframe_to').val(get_current_day())
             start()
+            reload_main_bal()
 
 
 

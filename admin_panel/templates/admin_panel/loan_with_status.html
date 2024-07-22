@@ -894,12 +894,12 @@
 
 
 
-    <!--DOCS MODAL	-->
+   <!--DOCS MODAL	-->
     <div id="DocsModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content bg-primary">
                 <div class="modal-header">
-                    <h5 class="mb-0 text-light">User Docs</h5>
+                    <h5 class="mb-0 text-light doc-title">User Docs </h5>
                     <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
                 </div>
                 <div class="modal-body">
@@ -916,14 +916,18 @@
                         </div>
                     </div>
 
+                </div>
 
+                <div class="modal-footer">
+                    <div class="col-md-2 text-end d-grid me-3">
+                        <button type="button" class="btn btn-dark" data-bs-target="#DoccModal" data-bs-toggle="modal">
+                            Approve/Reject
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-
-
 
 
 
@@ -985,7 +989,6 @@
 
 
 
-
     <!--DEVICE DETAILS MODAL	-->
     <div id="deviceDetailsModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
@@ -1013,7 +1016,6 @@
             </div>
         </div>
     </div>
-
 
 
 
@@ -1359,6 +1361,7 @@
     </div>
 
 
+
 {#    CHECKBOX SELECTED MODAL#}
     <div class="modal fade" id="CheckboxSelectedModal" tabindex="-1" aria-modal="true" role="dialog" style="display: none;">
         <div class="modal-dialog modal-sm">
@@ -1376,6 +1379,49 @@
             </div>
         </div>
     </div>
+
+
+
+
+    <!--DOC APPROVE/REJECT MODAL	-->
+    <div id="DoccModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="mb-0 text-light">Approve/Reject Docs</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+
+
+                    <div class="card">
+                        <div class="card-body">
+
+                            <div class="row gy-3">
+
+                                <div class="input-group"> <span class="input-group-text">Reject Reason</span>
+									<textarea class="form-control doc-reason" aria-label="With textarea" placeholder="Work ID is unclear, outdated, we do not accept the submitted docs, etc"></textarea>
+								</div>
+                                <small class="text-info">You don't have to fill the above for approval</small>
+
+                                <div class="col">
+                                    <button type="button" class="btn btn-success doc-decide" data-action="approve" onclick="doc_decide('approve')">Approve Docs</button>
+
+                                    <button type="button" class="btn btn-danger doc-decide" data-action="reject" onclick="doc_decide('reject')">Reject</button>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 
     <script>
         const success_audio = new Audio("{% static 'admin_panel/audio/correct.mp3' %}");
@@ -1746,7 +1792,40 @@
         })
 
 
-
+        function doc_decide(action) {
+            const reason = $('.doc-reason').val()
+            if (action === 'reject' && reason === '') {
+                notify('error', 'Please enter rejection reason')
+            } else {
+                loadOn();
+                $.ajax({
+                    url: '{% url "users" %}',
+                    data: {
+                        action: 'doc_decide',
+                        user_id: $('#selected_user_id').val(),
+                        doc_action: action,
+                        doc_reason: reason
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        notify(data.status, data.message)
+                        $('#DoccModal').modal('hide')
+                        if (data.status === "success") {
+                            $('.doc-title').html(data.content)
+                        }
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            }
+        }
 
     </script>
 
@@ -1948,6 +2027,8 @@
                 var id = row.data('user_id');
                 var loan_id = row.data('loan_id');
                 var eligible_amount = row.data('eligible_amount');
+                var doc_status = row.data('doc_status');
+                var doc_reason = row.data('doc_reason');
 
                 $(".details_first_name").val(first_name).data('id', id);
                 $(".details_last_name").val(last_name).data('id', id);
@@ -1972,6 +2053,18 @@
 
                 var blacklist_text = status === 'Active' ? 'Blacklist' : 'Whitelist'
                 $('.blacklist').html('<i class="lni lni-ban"></i> '+blacklist_text)
+
+                if(doc_status === 'True'){
+                    $('.doc-title').html('User Docs  <span class="badge text-bg-success">APPROVED</span>')
+                }else{
+                    if(doc_reason === ''){
+                        $('.doc-title').html('User Docs  <span class="badge text-bg-info">WAITING</span>')
+                    }else if(doc_reason === 'submitted'){
+                        $('.doc-title').html('User Docs  <span class="badge text-bg-warning">SUBMITTED</span>')
+                    }else{
+                        $('.doc-title').html('User Docs  <span class="badge text-bg-danger">REJECTED</span>')
+                    }
+                }
 
 
                 $("#selected_user_id").val(id);

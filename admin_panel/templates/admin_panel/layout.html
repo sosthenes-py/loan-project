@@ -207,7 +207,7 @@
 					<a href="javascript:;" class="has-arrow">
 						<div class="parent-icon"><i class="bx bx-category"></i>
 						</div>
-						<div class="menu-title">Menu</div>
+						<div class="menu-title">Other Menu</div>
 					</a>
 
                     {% if user.level != 'admin' %}
@@ -235,7 +235,17 @@
 					</ul>
 
 					<ul>
-						<li> <a href="{% url 'users' %}"><i class="bx bx-right-arrow-alt"></i>Users</a>
+						<li> <a href="{% url 'users' %}"><i class="bx bx-right-arrow-alt"></i>Registered Users</a>
+						</li>
+					</ul>
+
+                     <ul>
+						<li> <a href="{% url 'logs' %}"><i class="bx bx-right-arrow-alt"></i>Api Logs</a>
+						</li>
+					</ul>
+
+                     <ul>
+						<li> <a href="{% url 'accepted_users' %}"><i class="bx bx-right-arrow-alt"></i>Filtered Users</a>
 						</li>
 					</ul>
                     {% endif %}
@@ -557,29 +567,64 @@
     <!--app JS-->
 	<script src="{% static 'admin_panel/js/app.js' %}"></script>
 
-<script>
-    function copy_to_clipboard(item){
-        navigator.clipboard.writeText(item);
-        notify('info', 'Copied');
-    }
+ <script>
+     function copy_to_clipboard(item) {
+         navigator.clipboard.writeText(item);
+         notify('info', 'Copied');
+     }
 
-    function formatNumber(num, decimals) {
-                if (isNaN(num)) return 'Invalid number';
-                // Set the number of decimals to 2 if not provided
-                decimals = decimals || 2;
+     function formatNumber(num, decimals) {
+         if (isNaN(num)) return '...';
+         // Set the number of decimals to 2 if not provided
+         decimals = decimals || 2;
 
-                // Format the number
-                var parts = parseFloat(num).toFixed(decimals).toString().split('.');
-                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                return parts.join('.');
-            }
+         // Format the number
+         var parts = parseFloat(num).toFixed(decimals).toString().split('.');
+         parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+         return parts.join('.');
+     }
 
-            $('body').on('click', '.see_reason', function (){
-                $('#ReasonModal').modal('show')
-                $('.reason_head').text($(this).data('reason_head'))
-                $('.reason_body').text($(this).data('reason_body'))
-            })
-</script>
+     function formatAmount(amount) {
+         if (amount >= 1000000) {
+             return (amount / 1000000).toFixed(2).replace(/\.0$/, '') + 'M';
+         } else if (amount >= 100000) {
+             return (amount / 1000).toFixed(2).replace(/\.0$/, '') + 'k';
+         } else {
+             return formatNumber(amount);
+         }
+     }
+
+     function check_eligibility() {
+         var user_id = $("#selected_user_id").val();
+         loadOn();
+         $.ajax({
+             url: '{% url "users" %}',
+             data: {
+                 user_id: user_id,
+                 action: 'check_eligibility'
+             },
+             dataType: 'json',
+             type: 'post',
+             success: function (data) {
+                 loadOff()
+                 notify(data.status, data.message)
+             },
+             error: function (err1, err2) {
+                 loadOff()
+                 notify('error', JSON.stringify(err1))
+             },
+             beforeSend: function (xhr, settings) {
+                 xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+             }
+         })
+     }
+
+     $('body').on('click', '.see_reason', function () {
+         $('#ReasonModal').modal('show')
+         $('.reason_head').text($(this).data('reason_head'))
+         $('.reason_body').text($(this).data('reason_body'))
+     })
+ </script>
 
 
 
