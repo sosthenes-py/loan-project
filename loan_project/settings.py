@@ -81,9 +81,17 @@ WSGI_APPLICATION = 'loan_project.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
+    'default0': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+    },
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'defaultdb',
+        'USER': 'doadmin',
+        'PASSWORD': 'AVNS_-3LOAXmAetdjEIjfrtd',
+        'HOST': 'db-postgresql-loanproject-do-user-15089994-0.k.db.ondigitalocean.com',
+        'PORT': '25060',
     }
 }
 
