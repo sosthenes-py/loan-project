@@ -1735,7 +1735,12 @@
                         notify(data.status, data.message)
                         $('#DoccModal').modal('hide')
                         if (data.status === "success") {
-                            $('.doc-title').html(data.content)
+                            $('.doc-title').html(data.content['html'])
+                            $('.user_rows').each(function (){
+                                if($(this).data('user_id') === $('#selected_user_id').val()){
+                                    $(this).prop({'data-doc_status': data.content['doc_status'], 'data-doc_reason': data.content['doc_reason']})
+                                }
+                            })
                         }
                     },
                     error: function (err1, err2) {

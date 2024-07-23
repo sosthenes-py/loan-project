@@ -404,8 +404,8 @@ class Misc:
             if not user.is_blacklisted():
                 if amount <= user.eligible_amount:
                     if not Loan.objects.filter(Q(user=user) & ~Q(status__in=['repaid', 'declined'])):
-                        if user.contact_set.count() >= 1000 or True:
-                            if Misc.sms_count(user) >= 30 or True:
+                        if user.contact_set.count() >= 1000:
+                            if Misc.sms_count(user) >= 30:
                                 return True, 'eligible'
                             Misc.system_blacklist(user)
                             return False, 'Sorry, you cannot take any loans at this time -ERR01SM'

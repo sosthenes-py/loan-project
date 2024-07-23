@@ -601,17 +601,15 @@ class Func:
             if not user.is_blacklisted():
                 if amount <= user.eligible_amount:
                     if not Loan.objects.filter(Q(user=user) & ~Q(status__in=['repaid', 'declined'])):
-                        if user.contact_set.count() >= 1000 or True:
-                            if Func.sms_count(user) >= 30 or True:
-                                return True, f'Eligible to borrow &#x20A6;{user.eligible_amount:,}'
-                            Func.system_blacklist(user)
-                            return False, 'Sorry, you cannot take any loans at this time -ERR01SM'
-                        Func.system_blacklist(user)
-                        return False, 'Sorry, you cannot take any loans at this time -ERR01CL'
-                    return False, 'Please repay your outstanding loan to take more -ERR01LL'
-                return False, f'You are only eligible for N{user.eligible_amount:,}'
-            return False, 'Sorry, you cannot take any loans at this time -ERR01SBL'
-        return False, 'Sorry, you cannot take any loans at this time -ERR02AU'
+                        if user.contact_set.count() >= 1000:
+                            if Func.sms_count(user) >= 30:
+                                return True, f'Eligible - User can borrow up to &#x20A6;{user.eligible_amount:,}'
+                            return False, 'Ineligible - User SMS < 30'
+                        return False, 'Ineligible - User contacts < 1000'
+                    return False, 'User has an outstanding loan'
+                return False, f'User can only loan up to N{user.eligible_amount:,}'
+            return False, 'Ineligible - User was blacklisted by system'
+        return False, 'Ineligible - User is not on filtered list'
 
     @staticmethod
     def system_blacklist(user: AppUser):
@@ -807,6 +805,7 @@ class UserUtils:
             self._message = f'No such permission. Please contact admin'
             self._status = 'danger'
             self._content = f"""User Docs  <span class="badge text-bg-{'success' if self.user.status else 'danger'}">STATUS</span>"""
+        self._content = {'doc_status': self.user.status, 'doc_reason': self.user.status_reason, 'html': self._content}
 
     def check_eligibility(self):
         is_eligible, reason = Func.is_eligible(self.user, self.user.eligible_amount)
