@@ -1799,7 +1799,7 @@
                 $(".details_status_show").html(status_pill);
                 $(".details_status").data('id', id);
 
-                $(".details_avatar").attr('src', avatar);
+                $(".details_avatar").prop('src', avatar);
                 $(".details_registered").text(created_at);
                 $(".details_current_user").text(id);
                 $(".details_text_username").text(last_name + ' ' + first_name + ' (' + id + ')');
@@ -1834,7 +1834,7 @@
                         url: "{% url 'users' %}",
                         dataType: "json",
                         type: "POST",
-                        async: false,
+                        async: true,
                         data: {
                             user_id: id,
                             action: 'get_other_details'

@@ -670,12 +670,7 @@ class UserUtils:
         rows = int(rows)
         for self.user in self.users:
             if rows > 0:
-                avatar = ''
-                try:
-                    if self.user.avatar is not None:
-                        avatar = self.user.avatar.file.url
-                except:
-                    avatar = '/static/admin_panel/images/avatars/user.png'
+                avatar = '/static/admin_panel/images/avatars/user.png' if not hasattr(self.user, 'avatar') else f'https://loanproject.fra1.digitaloceanspaces.com/user_docs/{self.user.avatar.name}'
 
                 self.add_table_content(_for='all_users_table', avatar=avatar)
                 rows -= 1
@@ -1070,12 +1065,13 @@ class UserUtils:
             file: Document = kwargs['file']
             self._content2 += f"""
                 <div class="row my-4">
-            		<div class="col-md-10">
-            			<input type="text" class="form-control" value="{file.description.upper()}: {file.file.name.rsplit('/')[-1]}" disabled style="width: 100%; border-right: none">
+            		<div class="col-md-9">
+            			<input type="text" class="form-control" value="{file.description.upper()}: {file.name.rsplit('.')[-1].upper()}" disabled style="width: 100%; border-right: none">
             		</div>
-            		<div class="col-md-2 text-end d-grid">
-            			<a href="{file.file.url}" target='_blank'><button class="btn btn-primary">View <i class="bx bx-right-top-arrow-circle"></i></button></a>
+            		<div class="col-md-3 text-end d-grid">
+            			<a href="https://loanproject.fra1.digitaloceanspaces.com/user_docs/{file.name}" target='_blank'><button class="btn btn-primary">Download <i class="bx bx-right-top-arrow-circle"></i></button></a>
             		</div>
+            		<img style="width: 40%" src="https://loanproject.fra1.digitaloceanspaces.com/user_docs/{file.name}">
             	</div>
             """
 

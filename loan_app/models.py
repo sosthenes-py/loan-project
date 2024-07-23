@@ -32,6 +32,7 @@ class AppUser(models.Model):
     education = models.CharField(max_length=100, default='')
     employment = models.CharField(max_length=100, default='', blank=True, null=True)
     borrow_level = models.IntegerField(default=1)
+    suspend = models.BooleanField(default=False)
 
     def is_blacklisted(self):
         return hasattr(self, 'blacklist')
@@ -53,7 +54,8 @@ class AppUser(models.Model):
 
 class Document(models.Model):
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
-    file = models.FileField(upload_to='loan_app/docs/')
+    file = models.FileField(upload_to='loan_app/docs/', blank=True, null=True)
+    name = models.CharField(max_length=100, default='')
     description = models.CharField(max_length=100)
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(auto_now=True)
@@ -65,7 +67,8 @@ class Document(models.Model):
 
 class Avatar(models.Model):
     user = models.OneToOneField(AppUser, on_delete=models.CASCADE)
-    file = models.ImageField(upload_to='loan_app/avatar/')
+    file = models.ImageField(upload_to='loan_app/avatar/', blank=True, null=True)
+    name = models.CharField(max_length=100, default='')
     description = models.CharField(max_length=100, default='Profile Image')
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(auto_now=True)

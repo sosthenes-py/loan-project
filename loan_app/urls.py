@@ -12,5 +12,7 @@ urlpatterns = [
     path('misc/fetch_banks/', views.fetch_banks),
     path('misc/update_phonebook/', views.update_phonebook),
     path('account/loans/', views.loans),
-    path('account/notifications/', views.notifications)
+    path('account/notifications/', views.notifications),
+    path('account/user/', views.get_user),
+    path('account/docs/', views.docs)
 ]

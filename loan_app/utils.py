@@ -1,6 +1,8 @@
+import uuid
+
 from django.http import JsonResponse
 
-from loan_app.models import Loan, DisbursementAccount, VirtualAccount, AppUser, Blacklist, Notification, Otp
+from loan_app.models import Loan, DisbursementAccount, VirtualAccount, AppUser, Blacklist, Notification, Otp, Avatar, Document
 from admin_panel.models import LoanStatic, AcceptedUser
 from django.contrib.auth.hashers import make_password, check_password
 import random
@@ -12,6 +14,8 @@ from project_pack.models import Project
 import loan_app.api as apis
 from admin_panel.utils import Func
 import phonenumbers
+import base64
+from django.core.files.base import ContentFile
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.tokens import AccessToken
@@ -73,30 +77,7 @@ class Auth:
                     #         file=kwargs.get('avatar'),
                     #     ).save()
 
-                    # Employment(
-                    #     user=user,
-                    #     name=kwargs['employment_name'],
-                    #     address=kwargs['employment_address'],
-                    #     role=kwargs['employment_role'],
-                    #     duration=kwargs['employment_duration'],
-                    #     salary=kwargs['employment_salary'],
-                    #     hr_name=kwargs['employment_hr_name'],
-                    #     hr_phone=kwargs['employment_hr_phone'],
-                    #     hr_email=kwargs['employment_hr_email']
-                    # ).save()
-                    #
-                    # Emergency(
-                    #     user=user,
-                    #     family_name=kwargs['emergency_family_name'],
-                    #     family_phone=kwargs['emergency_family_phone'],
-                    #     family_relationship=kwargs['emergency_family_relationship'],
-                    #     family_email=kwargs['emergency_family_email'],
-                    #     family_occupation=kwargs['emergency_family_occupation'],
-                    #     colleague_name=kwargs['emergency_colleague_name'],
-                    #     colleague_email=kwargs['emergency_colleague_email'],
-                    #     colleague_phone=kwargs['emergency_colleague_phone'],
-                    #     colleague_occupation=kwargs['emergency_colleague_occupation']
-                    # )
+
 
                     DisbursementAccount(
                         user=user,
@@ -263,6 +244,7 @@ class Account:
                 "comment": "",
                 "user_agreement": "",
                 "isActive": loan.status not in ('repaid', 'declined'),
+                "decline_reason": loan.decline_reason
             }
             for loan in user.loan_set.all()
         ]
@@ -292,7 +274,7 @@ class Account:
         return {'error': {'status': 403, 'error': eligibility_message}, 'message': 'Http Exception'}
 
     @staticmethod
-    def fetch_user(user):
+    def get_user(user: AppUser):
         res = {
             "user_id": user.user_id,
             "first_name": user.first_name,
@@ -304,11 +286,60 @@ class Account:
             "alternate_phone": user.phone2,
             "email": user.email,
             "alternate_email": user.email2,
-            "joining_Date": f"{user.created_at:%Y-%m-%dT%H:%M:%S}",
-            "contact_address": user.address,
+            "joining_date": f"{user.created_at:%Y-%m-%dT%H:%M:%S}",
+            "address": user.address,
             "state": user.state,
-            "lga": user.lga
+            "lga": user.lga,
+            "marital_status": user.marital_status,
+            "nationality": user.nationality,
+            "bvn": user.bvn,
+            "education": user.education,
+            "disbursement_account": {
+                "bank_name": user.disbursementaccount.bank_name,
+                "account_number": user.disbursementaccount.number,
+                "account_name": f"{user.last_name} {user.first_name}",
+            },
+            "virtual_account": {
+                "bank_name": user.virtualaccount_set.first().bank_name,
+                "account_number": user.virtualaccount_set.first().number
+            },
+            "isNewUser": user.created_at.date() == dt.date.today(),
+            "isActive": not user.suspend,
+            "isVerified": user.status,
+            "isBlocked": user.suspend,
+            "last_login": f"{user.last_access:%Y-%m-%dT%H:%M:%S}",
+            "reverify": not user.status,
+            "reverify_reason": user.status_reason,
+            "profile_picture": f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{user.avatar.name}",
+            "docs": [
+                {
+                    "url": f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{doc.name}",
+                    "description": doc.description,
+                    "createdAt": f"{doc.created_at:%Y-%m-%dT%H:%M:%S}"
+                }
+                for doc in user.document_set.all()
+            ],
+            "eligible_amount": user.eligible_amount,
+            "borrow_level": user.borrow_level
         }
+        return {'status': 'success', 'content': res}
+
+    @staticmethod
+    def upload_docs(user, file, desc):
+        file_ext = file.name.rsplit('.')[-1]
+        file_name = f'{str(uuid.uuid4())}.{file_ext}'
+        try:
+            if desc == 'profile_pic':
+                if file_ext not in ['jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG']:
+                    return {'error': {'status': 403, 'error': 'Only jpg, jpeg and png file types are allowed as profile image'}, 'message': 'Http Exception'}
+                Avatar.objects.update_or_create(user=user, defaults={'name': file_name})
+            else:
+                Document(user=user, name=file_name, description=desc).save()
+            if apis.upload_to_space(file_content=file, file_name=file_name):
+                return {'status': 'success', 'message': 'Upload success'}
+            return {'error': {'status': 500, 'error': 'Upload failed'}, 'message': 'Http Exception'}
+        except Exception as e:
+            return {'error': {'status': 403, 'error': str(e)}, 'message': 'Http Exception'}
 
     @staticmethod
     def fetch_notifications(user: AppUser):

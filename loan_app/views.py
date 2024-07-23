@@ -87,6 +87,36 @@ def loans(request):
 
 
 @csrf_exempt
+def get_user(request):
+    user = utils.get_user_from_jwt(request)
+    if user:
+        if request.method == 'GET':
+            return JsonResponse(utils.Account.get_user(user))
+        return JsonResponse({'error': 'Invalid method'}, status=405)
+    return JsonResponse(
+        {'error': {'status': 401, 'error': 'User not found or Invalid token'}, 'message': 'Http Exception'})
+
+
+@csrf_exempt
+def docs(request):
+    user = utils.get_user_from_jwt(request)
+    if user:
+        if request.method == 'POST':
+            try:
+                if request.content_type.startswith('multipart/form-data'):
+                    desc = request.POST.get('description')
+                    file = request.FILES['file']
+                    response_data = utils.Account.upload_docs(user, file, desc)
+                    return JsonResponse(response_data)
+                else:
+                    return JsonResponse({'error': 'Invalid content type'}, status=400)
+            except Exception as e:
+                return JsonResponse({'error': str(e)}, status=500)
+        else:
+            return JsonResponse({'error': 'Invalid method'}, status=405)
+    return JsonResponse({'error': 'User not found or Invalid token'}, status=401)
+
+@csrf_exempt
 def notifications(request):
     user = utils.get_user_from_jwt(request)
     if user:
