@@ -179,3 +179,7 @@ class Otp(models.Model):
     code = models.CharField(max_length=20)
     expires_at = models.DateTimeField(null=True, blank=True)
 
+
+class Test(models.Model):
+    body = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
