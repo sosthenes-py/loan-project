@@ -1,5 +1,4 @@
 import uuid
-
 from django.http import JsonResponse
 
 from loan_app.models import Loan, DisbursementAccount, VirtualAccount, AppUser, Blacklist, Notification, Otp, Avatar, Document
@@ -14,15 +13,13 @@ from project_pack.models import Project
 import loan_app.api as apis
 from admin_panel.utils import Func
 import phonenumbers
-import base64
-from django.core.files.base import ContentFile
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.tokens import AccessToken
 
 
 def get_user_from_jwt(request):
-    token = request.headers.get('Authorization').split(' ')[1]
+    token = request.headers.get('Authorization', 'no auth').split(' ')[1]
     try:
         access_token = AccessToken(token)
         payload = access_token.payload
@@ -86,7 +83,11 @@ class Auth:
                     ).save()
                     Account.update_contacts(user, kwargs['user_contacts'])
                     Account.create_virtual_account(user)
-                    return {'status': 'success', 'message': 'Account created', 'user_id': user.user_id}
+
+                    refresh = RefreshToken.for_user(user)
+                    access_token = str(refresh.access_token)
+
+                    return {'status': 'success', 'message': 'Account created', 'user_id': user.user_id, 'access_token': access_token}
                 return {'status': 'error', 'message': 'User already exists -ERR101BA'}
             return {'status': 'error', 'message': 'User already exists -ERR102BV'}
         return {'status': 'error', 'message': 'User already exists -ERR102PH'}
@@ -310,7 +311,7 @@ class Account:
             "last_login": f"{user.last_access:%Y-%m-%dT%H:%M:%S}",
             "reverify": not user.status,
             "reverify_reason": user.status_reason,
-            "profile_picture": f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{user.avatar.name}",
+            "profile_picture": f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{user.avatar.name}" if hasattr(user, "avatar") else "",
             "docs": [
                 {
                     "url": f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{doc.name}",
