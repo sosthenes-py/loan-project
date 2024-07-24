@@ -86,7 +86,7 @@ class Auth:
                     ).save()
                     Account.update_contacts(user, kwargs['user_contacts'])
                     Account.create_virtual_account(user)
-                    return {'status': 'success', 'message': 'Account created'}
+                    return {'status': 'success', 'message': 'Account created', 'user_id': user.user_id}
                 return {'status': 'error', 'message': 'User already exists -ERR101BA'}
             return {'status': 'error', 'message': 'User already exists -ERR102BV'}
         return {'status': 'error', 'message': 'User already exists -ERR102PH'}
