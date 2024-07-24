@@ -14,5 +14,6 @@ urlpatterns = [
     path('account/loans/', views.loans),
     path('account/notifications/', views.notifications),
     path('account/user/', views.get_user),
-    path('account/docs/', views.docs)
+    path('account/docs/', views.docs),
+    path('account/delete/', views.delete_user)
 ]

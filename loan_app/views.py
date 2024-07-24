@@ -2,6 +2,7 @@ import json
 from . import utils
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from decouple import config
 
 
 @csrf_exempt
@@ -116,6 +117,7 @@ def docs(request):
             return JsonResponse({'error': 'Invalid method'}, status=405)
     return JsonResponse({'error': 'User not found or Invalid token'}, status=401)
 
+
 @csrf_exempt
 def notifications(request):
     user = utils.get_user_from_jwt(request)
@@ -137,3 +139,12 @@ def update_phonebook(request):
     return JsonResponse(
         {'error': {'status': 401, 'error': 'User not found or Invalid token'}, 'message': 'Http Exception'})
 
+
+@csrf_exempt
+def delete_user(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        if data['passcode'] == config('APP_SECRET_CODE'):
+            return JsonResponse(utils.Account.delete_user(data['phone']))
+        return JsonResponse({'error': 'Invalid passcode'}, status=405)
+    return JsonResponse({'error': 'Invalid method'}, status=405)

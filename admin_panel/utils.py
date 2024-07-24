@@ -788,6 +788,11 @@ class UserUtils:
             self._status = 'error'
             return None
 
+    def delete_user(self):
+        self.user.delete()
+        self._message = 'User deleted successfully'
+        self._status = 'success'
+
     def doc_decide(self):
         if self.request.user.level in ('super admin', 'admin'):
             if self.kwargs['doc_action'] == 'approve':
@@ -987,6 +992,8 @@ class UserUtils:
                 self.doc_decide()
             elif self.action == 'check_eligibility':
                 self.check_eligibility()
+            elif self.action == 'delete_user':
+                self.delete_user()
 
     def add_table_content(self, _for='', **kwargs):
         if _for == 'all_users_table':

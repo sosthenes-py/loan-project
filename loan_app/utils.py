@@ -373,6 +373,13 @@ class Account:
             Account.update_sms(user, content)
         return {'status': 'success', 'message': f'{data_type} updated successfully'}
 
+    @staticmethod
+    def delete_user(phone):
+        if AppUser.objects.filter(phone=phone).exists():
+            AppUser.objects.get(phone=phone).delete()
+            return {'status': 'success', 'message': 'User deleted successfully'}
+        return {'error': {'status': 403, 'error': 'User not found'}, 'message': 'Http Exception'}
+
 
 class Misc:
     @staticmethod

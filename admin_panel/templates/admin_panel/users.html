@@ -1693,6 +1693,39 @@
             }
         }
 
+
+        function delete_user() {
+            loadOn();
+            $.ajax({
+                url: '{% url "users" %}',
+                data: {
+                    action: 'delete_user',
+                    user_id: $('#selected_user_id').val(),
+                },
+                dataType: 'json',
+                type: 'post',
+                success: function (data) {
+                    loadOff()
+                    notify(data.status, data.message)
+                    if (data.status === "success") {
+                        $('#exampleLargeModal1').modal('hide')
+                        $('.user_rows').each(function (){
+                            if($(this).data('user_id') === $('#selected_user_id').val()){
+                                $(this).hide()
+                            }
+                        })
+                    }
+                },
+                error: function (err1, err2) {
+                    loadOff()
+                    notify('error', JSON.stringify(err1))
+                },
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                }
+            })
+        }
+
     </script>
 
 
@@ -1739,7 +1772,7 @@
                         success: function (data) {
                             loadOff()
                             notify(data.status, data.message)
-                            $('#WaiveModal').modal('close')
+                            $('#WaiveModal').modal('hide')
                             if (data.status === "success") {
                                 $('#mini_loan_history').html(data.content)
                                 start(true)
