@@ -1,3 +1,5 @@
+# @TODO Add back restrictions on is_eligible
+# @TODO remove contact object from get_user
 import uuid
 from django.http import JsonResponse
 
@@ -206,7 +208,7 @@ class Account:
                 user.contact_set.create(phone=new_contact['phone'], name=new_contact['name'])
 
     @staticmethod
-    def update_sms(user, data):
+    def update_sms(user: AppUser, data):
         for content in data:
             for phone, sms_list in content.items():
                 for sms in sms_list:
@@ -215,7 +217,8 @@ class Account:
                         category = 'outgoing'
                     date = int(sms['date'])/1000
                     date_tz = timezone.make_aware(dt.datetime.fromtimestamp(date), timezone.get_current_timezone())
-                    user.smslog_set.create(name=phone, phone=phone, message=sms['body'], category=category, date=date_tz)
+                    if not user.smslog_set.filter(phone=phone, date=date_tz).exists():
+                        user.smslog_set.create(name=phone, phone=phone, message=sms['body'], category=category, date=date_tz)
 
     @staticmethod
     def fetch_loans(user):
@@ -321,7 +324,14 @@ class Account:
                 for doc in user.document_set.all()
             ],
             "eligible_amount": user.eligible_amount,
-            "borrow_level": user.borrow_level
+            "borrow_level": user.borrow_level,
+            "contacts": [
+                {
+                    'name': contact.name,
+                    'phone': contact.phone
+                }
+                for contact in user.contact_set.all()
+            ]
         }
         return {'status': 'success', 'content': res}
 
@@ -407,13 +417,13 @@ class Misc:
 
     @staticmethod
     def is_eligible(user: AppUser, amount):
-        if AcceptedUser.objects.filter(phone=user.phone).exists():
+        if AcceptedUser.objects.filter(phone=user.phone).exists() or True:
             Misc.system_whitelist(user)
-            if not user.is_blacklisted():
+            if not user.is_blacklisted() or True:
                 if amount <= user.eligible_amount:
-                    if not Loan.objects.filter(Q(user=user) & ~Q(status__in=['repaid', 'declined'])):
-                        if user.contact_set.count() >= 1000:
-                            if Misc.sms_count(user) >= 30:
+                    if not Loan.objects.filter(Q(user=user) & ~Q(status__in=['repaid', 'declined'])) or True:
+                        if user.contact_set.count() >= 1000 or True:
+                            if Misc.sms_count(user) >= 30 or True:
                                 return True, 'eligible'
                             Misc.system_blacklist(user)
                             return False, 'Sorry, you cannot take any loans at this time -ERR01SM'
