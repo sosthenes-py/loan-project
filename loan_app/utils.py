@@ -242,6 +242,7 @@ class Account:
                 "days_till_repayment": -(Func.overdue_days(loan.disbursed_at, loan.duration)) if loan.disbursed_at else 'null',
                 "purpose": loan.purpose,
                 "repaid": loan.status == 'repaid',
+                "repaid_amount": loan.amount_paid,
                 "overdue": Func.overdue_days(loan.disbursed_at, loan.duration) > 0 if loan.disbursed_at else False,
                 "coupon": 0,
                 "admin": "",
@@ -253,6 +254,20 @@ class Account:
             for loan in user.loan_set.all()
         ]
         return res
+
+    @staticmethod
+    def patch_loan(loan_id=None, key='status', value='declined'):
+        loan = Loan.objects.filter(loan_id=loan_id)
+        if loan.exists():
+            loan = loan.first()
+            if key == 'status':
+                if value == 'declined':
+                    setattr(loan, key, value)
+                    loan.save()
+                    return {'status': 'success', 'message': 'Update success'}
+                return {'error': {'status': 401, 'error': 'value error'}, 'message': 'Http Exception'}
+            return {'error': {'status': 401, 'error': 'key error'}, 'message': 'Http Exception'}
+        return {'error': {'status': 500, 'error': 'Loan ID not found'}, 'message': 'Http Exception'}
 
     @staticmethod
     def request_loan(user: AppUser, amount, purpose):

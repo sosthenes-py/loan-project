@@ -85,7 +85,21 @@ def loans(request):
             amount = data.get('amount')
             purpose = data.get('purpose')
             return JsonResponse(utils.Account.request_loan(user, amount, purpose), safe=False)
-    return JsonResponse({'error': {'status': 401, 'error': 'User not found or Invalid token'}, 'message': 'Http Exception'})
+    return JsonResponse(
+        {'error': {'status': 401, 'error': 'User not found or Invalid token'}, 'message': 'Http Exception'})
+
+
+@csrf_exempt
+def update_loan_status(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        secret_key = data.get('secret_key')
+        if secret_key == config('APP_SECRET_CODE'):
+            return JsonResponse(utils.Account.patch_loan(
+                loan_id=data.get('loan_id'), key='status', value=data.get('status'))
+            )
+        return JsonResponse({'error': {'status': 401, 'error': 'Invalid secret'}, 'message': 'Http Exception'})
+    return JsonResponse({'error': 'Invalid method'}, status=405)
 
 
 @csrf_exempt

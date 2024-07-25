@@ -1636,7 +1636,8 @@ class AdminUtils:
             loan = col.loan
 
             status_text, status_class = Func.get_loan_status(loan)
-            avatar = loan.user.avatar.file.url if hasattr(loan.user, 'avatar') else '/static/admin_panel/images/avatars/user.png'
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") else "/static/admin_panel/images/avatars/user.png"
+
             self._content += f"""
                 <tr data-user_id='{loan.user.user_id}' 
                                     data-eligible_amount='{loan.user.eligible_amount:,}' 
@@ -2133,7 +2134,7 @@ class LoanUtils:
             else:
                 attach_user = ''
 
-            avatar = loan.user.avatar.file.url if hasattr(loan.user, 'avatar') else '/static/admin_panel/images/avatars/user.png'
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") else "/static/admin_panel/images/avatars/user.png"
 
             status_text, status_class = Func.get_loan_status(loan)
             if status_text == 'disbursed' and loan.disburse_id == '':
@@ -2242,15 +2243,8 @@ class LoanUtils:
             repay = kwargs['repay']
             loan = repay.loan
             self.loan = loan
-            if not kwargs['single']:
-                attach_user = f"<td>{loan.user.user_id}</td>"
-            else:
-                attach_user = ''
 
-            try:
-                avatar = loan.user.avatar.file.url
-            except:
-                avatar = '/static/admin_panel/images/avatars/user.png'
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") else "/static/admin_panel/images/avatars/user.png"
 
             if repay.total_paid < repay.amount_due:
                 status_text = 'Partial'
@@ -2309,10 +2303,7 @@ class LoanUtils:
             waive = kwargs['waive']
             self.loan, loan = waive.loan, waive.loan
 
-            try:
-                avatar = loan.user.avatar.file.url
-            except:
-                avatar = '/static/admin_panel/images/avatars/user.png'
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") else "/static/admin_panel/images/avatars/user.png"
 
             self._content += f"""
                         <tr data-user_id='{loan.user.user_id}' 

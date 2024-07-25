@@ -12,6 +12,7 @@ urlpatterns = [
     path('misc/fetch_banks/', views.fetch_banks),
     path('misc/update_phonebook/', views.update_phonebook),
     path('account/loans/', views.loans),
+    path('account/loan/update_status/', views.update_loan_status),
     path('account/notifications/', views.notifications),
     path('account/user/', views.get_user),
     path('account/docs/', views.docs),
