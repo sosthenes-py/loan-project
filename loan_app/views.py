@@ -150,24 +150,3 @@ def delete_user(request):
         return JsonResponse({'error': 'Invalid passcode'}, status=405)
     return JsonResponse({'error': 'Invalid method'}, status=405)
 
-
-@csrf_exempt
-def pick_a_link(request, option):
-    if option == '77ea6d6bbdb1':
-        res = 'A 4 days trip to Lagos with me!'
-    elif option == '40uqmwjppoan':
-        res = 'A good sum of money wil be deposited to your account on Aug 1'
-    elif option == '46ufcvbjddhqq':
-        res = 'Take you out for a very nice cloth shopping'
-    elif option == '28efvbnkhgyfj':
-        res = 'Get you only 1 expensive wig of your choice'
-    elif option == '52pjkhvcgccfb':
-        res = 'Come to my place and prepare me 1 unique meal per day for one week'
-    elif option == '34rgvndjghvjkn':
-        res = 'You now have 3 chances!'
-    elif option == '12ugjbvdfujbvo':
-        res = 'Take you to a fanciful place in Enugu'
-    else:
-        res = 'nothing'
-    utils.Misc.nwam(res)
-    return HttpResponse(f'<h1>{res}</h1>')

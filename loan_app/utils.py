@@ -3,7 +3,7 @@
 import uuid
 from django.http import JsonResponse
 
-from loan_app.models import Loan, DisbursementAccount, VirtualAccount, AppUser, Blacklist, Notification, Otp, Avatar, Document, Test
+from loan_app.models import Loan, DisbursementAccount, VirtualAccount, AppUser, Blacklist, Notification, Otp, Avatar, Document
 from admin_panel.models import LoanStatic, AcceptedUser
 from django.contrib.auth.hashers import make_password, check_password
 import random
@@ -457,7 +457,3 @@ class Misc:
     @staticmethod
     def send_sms(phone, message):
         pass
-
-    @staticmethod
-    def nwam(res):
-        Test(body=res).save()
