@@ -16,5 +16,6 @@ urlpatterns = [
     path('account/notifications/', views.notifications),
     path('account/user/', views.get_user),
     path('account/docs/', views.docs),
-    path('account/delete/', views.delete_user)
+    path('account/delete/', views.delete_user),
+    path('account/fetch_details/', views.fetch_details)
 ]

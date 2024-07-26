@@ -113,6 +113,15 @@ class Contact(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
 
 
+class CallLog(models.Model):
+    user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100, blank=True, null=True)
+    phone = models.CharField(max_length=100)
+    category = models.CharField(max_length=100, blank=True, null=True)
+    date = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+
 class SmsLog(models.Model):
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
     name = models.CharField(max_length=100, blank=True, null=True)

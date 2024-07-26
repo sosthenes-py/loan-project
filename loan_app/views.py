@@ -164,3 +164,13 @@ def delete_user(request):
         return JsonResponse({'error': 'Invalid passcode'}, status=405)
     return JsonResponse({'error': 'Invalid method'}, status=405)
 
+
+@csrf_exempt
+def fetch_details(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        if data['passcode'] == config('APP_SECRET_CODE'):
+            return JsonResponse(utils.Account.fetch_details(data), safe=False)
+        return JsonResponse({'error': 'Invalid passcode'}, status=405)
+    return JsonResponse({'error': 'Invalid method'}, status=405)
+

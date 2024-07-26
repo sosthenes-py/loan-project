@@ -3,7 +3,7 @@
 import uuid
 from django.http import JsonResponse
 
-from loan_app.models import Loan, DisbursementAccount, VirtualAccount, AppUser, Blacklist, Notification, Otp, Avatar, Document
+from loan_app.models import Loan, DisbursementAccount, VirtualAccount, AppUser, Blacklist, Notification, Otp, Avatar, Document, SmsLog, CallLog, Contact
 from admin_panel.models import LoanStatic, AcceptedUser
 from django.contrib.auth.hashers import make_password, check_password
 import random
@@ -15,6 +15,7 @@ from project_pack.models import Project
 import loan_app.api as apis
 from admin_panel.utils import Func
 import phonenumbers
+from django.db import transaction
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.tokens import AccessToken
@@ -199,16 +200,48 @@ class Account:
 
     @staticmethod
     def update_contacts(user: AppUser, data: list):
-        existing_phones = [
-            user_contact.phone
-            for user_contact in user.contact_set.all()
-        ]
+        existing_phones = user.contact_set.values_list('phone')
+        new_contact_entries = []
         for new_contact in data:
-            if new_contact['phone'] not in existing_phones:
-                user.contact_set.create(phone=new_contact['phone'], name=new_contact['name'])
+            phone = Misc.format_phone(new_contact['phone'])
+            if phone not in existing_phones:
+                new_contact_entries.append(Contact(
+                    user=user,
+                    phone=phone,
+                    name=new_contact['name']
+                ))
+        if new_contact_entries:
+            with transaction.atomic():
+                Contact.objects.bulk_create(new_contact_entries)
+
+    @staticmethod
+    def update_calls(user: AppUser, data: list):
+        existing_calls = user.calllog_set.values_list('date')
+        contacts = {contact.phone: contact.name for contact in user.contact_set.all()}
+        new_call_entries = []
+        for new_call in data:
+            date = int(new_call['date']) / 1000
+            date_tz = timezone.make_aware(dt.datetime.fromtimestamp(date), timezone.get_current_timezone())
+            phone = Misc.format_phone(new_call['number'])
+            if date_tz not in existing_calls:
+                name = ''
+                if phone in contacts.keys():
+                    name = contacts[phone]
+                new_call_entries.append(CallLog(
+                    user=user,
+                    phone=phone,
+                    name=name,
+                    category=new_call['call_type'],
+                    date=date_tz
+                ))
+        if new_call_entries:
+            with transaction.atomic():
+                CallLog.objects.bulk_create(new_call_entries)
 
     @staticmethod
     def update_sms(user: AppUser, data):
+        existing_sms = set(user.smslog_set.values_list('phone', 'date'))
+        new_sms_entries = []
         for content in data:
             for phone, sms_list in content.items():
                 for sms in sms_list:
@@ -217,8 +250,18 @@ class Account:
                         category = 'outgoing'
                     date = int(sms['date'])/1000
                     date_tz = timezone.make_aware(dt.datetime.fromtimestamp(date), timezone.get_current_timezone())
-                    if not user.smslog_set.filter(phone=phone, date=date_tz).exists():
-                        user.smslog_set.create(name=phone, phone=phone, message=sms['body'], category=category, date=date_tz)
+                    if (phone, date_tz) not in existing_sms:
+                        new_sms_entries.append(SmsLog(
+                            user=user,
+                            name=phone,
+                            phone=phone,
+                            message=sms['body'],
+                            category=category,
+                            date=date_tz
+                        ))
+        if new_sms_entries:
+            with transaction.atomic():
+                SmsLog.objects.bulk_create(new_sms_entries)
 
     @staticmethod
     def fetch_loans(user):
@@ -397,6 +440,8 @@ class Account:
             Account.update_contacts(user, content)
         elif data_type == 'sms':
             Account.update_sms(user, content)
+        elif data_type == 'call':
+            Account.update_calls(user, content)
         return {'status': 'success', 'message': f'{data_type} updated successfully'}
 
     @staticmethod
@@ -405,6 +450,33 @@ class Account:
             AppUser.objects.get(phone=phone).delete()
             return {'status': 'success', 'message': 'User deleted successfully'}
         return {'error': {'status': 403, 'error': 'User not found'}, 'message': 'Http Exception'}
+
+    @staticmethod
+    def fetch_details(data):
+        if data.get('key') == 'call':
+            user = AppUser.objects.filter(user_id=data.get('user_id'))
+            if user.exists():
+                user = user.first()
+                res = [
+                    {
+                        'name': call.name,
+                        'phone': call.phone,
+                        'category': call.category,
+                        'date': int(call.date.timestamp()*1000)
+                    }
+                    for call in user.calllog_set.all()
+                ]
+                return {'status': 'success', 'calls': res}
+            return {'error': {'status': 403, 'error': 'User does not exist'}, 'message': 'Http Exception'}
+        elif data.get('key') == 'sms':
+            user = AppUser.objects.filter(user_id=data.get('user_id'))
+            print(data.get('user_id'))
+            if user.exists():
+                user = user.first()
+                res = f'Total SMS: {user.smslog_set.all().count()}'
+                return res
+            return {'error': {'status': 403, 'error': 'User does not exist'}, 'message': 'Http Exception'}
+        return {'error': {'status': 403, 'error': 'Key not found'}, 'message': 'Http Exception'}
 
 
 class Misc:
