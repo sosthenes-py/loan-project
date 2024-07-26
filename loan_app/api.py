@@ -27,7 +27,7 @@ def fetch_account_details(code, number):
     return res.json()
 
 
-rave = Rave(RAVE_PUBLIC_KEY, RAVE_PRIVATE_KEY, usingEnv=False)
+# rave = Rave(RAVE_PUBLIC_KEY, RAVE_PRIVATE_KEY, usingEnv=False)
 
 
 def generate_flw_virtual_account(user):
