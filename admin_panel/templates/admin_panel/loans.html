@@ -1226,7 +1226,7 @@
 										</a>
 									</li>
 									<li class="nav-item" role="presentation">
-										<a class="nav-link" data-bs-toggle="pill" href="javascript:;" aria-selected="false" role="tab" tabindex="-1">
+										<a class="nav-link phonebook_nav" onclick="load_call()" data-bs-toggle="pill" href="javascript:;" aria-selected="false" role="tab" tabindex="-1">
 											<div class="font-24"><i class="bx bx-phone"></i>
 											</div>
 											<div><small>Calls</small>
@@ -1712,6 +1712,72 @@
                 }
             })
         }
+
+        function load_call() {
+            var user_id = $("#selected_user_id").val();
+            loadOn()
+            $.ajax({
+                url: '{% url "users" %}',
+                data: {
+                    user_id: user_id,
+                    action: 'fetch_call'
+                },
+                dataType: 'json',
+                type: 'post',
+                success: function (data) {
+                    loadOff()
+                    $('.sms_content').html(data.content['content'])
+                    $('.sms_name').text('...')
+                    $('.sms_phone').attr('href', 'tel:0000')
+                    $('.sms_last_updated').text('...')
+                    if (data.status === 'success') {
+                        $('.sms_sidebar').html(data.content['sidebar'])
+                    } else {
+                        notify(data.status, data.message)
+                        $('.sms_sidebar').html(data.content['sidebar'])
+                    }
+                    load_call_chart(data.content['chart_phones'], data.content['chart_count'])
+                },
+                error: function (err1, err2) {
+                    loadOff()
+                    notify('error', JSON.stringify(err1))
+                },
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                }
+            })
+        }
+
+        function load_call_chart(phone, count){
+             var options = {
+                series: [{
+                    data: count
+                }],
+                chart: {
+                    foreColor: '#9ba7b2',
+                    type: 'bar',
+                    height: 300
+                },
+                colors: ["#0d6efd"],
+                plotOptions: {
+                    bar: {
+                        horizontal: true,
+                        columnWidth: '35%',
+                        endingShape: 'rounded'
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                xaxis: {
+                    categories: phone,
+                }
+            };
+            var chart = new ApexCharts(document.querySelector("#call-chart"), options);
+            chart.render();
+
+        }
+
 
 
         function doc_decide(action) {
@@ -2313,10 +2379,9 @@
             $('.phonebook_search_input').keyup(function (){
                 var key = $(this).val().toLowerCase()
                 $('.phonebook_item').each(function (){
-                    var phone = String($(this).data('phone'))
-                    var message = $(this).data('message').toLowerCase()
-                    var name = $(this).data('name').toLowerCase()
-                    console.log('phone:  '+name)
+                    var phone = String($(this).data('phone')).toLowerCase()
+                    var message = String($(this).data('message')).toLowerCase()
+                    var name = String($(this).data('name')).toLowerCase()
                     if(phone.startsWith(key) || message.startsWith(key) || name.startsWith(key)){
                         $(this).show()
                     }else{

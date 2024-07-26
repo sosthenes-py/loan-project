@@ -950,6 +950,47 @@ class UserUtils:
                 """
         self._content = content
 
+    def fetch_call(self):
+        self.user: AppUser
+        calls = self.user.calllog_set.order_by('date').all()
+        content = {}
+        self._content = ''
+        if calls:
+            for call in calls:
+                self.add_table_content(_for='call', call=call)
+            content['sidebar'] = self._content
+
+            # Get Data For Call Chart
+            sorted_calls = self.user.calllog_set.values('phone').annotate(
+                count=Count('phone')
+            ).order_by('-count')[:10]
+            phones, count = [], []
+            for call in sorted_calls:
+                phones.append(call['phone'])
+                count.append(call['count'])
+            content['chart_phones'] = phones
+            content['chart_count'] = count
+            print(count)
+            print(phones)
+        else:
+            content['sidebar'] = """
+                            <a href="javascript:;" class="list-group-item active">
+        						<div class="d-flex">
+        							<div class="flex-grow-1 ms-2">
+        								<h6 class="mb-0 chat-title">No Data</h6>
+        								<p class="mb-0 chat-msg">No calls here yet..</p>
+        							</div>
+        							<div class="chat-time"></div>
+        						</div>
+        					</a>
+                        """
+        content['content'] = """
+                        <div style="justify-content: center; height: 100%; align-items: center; display: flex;" id="call-chart">
+                            
+                        </div>
+                """
+        self._content = content
+
     def process(self):
         if self.action == "get_all_users":
             self.fetch_users_in_table(
@@ -994,6 +1035,8 @@ class UserUtils:
                 self.check_eligibility()
             elif self.action == 'delete_user':
                 self.delete_user()
+            elif self.action == 'fetch_call':
+                self.fetch_call()
 
     def add_table_content(self, _for='', **kwargs):
         if _for == 'all_users_table':
@@ -1140,6 +1183,49 @@ class UserUtils:
             					</div>
             				</a>
                         """
+
+        elif _for == 'call':
+            call = kwargs['call']
+            if call.category == 'incoming':
+                call_class = 'primary'
+                icon = 'phone-incoming'
+            elif call.category == 'outgoing':
+                call_class = 'primary'
+                icon = 'phone-outgoing'
+            elif call.category == 'missed':
+                call_class = 'danger'
+                icon = 'phone-incoming'
+            elif call.category == 'rejected':
+                call_class = 'danger'
+                icon = 'block'
+            elif call.category == 'blocked':
+                call_class = 'danger'
+                icon = 'block'
+            else:
+                call_class = 'info'
+                icon = 'phone'
+
+            self._content += f"""
+                            <a href="javascript:;" class="list-group-item contact_item phonebook_item" data-name="{call.name}" data-message="" data-phone="{call.phone}">
+            					<div class="d-flex">
+            						<div class="chat-user-offline">
+            							<img src="/static/admin_panel/images/avatars/user.png" width="42" height="42" class="rounded-circle" alt="">
+            						</div>
+            						<div class="flex-grow-1 ms-2">
+            							<h6 class="mb-0 chat-title fw-bold text-{call_class}">{'Unsaved' if call.name == '' else call.name} <i class='bx bx-{icon} text-{call_class}'></i></h6>
+            							<p class="mb-0 chat-msg" >{call.phone}</p>
+            						</div>
+            						<div class="chat-time"><span class='badge text-bg-primary' onclick="copy_to_clipboard('{call.phone}')"><i class='bx bx-copy'></i> copy</span></div>
+            					</div>
+            				</a>
+                        """
+
+        elif _for == 'call_content':
+            self._content = """
+            <div style="justify-content: center; height: 100%; align-items: center; display: flex;">
+                <i>Nothing to show here...</i>
+            </div>
+            """
 
         elif _for == 'timeline':
             tl: Timeline = kwargs['tl']

@@ -273,8 +273,6 @@
 
 
 
-
-
  {#   ----------------- HISTORICAL STATS CHART-------------------------#}
 
                 <div class="row row-cols-1 row-cols-md-12 row-cols-xl-12">
@@ -297,7 +295,6 @@
 						</div>
 					</div>
 				</div>
-
 
 
 
@@ -539,7 +536,6 @@
     <script>
         const success_audio = new Audio("{% static 'admin_panel/audio/correct.mp3' %}");
         const error_audio = new Audio("{% static 'admin_panel/audio/wrong.mp3' %}");
-
 
         var overlay = $("#overlay");
         var loader = $("#loader");
@@ -858,54 +854,6 @@
 
 
 {#   ----------------- DISBURSED VS REPAID -------------------------#}
-
-
-
- {#   ----------------- CATEGORIES CHART-------------------------#}
-
-            var e3 = {
-            series: [44, 55, 13, 43, 22],
-            chart: {
-                foreColor: '#9ba7b2',
-                height: 330,
-                type: 'pie',
-            },
-            colors: ["#0d6efd", "#6c757d", "#17a00e", "#f41127", "#ffc107"],
-            labels: ['Team A', 'Team B', 'Team C', 'Team D', 'Team E'],
-            responsive: [{
-                breakpoint: 480,
-                options: {
-                    chart: {
-                        height: 360
-                    },
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }],
-                title: {
-                    text: 'Categories',
-                    align: 'left',
-                    offsetY: 25,
-                    offsetX: 20
-                },
-        };
-        var e3_chart = new ApexCharts(document.querySelector("#categories_chart"), e3);
-        e3_chart.render();
-
-
-        	 $("#login_as").click(function(){
-		            var user= $("#general_username").val();
-		            var url= "https://"+site_domain+"/admin-signin?username="+user;
-		            $.post('', {
-		                login_as: "set",
-		                username: user
-		            }, function(data, status){
-		                if(data=== "success"){
-		                    notify('error', 'Action could not be completed')
-		                }
-		            })
-		        })
 
 
 	        $("#order_search").keyup(function(){
