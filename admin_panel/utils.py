@@ -952,7 +952,7 @@ class UserUtils:
 
     def fetch_call(self):
         self.user: AppUser
-        calls = self.user.calllog_set.order_by('date').all()
+        calls = self.user.calllog_set.order_by('-date').all()
         content = {}
         self._content = ''
         if calls:
@@ -963,11 +963,13 @@ class UserUtils:
             # Get Data For Call Chart
             sorted_calls = self.user.calllog_set.values('phone').annotate(
                 count=Count('phone')
-            ).order_by('count')[:10]
+            ).order_by('-count')[:10]
             phones, count = [], []
             for call in sorted_calls:
                 phones.append(call['phone'])
                 count.append(call['count'])
+            # phones.reverse()
+            # count.reverse()
             content['chart_phones'] = phones
             content['chart_count'] = count
         else:
