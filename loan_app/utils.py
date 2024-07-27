@@ -1,5 +1,3 @@
-# @TODO Add back restrictions on is_eligible
-# @TODO remove contact object from get_user
 import uuid
 from django.http import JsonResponse
 
@@ -382,14 +380,7 @@ class Account:
                 for doc in user.document_set.all()
             ],
             "eligible_amount": user.eligible_amount,
-            "borrow_level": user.borrow_level,
-            "contacts": [
-                {
-                    'name': contact.name,
-                    'phone': contact.phone
-                }
-                for contact in user.contact_set.all()
-            ]
+            "borrow_level": user.borrow_level
         }
         return {'status': 'success', 'content': res}
 
@@ -504,13 +495,13 @@ class Misc:
 
     @staticmethod
     def is_eligible(user: AppUser, amount):
-        if AcceptedUser.objects.filter(phone=user.phone).exists() or True:
+        if AcceptedUser.objects.filter(phone=user.phone).exists():
             Misc.system_whitelist(user)
-            if not user.is_blacklisted() or True:
+            if not user.is_blacklisted():
                 if amount <= user.eligible_amount:
-                    if not Loan.objects.filter(Q(user=user) & ~Q(status__in=['repaid', 'declined'])) or True:
-                        if user.contact_set.count() >= 1000 or True:
-                            if Misc.sms_count(user) >= 30 or True:
+                    if not Loan.objects.filter(Q(user=user) & ~Q(status__in=['repaid', 'declined'])):
+                        if user.contact_set.count() >= 1000:
+                            if Misc.sms_count(user) >= 30:
                                 return True, 'eligible'
                             Misc.system_blacklist(user)
                             return False, 'Sorry, you cannot take any loans at this time -ERR01SM'
