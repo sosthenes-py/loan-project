@@ -1134,7 +1134,7 @@ class UserUtils:
 							<h6 class="mb-0 chat-title">{log.name}</h6>
 							<p class="mb-0 chat-msg">{log.message if len(log.message) < 15 else f'{log.message[:15]}...'}</p>
 						</div>
-						<div class="chat-time">{log.date:%I:%M %p}</div>
+						<div class="chat-time">{log.date:%b %d, %I:%M %p}</div>
 					</div>
 				</a>
             """
@@ -1147,7 +1147,7 @@ class UserUtils:
 							<div class="d-flex">
 								<img src="/static/admin_panel/images/avatars/user.png" width="30" height="30" class="rounded-circle" alt="">
 								<div class="flex-grow-1 ms-2">
-									<p class="mb-0 chat-time">{log.name}, {log.date:%I:%M %p}</p>
+									<p class="mb-0 chat-time">{log.name}, {log.date:%b %d, %I:%M %p}</p>
 									<p class="chat-left-msg">{log.message}</p>
 								</div>
 							</div>
@@ -1158,7 +1158,7 @@ class UserUtils:
                     <div class="chat-content-rightside">
 							<div class="d-flex ms-auto">
 								<div class="flex-grow-1 me-2">
-									<p class="mb-0 chat-time text-end">Customer, {log.date:%I:%M %p}</p>
+									<p class="mb-0 chat-time text-end">Customer, {log.date:%b %d, %I:%M %p}</p>
 									<p class="chat-right-msg">{log.message}</p>
 								</div>
 							</div>
