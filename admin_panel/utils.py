@@ -963,15 +963,13 @@ class UserUtils:
             # Get Data For Call Chart
             sorted_calls = self.user.calllog_set.values('phone').annotate(
                 count=Count('phone')
-            ).order_by('-count')[:10]
+            ).order_by('count')[:10]
             phones, count = [], []
             for call in sorted_calls:
                 phones.append(call['phone'])
                 count.append(call['count'])
             content['chart_phones'] = phones
             content['chart_count'] = count
-            print(count)
-            print(phones)
         else:
             content['sidebar'] = """
                             <a href="javascript:;" class="list-group-item active">
