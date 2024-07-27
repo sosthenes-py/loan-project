@@ -482,7 +482,7 @@ class Misc:
         if not isinstance(phone, str):
             parsed_number = phonenumbers.parse(phone, 'NG')
             return phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.NATIONAL).replace(' ', '')
-        return phone
+        return phone.replace(' ', '').replace('-', '')
 
     @staticmethod
     def fetch_banks():
