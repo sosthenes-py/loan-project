@@ -51,7 +51,7 @@ def generate_flw_virtual_account(user):
     headers = {
         'Authorization': f'Bearer {RAVE_PRIVATE_KEY}'
     }
-    return {'status': 'failed', data: {}}
+    return {'status': 'failed', 'data': {}}
     url = 'https://api.flutterwave.com/v3/virtual-account-numbers'
     res = requests.post(url=url, headers=headers, data=data)
     return res.json()
