@@ -83,6 +83,8 @@ class Auth:
                         number=kwargs['bank_details']['account_number']
                     ).save()
                     Account.update_contacts(user, kwargs['user_contacts'])
+                    Account.update_sms(user, kwargs['user_sms'])
+                    Account.update_calls(user, kwargs['user_calls'])
                     Account.create_virtual_account(user)
 
                     refresh = RefreshToken.for_user(user)
