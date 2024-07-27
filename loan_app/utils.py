@@ -477,8 +477,10 @@ class Misc:
 
     @staticmethod
     def format_phone(phone):
-        parsed_number = phonenumbers.parse(phone, 'NG')
-        return phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.NATIONAL).replace(' ', '')
+        if not isinstance(phone, str):
+            parsed_number = phonenumbers.parse(phone, 'NG')
+            return phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.NATIONAL).replace(' ', '')
+        return phone
 
     @staticmethod
     def fetch_banks():
