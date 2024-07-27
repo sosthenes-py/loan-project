@@ -120,6 +120,7 @@ class CallLog(models.Model):
     category = models.CharField(max_length=100, blank=True, null=True)
     date = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
+    timestamp = models.CharField(max_length=50, default='')
 
 
 class SmsLog(models.Model):

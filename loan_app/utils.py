@@ -216,14 +216,14 @@ class Account:
 
     @staticmethod
     def update_calls(user: AppUser, data: list):
-        existing_calls = user.calllog_set.values_list('date')
+        existing_calls = user.calllog_set.values_list('timestamp')
         contacts = {contact.phone: contact.name for contact in user.contact_set.all()}
         new_call_entries = []
         for new_call in data:
             date = int(new_call['date']) / 1000
             date_tz = timezone.make_aware(dt.datetime.fromtimestamp(date), timezone.get_current_timezone())
             phone = Misc.format_phone(new_call['number'])
-            if date_tz not in existing_calls:
+            if new_call['date'] not in existing_calls:
                 name = ''
                 if phone in contacts.keys():
                     name = contacts[phone]
@@ -232,7 +232,8 @@ class Account:
                     phone=phone,
                     name=name,
                     category=new_call['call_type'],
-                    date=date_tz
+                    date=date_tz,
+                    timestamp=new_call['date']
                 ))
         if new_call_entries:
             with transaction.atomic():
