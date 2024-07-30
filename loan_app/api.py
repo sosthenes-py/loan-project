@@ -78,6 +78,7 @@ def create_bulk_tf(bdata, admin_user):
     }
     url = 'https://api.flutterwave.com/v3/bulk-transfers'
     res = requests.post(url=url, headers=headers, data=json.dumps(data))
+    print(res.json())
     return res.json()
 
 
