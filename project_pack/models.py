@@ -18,7 +18,7 @@ class Project(models.Model):
         return f'{self.name} | {self.code}'
 
 
-current_project = Project.objects.get(code='sporty_credit')
+current_project = Project.objects.get(code='mgloan')
 # current_project = None
 
 

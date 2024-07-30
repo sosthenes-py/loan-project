@@ -255,7 +255,7 @@ class Func:
                 'account_number': loan.user.disbursementaccount.number,
                 'amount': loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount),
                 'currency': 'NGN',
-                'narration': 'Sportycredit Loan',
+                'narration': 'MG Loan',
                 'reference': f'{loan.loan_id}-{admin_user.id}',
                 'meta': [
                     {

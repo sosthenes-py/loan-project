@@ -46,7 +46,7 @@ def generate_flw_virtual_account(user):
         'firstname': user.first_name,
         'lastname': user.last_name,
         'phonenumber': user.phone,
-        'narration': f'SportyCredit-{user.last_name}'
+        'narration': f'MGLoan-{user.last_name}'
     }
     headers = {
         'Authorization': f'Bearer {RAVE_PRIVATE_KEY}'
@@ -110,7 +110,7 @@ def send_otp(user, length, medium: list):
     }
     data = {
         'length': length,
-        'sender': 'SportyCredit',
+        'sender': 'MGLOAN',
         'send': True,
         'medium': medium,
         'expiry': 10,
@@ -137,7 +137,7 @@ def send():
             'email': 'sos.sosthenes1@gmail.com',
             'phone': '2348147173448'
         },
-        'sender': 'SportyCredit',
+        'sender': 'MGLOAN',
         'send': True,
         'medium': ['whatsapp'],
         'expiry': 10,
