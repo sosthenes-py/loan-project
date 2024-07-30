@@ -186,7 +186,7 @@ def operators(request):
 
 @csrf_exempt
 def webhook(request):
-    secret_hash = 'mysecrethash'
+    secret_hash = '123456'
     signature = request.headers.get("verif-hash")
     if signature or (signature != secret_hash):
         return HttpResponse(status=401)
