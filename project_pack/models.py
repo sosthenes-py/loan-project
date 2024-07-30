@@ -1,3 +1,7 @@
+# TODO: When making initial migration or starting project initially, set current_project var below to None,
+#  then after migration, manually create a new Project object in the project table,
+#  then set current_project to get the new project you created.
+
 from django.db import models
 from django.utils import timezone
 
@@ -15,6 +19,7 @@ class Project(models.Model):
 
 
 current_project = Project.objects.get(code='sporty_credit')
+# current_project = None
 
 
 class ProjectQuerySet(models.QuerySet):
