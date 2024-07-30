@@ -865,9 +865,13 @@ class UserUtils:
             self.add_table_content(_for='timeline', tl=tl)
         self._content = self._content2
 
+    @staticmethod
+    def reverse_dict(it: dict):
+        return {a: b for a, b in reversed(it.items())}
+
     def fetch_sms(self, which):
         self.user: AppUser
-        logs = self.user.smslog_set.order_by('-date').all()
+        logs = self.user.smslog_set.order_by('date').all()
         if logs:
             logs_dict = {}
             for log in logs:
@@ -879,6 +883,7 @@ class UserUtils:
             content = {}
             if which == 'sidebar':
                 self._content = ''
+                logs_dict = UserUtils.reverse_dict(logs_dict)
                 for phone, logs_list in logs_dict.items():
                     last_log = logs_list[len(logs_list)-1]
                     self.add_table_content(_for='sms_sidebar', log=last_log)
@@ -891,6 +896,7 @@ class UserUtils:
             else:
                 self._content = ''
                 logs_list = logs_dict[which]
+
                 for log in logs_list:
                     self.add_table_content(_for='sms_content', log=log)
                 content['content'] = self._content
