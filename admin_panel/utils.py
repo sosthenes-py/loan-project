@@ -601,7 +601,7 @@ class Func:
             if not user.is_blacklisted():
                 if amount <= user.eligible_amount:
                     if not Loan.objects.filter(Q(user=user) & ~Q(status__in=['repaid', 'declined'])):
-                        if user.contact_set.count() >= 1000:
+                        if user.contact_set.count() >= 200:
                             if Func.sms_count(user) >= 30:
                                 return True, f'Eligible - User can borrow up to &#x20A6;{user.eligible_amount:,}'
                             return False, 'Ineligible - User SMS < 30'
@@ -867,7 +867,7 @@ class UserUtils:
 
     def fetch_sms(self, which):
         self.user: AppUser
-        logs = self.user.smslog_set.order_by('date').all()
+        logs = self.user.smslog_set.order_by('-date').all()
         if logs:
             logs_dict = {}
             for log in logs:
