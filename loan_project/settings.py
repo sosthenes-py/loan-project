@@ -27,7 +27,7 @@ SECRET_KEY = config('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['loanproject-peegm.ondigitalocean.app', 'localhost']
+ALLOWED_HOSTS = ['loanproject-7na29.ondigitalocean.app', 'localhost']
 
 
 # Application definition
