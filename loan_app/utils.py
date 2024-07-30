@@ -59,7 +59,7 @@ class Auth:
                         lga=kwargs['lga'],
                     )
                     user.save()
-                    user.user_id = f'SU{user.id}{random.randint(100, 1000)}'
+                    user.user_id = f'MGU{user.id}{random.randint(100, 1000)}'
                     user.save()
 
                     # if kwargs.get('file'):
@@ -325,7 +325,7 @@ class Account:
             new_loan = Loan(user=user, principal_amount=principal_amount,
                             amount_due=amount_due, reloan=reloan, duration=duration, purpose=purpose)
             new_loan.save()
-            new_loan.loan_id = f'SL{new_loan.id}{random.randint(100, 1000)}'
+            new_loan.loan_id = f'MGL{new_loan.id}{random.randint(100, 1000)}'
             new_loan.save()
             LoanStatic(loan=new_loan, status='pending').save()
             loans = Account.fetch_loans(user)
@@ -363,8 +363,8 @@ class Account:
                 "account_name": f"{user.last_name} {user.first_name}",
             },
             "virtual_account": {
-                "bank_name": user.virtualaccount_set.first().bank_name,
-                "account_number": user.virtualaccount_set.first().number
+                "bank_name": user.virtualaccount_set.last().bank_name,
+                "account_number": user.virtualaccount_set.last().number
             },
             "isNewUser": user.created_at.date() == dt.date.today(),
             "isActive": not user.suspend,

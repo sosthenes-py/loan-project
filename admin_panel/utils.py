@@ -216,7 +216,7 @@ class Func:
                                 amount_due=amount_due, amount_paid=amount_paid, disbursed_at=disbursed_at,
                                 reloan=reloan, status=status, created_at=current_date)
                 new_loan.save()
-                new_loan.loan_id = f'SL{new_loan.id}{random.randint(100, 1000)}'
+                new_loan.loan_id = f'MGL{new_loan.id}{random.randint(100, 1000)}'
                 new_loan.save()
                 total_added += 1
             current_date += dt.timedelta(days=1)
@@ -680,8 +680,8 @@ class UserUtils:
         self._content['bankdetails_name'] = f'{self.user.last_name} {self.user.first_name}'
         self._content['bankdetails_bvn'] = self.user.bvn
 
-        self._content['virtual_bankdetails_number'] = self.user.virtualaccount_set.first().number
-        self._content['virtual_bankdetails_bank'] = self.user.virtualaccount_set.first().bank_name
+        self._content['virtual_bankdetails_number'] = self.user.virtualaccount_set.last().number
+        self._content['virtual_bankdetails_bank'] = self.user.virtualaccount_set.last().bank_name
         self._content['virtual_bankdetails_name'] = f'{self.user.last_name} {self.user.first_name}'
 
         self._content['loan_count'] = self.user.loan_set.count()
@@ -2746,9 +2746,10 @@ class Analysis:
             if stage != 'M1':
                 data_x.append(stage)
                 data_y.append(f'{perc:.1f}')
-        # now add M1 as the last item
-        data_x.append('M1')
-        data_y.append(f"{recoverys['M1']:.1f}")
+        if recoverys:
+            # now add M1 as the last item
+            data_x.append('M1')
+            data_y.append(f"{recoverys['M1']:.1f}")
         return {
             'x': data_x,
             'y': data_y
