@@ -18,8 +18,8 @@ class Project(models.Model):
         return f'{self.name} | {self.code}'
 
 
-# current_project = Project.objects.get(code='mgloan')
-current_project = None
+current_project = Project.objects.get(code='mgloan')
+# current_project = None
 
 
 class ProjectQuerySet(models.QuerySet):
