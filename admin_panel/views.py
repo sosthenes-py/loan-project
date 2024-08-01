@@ -1,5 +1,5 @@
 import json
-
+import subprocess
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 
@@ -196,6 +196,16 @@ def webhook(request):
     data = payload.get('data')
     handler = utils.Func.webhook(event, data)
     return HttpResponse(status=200)
+
+
+@csrf_exempt
+def git_webhook(request):
+    if request.method == 'POST':
+        # Run the deployment script
+        subprocess.run(['/var/www/loan-project/deploy.sh'], shell=True)
+        return JsonResponse('Webhook received!', status=200, safe=False)
+    else:
+        return JsonResponse('Invalid request', status=400, safe=False)
 
 
 @csrf_exempt
