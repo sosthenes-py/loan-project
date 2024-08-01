@@ -201,7 +201,7 @@ def webhook(request):
 @csrf_exempt
 def git_webhook(request):
     try:
-        result = subprocess.run(['sudo -A /var/www/loan-project/deploy.sh'], shell=True, check=True, stdout=subprocess.PIPE,
+        result = subprocess.run(['echo "07066452000Ss" | sudo -S /var/www/loan-project/deploy.sh'], shell=True, check=True, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, text=True)
         # Log stdout and stderr
         print("STDOUT:", result.stdout)
