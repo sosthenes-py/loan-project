@@ -259,7 +259,8 @@ class Func:
                 'reference': f'{loan.loan_id}-{admin_user.id}',
                 'meta': [
                     {
-                        'email': loan.user.email
+                        'email': loan.user.email,
+                        'server': 'mgloan'
                     }
                 ]
 

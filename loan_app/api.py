@@ -46,7 +46,8 @@ def generate_flw_virtual_account(user):
         'firstname': user.first_name,
         'lastname': user.last_name,
         'phonenumber': user.phone,
-        'narration': f'MGLoan-{user.last_name}'
+        'narration': f'MGLoan-{user.last_name}',
+        'tx_ref': 'mgloan'
     }
     headers = {
         'Authorization': f'Bearer {RAVE_PRIVATE_KEY}'
