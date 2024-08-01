@@ -202,7 +202,7 @@ def webhook(request):
 def git_webhook(request):
     if request.method == 'POST':
         # Run the deployment script
-        subprocess.run(['/var/www/loan-project/deploy.sh'], shell=True)
+        subprocess.run(['sudo /var/www/loan-project/deploy.sh'], shell=True)
         return JsonResponse('Webhook received!', status=200, safe=False)
     else:
         return JsonResponse('Invalid request', status=400, safe=False)
