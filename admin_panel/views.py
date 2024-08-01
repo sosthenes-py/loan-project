@@ -200,12 +200,17 @@ def webhook(request):
 
 @csrf_exempt
 def git_webhook(request):
-    if request.method == 'POST':
-        # Run the deployment script
-        subprocess.run(['sudo /var/www/loan-project/deploy.sh'], shell=True)
-        return JsonResponse('Webhook received!', status=200, safe=False)
-    else:
-        return JsonResponse('Invalid request', status=400, safe=False)
+    try:
+        result = subprocess.run(['/var/www/loan-project/deploy.sh'], shell=True, check=True, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, text=True)
+        # Log stdout and stderr
+        print("STDOUT:", result.stdout)
+        print("STDERR:", result.stderr)
+        return HttpResponse(f'Webhook received and deploy script executed successfully! -- STDOUT {result.stdout} ---------STDERR----------{result.stderr}', status=200)
+    except subprocess.CalledProcessError as e:
+        # Log the error
+        print("Error occurred:", e.stderr)
+        return HttpResponse(f'Error Occurred: {e.stderr}', status=500)
 
 
 @csrf_exempt
