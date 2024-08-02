@@ -552,9 +552,13 @@ class Func:
     @staticmethod
     def webhook(event, data):
         if event == 'charge.completed':
-            return Func.webhook_charge(data)
+            if data['tx_ref'] == 'mgloan':
+                return Func.webhook_charge(data)
+            return False
         elif event == 'transfer.completed':
-            return Func.webhook_transfer(data)
+            if data['meta'] and data['meta'][0]['server'] == 'mgloan':
+                return Func.webhook_transfer(data)
+            return False
 
     @staticmethod
     def webhook_charge(data):

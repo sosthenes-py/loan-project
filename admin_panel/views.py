@@ -225,3 +225,4 @@ def automations(request, program):
         elif program == 'recovery':
             utils.Func.set_recovery()
         return JsonResponse({'status': 'success'})
+
