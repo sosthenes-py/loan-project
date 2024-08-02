@@ -12,6 +12,7 @@ from django.contrib.auth.decorators import login_required
 from admin_panel.models import Repayment
 import admin_panel.utils as utils
 import datetime as dt
+from decouple import config
 
 
 # Create your views here.
@@ -201,7 +202,7 @@ def webhook(request):
 @csrf_exempt
 def git_webhook(request):
     try:
-        result = subprocess.run(['echo "07066452000Ss" | sudo -S /var/www/loan-project/deploy.sh'], shell=True, check=True, stdout=subprocess.PIPE,
+        result = subprocess.run([f'echo "{config("SUDO_PASS")}" | sudo -S /var/www/loan-project/deploy.sh'], shell=True, check=True, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, text=True)
         # Log stdout and stderr
         print("STDOUT:", result.stdout)

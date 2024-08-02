@@ -265,7 +265,7 @@ class Func:
                 ]
 
             }
-            for loan in loans
+            for loan in loans if loan.amount_disbursed == 0
         ]
         # print(bulk_data)
         res = apis.create_bulk_tf(bulk_data, admin_user)
