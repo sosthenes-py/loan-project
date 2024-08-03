@@ -115,7 +115,7 @@ class Repayment(models.Model):
     amount_due = models.FloatField(max_length=10, default=0)
     amount_paid_now = models.FloatField(max_length=10, default=0)
     total_paid = models.FloatField(max_length=10, default=0)
-    stage = models.CharField(max_length=10, default='A')
+    stage = models.CharField(max_length=20, default='A')
     overdue_days = models.IntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(auto_now=True)
