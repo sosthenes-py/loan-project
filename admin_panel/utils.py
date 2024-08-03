@@ -89,6 +89,8 @@ class Func:
                 return 'S4'
             elif diff.days > 30:
                 return 'M1'
+            else:
+                return 'S-1'
         return ''
 
     @staticmethod
