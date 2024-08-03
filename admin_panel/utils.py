@@ -138,6 +138,8 @@ class Func:
                  detail=loan.status,
                  overdue_days=tl_o).save()
 
+        print(f'----------Stage: {Func.get_stage(loan)},,,,, status: {status}')
+
         Repayment(user=loan.user, admin_user=admin_user, loan=loan, principal_amount=loan.principal_amount,
                   amount_due=loan.amount_due, amount_paid_now=amount_paid, total_paid=loan.amount_paid,
                   stage=Func.get_stage(loan), overdue_days=overdue_days, status=status).save()

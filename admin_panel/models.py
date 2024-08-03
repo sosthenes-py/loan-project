@@ -120,6 +120,7 @@ class Repayment(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=20, default='')
+    on_field = models.CharField(max_length=10, default='')
     allow = models.BooleanField(default=False)  # when admin forgives late repayment, allow = True
 
     def __str__(self):

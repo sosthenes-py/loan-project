@@ -189,13 +189,11 @@ def operators(request):
 @csrf_exempt
 def webhook(request):
     secret_hash = '123456'
-    print(f'Header: ---------- {request.headers}')
     signature = request.headers.get("Verif-Hash")
     if not signature or signature != secret_hash:
         return HttpResponse(status=401)
 
     payload = json.loads(request.body)
-    print(f'Payload: ---------- {payload}')
     event = payload.get('event')
     data = payload.get('data')
     handler = utils.Func.webhook(event, data)
