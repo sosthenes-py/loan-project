@@ -89,7 +89,7 @@ bb = [
 
 def create_bulk_tf(bdata, admin_user):
     data = {
-        'title': f"Disb by {admin_user.level} - {admin_user.first_name} @ {dt.datetime.now():%b %d, %Y}",
+        'title': f"Disb by {admin_user.level} - {admin_user.first_name}",
         'bulk_data': bdata
     }
 
