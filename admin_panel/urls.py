@@ -18,11 +18,10 @@ urlpatterns = [
     path('operators/', views.operators, name='operators'),
     path('blacklist/', views.view_blacklist, name='blacklist'),
     path('logs/', views.view_logs, name='logs'),
-    path('webhook/', views.webhook, name='webhook'),
+    path('webhook', views.webhook, name='webhook'),
     path('users/filtered/', views.accepted_users, name='accepted_users'),
     path('automations/<str:program>', views.automations),
-    path('git-webhook/', views.git_webhook),
-    re_path(r'^\.well-known/pki-validation/99ECEB4229AA7782EF6C6981B96DF655.txt$', views.serve_verification_file),
+    path('git-webhook/', views.git_webhook)
 ]
 
 if settings.DEBUG:
