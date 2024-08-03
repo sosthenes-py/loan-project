@@ -119,7 +119,7 @@ class Repayment(models.Model):
     overdue_days = models.IntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=10, default='')
+    status = models.CharField(max_length=20, default='')
     allow = models.BooleanField(default=False)  # when admin forgives late repayment, allow = True
 
     def __str__(self):
@@ -287,7 +287,7 @@ class Waive(models.Model):
     reason = models.CharField(max_length=10, default='PP')
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(max_length=10, default='pending')
+    status = models.CharField(max_length=20, default='pending')
 
 
 class Timeline(models.Model):
