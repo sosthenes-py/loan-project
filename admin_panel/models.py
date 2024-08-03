@@ -119,7 +119,7 @@ class Repayment(models.Model):
     overdue_days = models.IntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=20, default='')
+    status = models.CharField(max_length=25, default='')
     on_field = models.CharField(max_length=10, default='')
     allow = models.BooleanField(default=False)  # when admin forgives late repayment, allow = True
 
