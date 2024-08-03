@@ -191,7 +191,7 @@ def webhook(request):
     secret_hash = '167.99.92.154'
     print(f'Header: ---------- {request.headers}')
     signature = request.headers.get("X-Real-Ip")
-    if signature or (signature != secret_hash):
+    if not signature or signature != secret_hash:
         return HttpResponse(status=401)
 
     payload = json.loads(request.body)
