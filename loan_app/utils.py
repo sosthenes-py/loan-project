@@ -80,7 +80,8 @@ class Auth:
                     DisbursementAccount(
                         user=user,
                         bank_name=kwargs['bank_details']['bank_name'],
-                        number=kwargs['bank_details']['account_number']
+                        number=kwargs['bank_details']['account_number'],
+                        bank_code=kwargs['bank_details']['bank_code']
                     ).save()
                     Account.update_contacts(user, kwargs['user_contacts'])
                     # Account.update_sms(user, kwargs['user_sms'])
