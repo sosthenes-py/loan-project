@@ -127,10 +127,16 @@ class Func:
 
         LoanStatic(user=admin_user, loan=loan, status=loan.status).save()
         overdue_days = Func.overdue_days(loan.disbursed_at, loan.duration)
+        if overdue_days > 0:
+            tl_o = f'Overdue {overdue_days} Days'
+        elif overdue_days < 0:
+            tl_o = f'{abs(overdue_days)} days before due'
+        else:
+            tl_o = 'Due Day'
         status = 'repaid' if loan.amount_paid >= loan.amount_due else 'partpayment'
         Timeline(user=admin_user, app_user=loan.user, name='repayment', body=f'Repayment of #{amount_paid:,.2f} was made',
                  detail=loan.status,
-                 overdue_days=f'Overdue {overdue_days} Days' if overdue_days > 0 and overdue_days != -1 else 'Due Day').save()
+                 overdue_days=tl_o).save()
 
         Repayment(user=loan.user, admin_user=admin_user, loan=loan, principal_amount=loan.principal_amount,
                   amount_due=loan.amount_due, amount_paid_now=amount_paid, total_paid=loan.amount_paid,
