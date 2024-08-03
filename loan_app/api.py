@@ -67,10 +67,46 @@ def is_tx_valid(id_):
     return res.json()['status'] == 'success'
 
 
+bb = [
+    {
+        'bank_code': '057',
+        'account_number': '2118728610',
+        # 'amount': loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount),
+        'amount': 1000,
+        'currency': 'NGN',
+        'narration': 'MG Loan',
+        'reference': f'MGL1234-2',
+        'meta': [
+            {
+                'email': 'sos.sosthenes1@gmail.com',
+                'server': 'mgloan'
+            }
+        ]
+
+    }
+]
+
+
 def create_bulk_tf(bdata, admin_user):
     data = {
         'title': f"Disb by {admin_user.level} - {admin_user.first_name} @ {dt.datetime.now():%b %d, %Y}",
         'bulk_data': bdata
+    }
+
+    headers = {
+        'Authorization': f'Bearer {RAVE_PRIVATE_KEY}',
+        'content-type': 'application/json',
+    }
+    url = 'https://api.flutterwave.com/v3/bulk-transfers'
+    res = requests.post(url=url, headers=headers, data=json.dumps(data))
+    print(res.json())
+    return res.json()
+
+
+def create_tf():
+    data = {
+        'title': f"Disb by test",
+        'bulk_data': bb
     }
 
     headers = {
@@ -113,7 +149,7 @@ def send_otp(user, length, medium: list):
     data = {
         'length': length,
         'sender': 'MGLOAN',
-        'send': True,
+        'send': False,
         'medium': medium,
         'expiry': 10,
         'customer': {
@@ -124,7 +160,7 @@ def send_otp(user, length, medium: list):
     }
 
     url = f'https://api.flutterwave.com/v3/otps'
-    res = requests.post(url=url, headers=headers, data=data)
+    res = requests.post(url=url, headers=headers, json=data)
     return res.json()
 
 

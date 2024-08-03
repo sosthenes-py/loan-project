@@ -147,10 +147,9 @@ class Auth:
         if user:
             if data['action'] == 'forgot':
                 # requires: medium
-                # res = apis.send_otp(user=user, length=6, medium=data.get('medium', ['sms']))
-                res = {'status': 'success', 'data': {'otp': '1234'}}
+                res = apis.send_otp(user=user, length=6, medium=data.get('medium', ['sms', 'whatsapp']))
                 if res['status'] == 'success':
-                    Otp.objects.update_or_create(user=user, defaults={'code': res["data"]["otp"], 'expires_at': timezone.now() + dt.timedelta(minutes=10)})
+                    Otp.objects.update_or_create(user=user, defaults={'code': res["data"][0]["otp"], 'expires_at': timezone.now() + dt.timedelta(minutes=10)})
                     return {'status': 'success', 'message': 'A token has been sent to your phone'}
                 return {'error': {'status': 500, 'error': 'Token sending failed. Please try again'}, 'message': 'Http Exception'}
             elif data['action'] == 'update':
