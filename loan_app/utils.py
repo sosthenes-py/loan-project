@@ -216,7 +216,7 @@ class Account:
 
     @staticmethod
     def update_calls(user: AppUser, data: list):
-        existing_calls = user.calllog_set.values_list('timestamp')
+        existing_calls = user.calllog_set.values_list('timestamp', flat=True)
         contacts = {contact.phone: contact.name for contact in user.contact_set.all()}
         new_call_entries = []
         for new_call in data:
