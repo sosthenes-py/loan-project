@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path
 from . import views
 from django.conf.urls.static import static
 from django.conf import settings
@@ -21,8 +21,11 @@ urlpatterns = [
     path('webhook/', views.webhook, name='webhook'),
     path('users/filtered/', views.accepted_users, name='accepted_users'),
     path('automations/<str:program>', views.automations),
-    path('git-webhook/', views.git_webhook)
+    path('git-webhook/', views.git_webhook),
+    re_path(r'^\.well-known/pki-validation/99ECEB4229AA7782EF6C6981B96DF655.txt$', views.serve_verification_file),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

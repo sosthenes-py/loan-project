@@ -13,6 +13,7 @@ from admin_panel.models import Repayment
 import admin_panel.utils as utils
 import datetime as dt
 from decouple import config
+import os
 
 
 # Create your views here.
@@ -226,3 +227,11 @@ def automations(request, program):
             utils.Func.set_recovery()
         return JsonResponse({'status': 'success'})
 
+
+@csrf_exempt
+def serve_verification_file(request):
+    file_path = os.path.join(os.path.dirname(__file__), 'verification', '99ECEB4229AA7782EF6C6981B96DF655.txt')
+    with open(file_path, 'r') as file:
+        response = HttpResponse(file.read(), content_type='text/plain')
+        response['Content-Disposition'] = 'inline; filename="99ECEB4229AA7782EF6C6981B96DF655.txt"'
+        return response
