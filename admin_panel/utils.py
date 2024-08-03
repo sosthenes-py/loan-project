@@ -89,8 +89,6 @@ class Func:
                 return 'S4'
             elif diff.days > 30:
                 return 'M1'
-            else:
-                return 'S-1'
         return ''
 
     @staticmethod
@@ -263,7 +261,8 @@ class Func:
             {
                 'bank_code': loan.user.disbursementaccount.bank_code,
                 'account_number': loan.user.disbursementaccount.number,
-                'amount': loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount),
+                # 'amount': loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount),
+                'amount': 1200,
                 'currency': 'NGN',
                 'narration': 'MG Loan',
                 'reference': f'{loan.loan_id}-{admin_user.id}',

@@ -194,6 +194,7 @@ def webhook(request):
         return HttpResponse(status=401)
 
     payload = json.loads(request.body)
+    print(f'PAYLOAD---------{payload}')
     event = payload.get('event')
     data = payload.get('data')
     handler = utils.Func.webhook(event, data)
