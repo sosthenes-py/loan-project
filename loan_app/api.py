@@ -92,12 +92,16 @@ def create_bulk_tf(bdata, admin_user):
         'title': f"Disb by {admin_user.level} - {admin_user.first_name}",
         'bulk_data': bdata
     }
+    url = 'https://api.flutterwave.com/v3/bulk-transfers'
+
+    if len(bdata) == 1:
+        data = bdata[0]
+        url = 'https://api.flutterwave.com/v3/transfers'
 
     headers = {
         'Authorization': f'Bearer {RAVE_PRIVATE_KEY}',
         'content-type': 'application/json',
     }
-    url = 'https://api.flutterwave.com/v3/bulk-transfers'
     res = requests.post(url=url, headers=headers, data=json.dumps(data))
     print(res.json())
     return res.json()
@@ -117,6 +121,8 @@ def create_tf():
     res = requests.post(url=url, headers=headers, data=json.dumps(data))
     print(res.json())
     return res.json()
+
+
 
 
 def fetch_main_bal():
