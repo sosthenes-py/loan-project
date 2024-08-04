@@ -814,7 +814,6 @@
                                 <table class="table align-middle mb-0">
                                     <thead class="table-light">
                                     <tr>
-                                        <th>S/N <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Serial Number"></i></th>
                                         <th>Loan ID <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Unique identifier for the loan"></i></th>
                                         <th>Principal <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Principal loan amount"></i></th>
                                         <th>Due <i class="bx bx-info-circle" data-toggle="tooltip" data-placement="top" title="Amount Due"></i></th>
@@ -1515,6 +1514,7 @@
                                 var table = $('#loan_table').DataTable({
                                     lengthChange: false,
                                     pageLength: 15,
+                                    ordering: false,
                                     buttons: ['copy', 'excel', 'pdf', 'print']
                                 });
                                 table.buttons().container().appendTo('#loan_table_wrapper .col-md-6:eq(0)');
