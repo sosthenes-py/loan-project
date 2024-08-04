@@ -92,10 +92,20 @@ def create_bulk_tf(bdata, admin_user):
         'title': f"Disb by {admin_user.level} - {admin_user.first_name}",
         'bulk_data': bdata
     }
+    data = json.dumps(data)
     url = 'https://api.flutterwave.com/v3/bulk-transfers'
 
     if len(bdata) == 1:
-        data = bdata[0]
+        dd = bdata[0]
+        data = {
+            "account_bank": dd['bank_code'],
+            "account_number": dd['account_number'],
+            "amount": dd['amount'],
+            "narration": dd['narration'],
+            "currency": "NGN",
+            "reference": dd['reference'],
+            "debit_currency": "NGN"
+        }
         url = 'https://api.flutterwave.com/v3/transfers'
 
     headers = {
@@ -103,7 +113,7 @@ def create_bulk_tf(bdata, admin_user):
         'content-type': 'application/json',
     }
     print(f'Data--------------{data}')
-    res = requests.post(url=url, headers=headers, data=json.dumps(data))
+    res = requests.post(url=url, headers=headers, data=data)
     print(res.json())
     return res.json()
 
