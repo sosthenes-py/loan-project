@@ -261,8 +261,7 @@ class Func:
             {
                 'bank_code': loan.user.disbursementaccount.bank_code,
                 'account_number': loan.user.disbursementaccount.number,
-                # 'amount': loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount),
-                'amount': 1200,
+                'amount': loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount),
                 'currency': 'NGN',
                 'narration': 'MG Loan',
                 'reference': f'{loan.loan_id}-{admin_user.id}',
