@@ -102,6 +102,7 @@ def create_bulk_tf(bdata, admin_user):
         'Authorization': f'Bearer {RAVE_PRIVATE_KEY}',
         'content-type': 'application/json',
     }
+    print(f'Data--------------{data}')
     res = requests.post(url=url, headers=headers, data=json.dumps(data))
     print(res.json())
     return res.json()
