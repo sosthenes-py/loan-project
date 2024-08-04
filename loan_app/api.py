@@ -113,7 +113,7 @@ def create_bulk_tf(bdata, admin_user):
         'content-type': 'application/json',
     }
     print(f'Data--------------{data}')
-    res = requests.post(url=url, headers=headers, data=data)
+    res = requests.post(url=url, headers=headers, data=json.dumps(data))
     print(res.json())
     return res.json()
 
