@@ -269,7 +269,7 @@ class Func:
                     {
                         'email': loan.user.email,
                         'phone': loan.user.phone,
-                        'server': 'mgloan'
+                        'merchant_name': 'mgloan'
                     }
                 ]
 
