@@ -269,6 +269,7 @@ class Func:
                 'meta': [
                     {
                         'email': loan.user.email,
+                        'phone': loan.user.phone,
                         'server': 'mgloan'
                     }
                 ]
@@ -567,7 +568,7 @@ class Func:
                 return Func.webhook_charge(data)
             return False
         elif event == 'transfer.completed':
-            if data['meta'] and data['meta'][0]['server'] == 'mgloan':
+            if data['narration'] == 'MG Loan' or data['meta'][0]['EmailAddress'] in AppUser.objects.all().values_list('email', flat=True):
                 return Func.webhook_transfer(data)
             return False
 
