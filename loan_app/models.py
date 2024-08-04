@@ -179,7 +179,7 @@ class Blacklist(models.Model):
 class Notification(models.Model):
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
     message = models.TextField()
-    message_type = models.CharField(max_length=20, default='system')
+    message_type = models.CharField(max_length=50, default='system')
     viewed = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
 

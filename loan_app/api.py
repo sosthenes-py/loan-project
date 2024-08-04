@@ -1,4 +1,3 @@
-# TODO: set back fetch virtual accounts to use flw api
 
 import json
 import datetime as dt
@@ -47,7 +46,7 @@ def generate_flw_virtual_account(user):
         'lastname': user.last_name,
         'phonenumber': user.phone,
         'narration': f'MGLoan-{user.last_name}',
-        'tx_ref': 'mgloan'
+        'tx_ref': f'mgloan-{user.user_id}'
     }
     headers = {
         'Authorization': f'Bearer {RAVE_PRIVATE_KEY}'
@@ -65,26 +64,6 @@ def is_tx_valid(id_):
     url = f'https://api.flutterwave.com/v3/transactions/{id_}/verify'
     res = requests.get(url=url, headers=headers)
     return res.json()['status'] == 'success'
-
-
-bb = [
-    {
-        'bank_code': '057',
-        'account_number': '2118728610',
-        # 'amount': loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount),
-        'amount': 1000,
-        'currency': 'NGN',
-        'narration': 'MG Loan',
-        'reference': f'MGL1234-2',
-        'meta': [
-            {
-                'email': 'sos.sosthenes1@gmail.com',
-                'server': 'mgloan'
-            }
-        ]
-
-    }
-]
 
 
 def create_bulk_tf(bdata, admin_user):
@@ -112,28 +91,9 @@ def create_bulk_tf(bdata, admin_user):
         'Authorization': f'Bearer {RAVE_PRIVATE_KEY}',
         'content-type': 'application/json',
     }
-    print(f'Data--------------{data}')
     res = requests.post(url=url, headers=headers, data=json.dumps(data))
     print(res.json())
     return res.json()
-
-
-def create_tf():
-    data = {
-        'title': f"Disb by test",
-        'bulk_data': bb
-    }
-
-    headers = {
-        'Authorization': f'Bearer {RAVE_PRIVATE_KEY}',
-        'content-type': 'application/json',
-    }
-    url = 'https://api.flutterwave.com/v3/bulk-transfers'
-    res = requests.post(url=url, headers=headers, data=json.dumps(data))
-    print(res.json())
-    return res.json()
-
-
 
 
 def fetch_main_bal():

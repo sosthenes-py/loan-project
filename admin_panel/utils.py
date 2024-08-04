@@ -98,11 +98,12 @@ class Func:
         return '-'
 
     @staticmethod
-    def repayment(loan: Loan, amount_paid):
+    def repayment(loan: Loan, amount_paid, tx_id=''):
         """
         Run this method after receiving payload, validating transaction, checking for duplicate, etc.
         :param loan:
         :param amount_paid:
+        :param tx_id:
         :return:
         """
         amount_paid = float(amount_paid)
@@ -136,11 +137,9 @@ class Func:
                  detail=loan.status,
                  overdue_days=tl_o).save()
 
-        print(f'----------Stage: {Func.get_stage(loan)},,,,, status: {status}')
-
         Repayment(user=loan.user, admin_user=admin_user, loan=loan, principal_amount=loan.principal_amount,
                   amount_due=loan.amount_due, amount_paid_now=amount_paid, total_paid=loan.amount_paid,
-                  stage=Func.get_stage(loan), overdue_days=overdue_days, status=status).save()
+                  stage=Func.get_stage(loan), overdue_days=overdue_days, status=status, tx_id=tx_id).save()
         Func.eligibility_upgrade(loan.user)
 
     @staticmethod
@@ -563,7 +562,8 @@ class Func:
     @staticmethod
     def webhook(event, data):
         if event == 'charge.completed':
-            if data['tx_ref'] == 'mgloan':
+            tx_ref = data['tx_ref']
+            if ('-' in tx_ref and tx_ref.split('-')[0] == 'mgloan') or tx_ref == 'mgloan':
                 return Func.webhook_charge(data)
             return False
         elif event == 'transfer.completed':
@@ -578,7 +578,7 @@ class Func:
                 user = AppUser.objects.get(phone=data['customer']['phone_number'])
                 if user:
                     loan = user.loan_set.last()
-                    Func.repayment(loan=loan, amount_paid=data['amount'])
+                    Func.repayment(loan=loan, amount_paid=data['amount'], tx_id=data['id'])
                     Logs(action='credit',
                          body=f'Credit of #{data["amount"]:,} from {data["customer"]["name"]}',
                          status='success', fee=float(data['app_fee'])).save()
@@ -592,7 +592,7 @@ class Func:
         admin_id = data['reference'].split('-')[1]
         loan = Loan.objects.get(loan_id=loan_id)
         admin = AdminUser.objects.get(pk=admin_id)
-        if loan:
+        if loan and loan.disburse_id == '':
             if data['status'] == 'SUCCESSFUL':
                 loan.disburse_id = tx_id
                 loan.save()

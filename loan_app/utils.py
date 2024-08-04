@@ -2,7 +2,7 @@ import uuid
 from django.http import JsonResponse
 
 from loan_app.models import Loan, DisbursementAccount, VirtualAccount, AppUser, Blacklist, Notification, Otp, Avatar, Document, SmsLog, CallLog, Contact
-from admin_panel.models import LoanStatic, AcceptedUser
+from admin_panel.models import LoanStatic, AcceptedUser, Logs
 from django.contrib.auth.hashers import make_password, check_password
 import random
 from django.utils import timezone
@@ -151,8 +151,9 @@ class Auth:
         if user:
             if data['action'] == 'forgot':
                 # requires: medium
-                res = apis.send_otp(user=user, length=6, medium=data.get('medium', ['sms']))
-                print(res)
+                res = apis.send_otp(user=user, length=6, medium=data.get('medium', ['sms', 'whatsapp']))
+                # register api fee log
+                Logs(action='OTP', body=f'A user {user.user_id} requested for password update and [sms,whatsapp] OTPs were sent', status='danger', fee=19).save()
                 if res['status'] == 'success':
                     Otp.objects.update_or_create(user=user, defaults={'code': res["data"][0]["otp"], 'expires_at': timezone.now() + dt.timedelta(minutes=10)})
                     return {'status': 'success', 'message': 'A token has been sent to your phone'}
