@@ -388,7 +388,8 @@ class Account:
                 for doc in user.document_set.all()
             ],
             "eligible_amount": user.eligible_amount,
-            "borrow_level": user.borrow_level
+            "borrow_level": user.borrow_level,
+            "service_charge": 40 if user.borrow_level == 1 else 40
         }
         return {'status': 'success', 'content': res}
 
