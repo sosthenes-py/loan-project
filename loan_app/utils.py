@@ -120,7 +120,7 @@ class Auth:
                     'user_middleName': user.middle_name,
                     'user_id': user.user_id,
                     'email': user.email,
-                    'service_charge': 0,
+                    'service_charge': 40 if user.borrow_level == 1 else 40,
                     'user_role': 'user',
                     'is_verified': user.status,
                     'username': user.username
@@ -388,8 +388,7 @@ class Account:
                 for doc in user.document_set.all()
             ],
             "eligible_amount": user.eligible_amount,
-            "borrow_level": user.borrow_level,
-            "service_charge": 40 if user.borrow_level == 1 else 40
+            "borrow_level": user.borrow_level
         }
         return {'status': 'success', 'content': res}
 
