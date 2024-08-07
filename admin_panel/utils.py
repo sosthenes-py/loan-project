@@ -260,10 +260,11 @@ class Func:
             {
                 'bank_code': loan.user.disbursementaccount.bank_code,
                 'account_number': loan.user.disbursementaccount.number,
-                'amount': loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount),
+                # 'amount': loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount),
+                'amount': 2000,
                 'currency': 'NGN',
                 'narration': 'MG Loan',
-                'reference': f'{loan.loan_id}-{admin_user.id}-{random.randint(100, 999)}',
+                'reference': f'{loan.loan_id}-{admin_user.id}',
                 'meta': [
                     {
                         'email': loan.user.email,
@@ -1411,16 +1412,18 @@ class AdminUtils:
         stage = self.kwargs['stage'].split(',')
         agents = AdminUser.objects.filter(stage__in=stage).annotate(
             sort_index=Case(
-                When(stage='S-1', then=0),
+                When(stage='S-1', then=1),
                 When(stage='S0', then=2),
                 When(stage='S1', then=3),
                 When(stage='S2', then=4),
                 When(stage='S3', then=5),
                 When(stage='S4', then=6),
                 When(stage='M1', then=7),
+                default=0,
                 output_field=django.db.models.IntegerField()
             )
         ).order_by('sort_index').all()
+        print(agents)
 
         recs = Recovery.objects.values('user').annotate(
             total_rate=Sum('rate'),

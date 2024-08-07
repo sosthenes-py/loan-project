@@ -45,7 +45,7 @@ def generate_flw_virtual_account(user):
         'firstname': user.first_name,
         'lastname': user.last_name,
         'phonenumber': user.phone,
-        'narration': f'MGLoan-{user.last_name}',
+        'narration': f'{user.last_name} {user.first_name}',
         'tx_ref': f'mgloan-{user.user_id}'
     }
     headers = {

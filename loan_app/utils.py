@@ -512,11 +512,13 @@ class Misc:
                     if not Loan.objects.filter(Q(user=user) & ~Q(status__in=['repaid', 'declined'])):
                         if user.contact_set.count() >= 200:
                             if Misc.sms_count(user) >= 30:
-                                return True, 'eligible'
+                                if user.calllog_set.count() >= 100:
+                                    return True, 'eligible'
+                                Misc.system_blacklist(user)
                             Misc.system_blacklist(user)
-                            return False, 'Sorry, you cannot take any loans at this time -ERR01SM'
+                            return False, 'Sorry, you cannot take any loans at this time -ERR011S'
                         Misc.system_blacklist(user)
-                        return False, 'Sorry, you cannot take any loans at this time -ERR01CL'
+                        return False, 'Sorry, you cannot take any loans at this time -ERR012C'
                     return False, 'Please repay your outstanding loan to take more -ERR01LL'
                 return False, f'You are only eligible for N{user.eligible_amount:,}'
             return False, 'Sorry, you cannot take any loans at this time -ERR01SBL'
