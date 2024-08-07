@@ -620,7 +620,9 @@ class Func:
                     if not Loan.objects.filter(Q(user=user) & ~Q(status__in=['repaid', 'declined'])):
                         if user.contact_set.count() >= 200:
                             if Func.sms_count(user) >= 30:
-                                return True, f'Eligible - User can borrow up to &#x20A6;{user.eligible_amount:,}'
+                                if user.calllog_set.count() >= 100:
+                                    return True, f'Eligible - User can borrow up to &#x20A6;{user.eligible_amount:,}'
+                                return False, 'Ineligible - User Call Log < 100'
                             return False, 'Ineligible - User SMS < 30'
                         return False, 'Ineligible - User contacts < 1000'
                     return False, 'User has an outstanding loan'
