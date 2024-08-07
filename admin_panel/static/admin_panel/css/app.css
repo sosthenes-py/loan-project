@@ -79,12 +79,12 @@ a {
 	margin-left: 10px;
 	margin-bottom: 0;
 	letter-spacing: 1px;
-	color: #0d6efd
+	color: #E65100
 }
 .toggle-icon {
 	font-size: 22px;
 	cursor: pointer;
-	color: #0d6efd
+	color: #E65100
 }
 .topbar {
 	position: fixed;
@@ -211,7 +211,7 @@ a {
 	padding: 8px 15px 8px 45px
 }
 .sidebar-wrapper .metismenu .mm-active>a, .sidebar-wrapper .metismenu a:active, .sidebar-wrapper .metismenu a:focus, .sidebar-wrapper .metismenu a:hover {
-	color: #0d6efd;
+	color: #E65100;
 	text-decoration: none;
 	background: rgb(13 110 253 / .12)
 }
@@ -323,7 +323,7 @@ a {
 	border-radius: 10px;
 	bottom: 20px;
 	right: 12px;
-	background-color: #0d6efd;
+	background-color: #E65100;
 	z-index: 5
 }
 .back-to-top:hover {
@@ -442,7 +442,7 @@ a {
 	font-size: 23px
 }
 .fm-menu .list-group a:hover {
-	background: #0d6efd;
+	background: #E65100;
 	color: #fff;
 	transition: all .2s ease-out
 }
@@ -651,7 +651,7 @@ a {
 .invoice header {
 	padding: 10px 0;
 	margin-bottom: 20px;
-	border-bottom: 1px solid #0d6efd
+	border-bottom: 1px solid #E65100
 }
 .invoice .company-details {
 	text-align: right
@@ -675,7 +675,7 @@ a {
 }
 .invoice .invoice-details .invoice-id {
 	margin-top: 0;
-	color: #0d6efd
+	color: #E65100
 }
 .invoice main {
 	padding-bottom: 50px
@@ -687,7 +687,7 @@ a {
 }
 .invoice main .notices {
 	padding-left: 6px;
-	border-left: 6px solid #0d6efd;
+	border-left: 6px solid #E65100;
 	background: #e7f2ff;
 	padding: 10px
 }
@@ -713,7 +713,7 @@ a {
 .invoice table td h3 {
 	margin: 0;
 	font-weight: 400;
-	color: #0d6efd;
+	color: #E65100;
 	font-size: 1.2em
 }
 .invoice table .qty, .invoice table .total, .invoice table .unit {
@@ -723,13 +723,13 @@ a {
 .invoice table .no {
 	color: #fff;
 	font-size: 1.6em;
-	background: #0d6efd
+	background: #E65100
 }
 .invoice table .unit {
 	background: #ddd
 }
 .invoice table .total {
-	background: #0d6efd;
+	background: #E65100;
 	color: #fff
 }
 .invoice table tbody tr:last-child td {
@@ -748,9 +748,9 @@ a {
 	border-top: none
 }
 .invoice table tfoot tr:last-child td {
-	color: #0d6efd;
+	color: #E65100;
 	font-size: 1.4em;
-	border-top: 1px solid #0d6efd
+	border-top: 1px solid #E65100
 }
 .invoice table tfoot tr td:first-child {
 	border: none
@@ -892,7 +892,7 @@ a {
 	color: #4a4b4c
 }
 .chat-tab-menu .nav-pills .nav-link.active, .chat-tab-menu .nav-pills .show>.nav-link {
-	color: #0d6efd;
+	color: #E65100;
 	background-color: rgb(0 123 255 / 0%)
 }
 .chat-title {
@@ -1147,8 +1147,8 @@ a {
 	background-color: rgb(255 255 255 / 20%)
 }
 .nav-primary.nav-tabs .nav-link.active {
-	color: #0d6efd;
-	border-color: #0d6efd #0d6efd #fff
+	color: #E65100;
+	border-color: #E65100 #E65100 #fff
 }
 .nav-danger.nav-tabs .nav-link.active {
 	color: #f41127;
@@ -1666,7 +1666,7 @@ input::placeholder {
 	height: 40px;
 	line-height: 40px;
 	font-size: 24px;
-	background: #0d6efd;
+	background: #E65100;
 	box-shadow: 0 .3rem .6rem rgba(0, 0, 0, .13);
 	color: #fff;
 	text-align: center;

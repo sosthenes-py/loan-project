@@ -1,3 +1,5 @@
+import re
+
 import django.db.models
 from django.utils import timezone
 import datetime as dt
@@ -13,6 +15,7 @@ from faker import Faker
 import loan_app.api as apis
 import json
 import phonenumbers
+from django.db import transaction
 
 
 LOAN_DURATION = 5
@@ -1578,10 +1581,15 @@ class AdminUtils:
 
     def accepted_users(self):
         main_action = self.kwargs['main_action']
-        phone = Func.format_phone(self.kwargs['phone'])
+        phone = self.kwargs['phone']
         if main_action == 'add':
-            if not AcceptedUser.objects.filter(phone=phone).exists():
-                AcceptedUser(phone=phone, admin_user=self.admin_user).save()
+            existing_users = AcceptedUser.objects.all().values_list('phone', flat=True)
+            phones = re.split(r'[\n\s]+', phone.strip())
+            phones_to_add = [phone if phone[0] == '0' else f'0{phone}' for phone in phones if phone not in existing_users]
+            if phones_to_add:
+                phones_to_add = [AcceptedUser(phone=phone, admin_user=self.admin_user) for phone in phones_to_add]
+                with transaction.atomic():
+                    AcceptedUser.objects.bulk_create(phones_to_add)
                 self._status = 'success'
                 self._message = 'Added'
             else:

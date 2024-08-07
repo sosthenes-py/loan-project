@@ -43,7 +43,7 @@ $(function() {
 			type: "gradient",
 			gradient: {
 				shade: "light",
-				gradientToColors: ["#0d6efd"],
+				gradientToColors: ["#E65100"],
 				shadeIntensity: 1,
 				type: "vertical",
 				opacityFrom: .7,
@@ -53,7 +53,7 @@ $(function() {
 		},
 		markers: {
 			size: 5,
-			colors: ["#0d6efd"],
+			colors: ["#E65100"],
 			strokeColors: "#fff",
 			strokeWidth: 2,
 			hover: {
@@ -63,7 +63,7 @@ $(function() {
 		dataLabels: {
 			enabled: !1
 		},
-		colors: ["#0d6efd"],
+		colors: ["#E65100"],
 		yaxis: {
 			title: {
 				text: "Sessions"
@@ -418,7 +418,7 @@ $(function() {
 				left: 14,
 				blur: 4,
 				opacity: .12,
-				color: "#0d6efd"
+				color: "#E65100"
 			},
 			sparkline: {
 				enabled: !0
@@ -426,7 +426,7 @@ $(function() {
 		},
 		markers: {
 			size: 0,
-			colors: ["#0d6efd"],
+			colors: ["#E65100"],
 			strokeColors: "#fff",
 			strokeWidth: 2,
 			hover: {
@@ -448,7 +448,7 @@ $(function() {
 			width: 0,
 			curve: "smooth"
 		},
-		colors: ["#0d6efd"],
+		colors: ["#E65100"],
 		xaxis: {
 			categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 		},
@@ -828,7 +828,7 @@ $(function() {
 			width: 1,
 			colors: void 0
 		},
-		colors: ["#17a00e", "#0dcaf0", "#f41127", "#ffc107", "#0d6efd"],
+		colors: ["#17a00e", "#0dcaf0", "#f41127", "#ffc107", "#E65100"],
 		yaxis: {
 			show: !1
 		},
@@ -879,7 +879,7 @@ $(function() {
 		series: {
 			regions: [{
 				values: {
-					IN: "#0d6efd",
+					IN: "#E65100",
 					US: "#15b70a",
 					RU: "#f41127",
 					AU: "#ffb207"

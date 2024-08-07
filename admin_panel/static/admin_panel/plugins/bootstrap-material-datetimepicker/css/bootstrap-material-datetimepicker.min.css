@@ -30,7 +30,7 @@
 	padding: .3em
 }
 .dtp div.dtp-date, .dtp div.dtp-time {
-	background: #0d6efd;
+	background: #E65100;
 	text-align: center;
 	color: #fff;
 	padding: 10px
@@ -96,7 +96,7 @@
 	border-radius: 50%!important
 }
 .dtp table.dtp-picker-days tr>td>a.selected {
-	background: #0d6efd;
+	background: #E65100;
 	color: #fff
 }
 .dtp table.dtp-picker-days tr>th {

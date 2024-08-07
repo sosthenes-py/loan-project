@@ -93,7 +93,7 @@ $(function () {
 			curve: 'smooth',
 			width: 5
 		},
-		colors: ["#0d6efd", '#212529'],
+		colors: ["#E65100", '#212529'],
 		series: [{
 			name: "Music",
 			data: [1, 15, 56, 20, 33, 27]
@@ -161,7 +161,7 @@ $(function () {
 				show: true
 			},
 		},
-		colors: ["#0d6efd", '#f41127'],
+		colors: ["#E65100", '#f41127'],
 		title: {
 			text: 'Area Chart',
 			align: 'left',
@@ -228,7 +228,7 @@ $(function () {
 				fontSize: '14px'
 			}
 		},
-		colors: ["#212529", '#0d6efd', '#ffc107'],
+		colors: ["#212529", '#E65100', '#ffc107'],
 		xaxis: {
 			categories: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
 		},
@@ -262,7 +262,7 @@ $(function () {
 			type: 'bar',
 			height: 350
 		},
-		colors: ["#0d6efd"],
+		colors: ["#E65100"],
 		plotOptions: {
 			bar: {
 				horizontal: true,
@@ -313,7 +313,7 @@ $(function () {
 				endingShape: 'rounded'
 			}
 		},
-		colors: ["#0d6efd", "#212529"],
+		colors: ["#E65100", "#212529"],
 		title: {
 			text: 'Traffic Sources'
 		},
@@ -367,7 +367,7 @@ $(function () {
 				show: true
 			},
 		},
-		colors: ["#0d6efd", "#17a00e", "#f41127"],
+		colors: ["#E65100", "#17a00e", "#f41127"],
 		stroke: {
 			width: [0, 2, 5],
 			curve: 'smooth'
@@ -426,7 +426,7 @@ $(function () {
 			height: 330,
 			type: 'pie',
 		},
-		colors: ["#0d6efd", "#6c757d", "#17a00e", "#f41127", "#ffc107"],
+		colors: ["#E65100", "#6c757d", "#17a00e", "#f41127", "#ffc107"],
 		labels: ['Team A', 'Team B', 'Team C', 'Team D', 'Team E'],
 		responsive: [{
 			breakpoint: 480,
@@ -452,7 +452,7 @@ $(function () {
 			height: 380,
 			type: 'donut',
 		},
-		colors: ["#0d6efd", "#212529", "#17a00e", "#f41127", "#ffc107"],
+		colors: ["#E65100", "#212529", "#17a00e", "#f41127", "#ffc107"],
 		responsive: [{
 			breakpoint: 480,
 			options: {
@@ -492,7 +492,7 @@ $(function () {
 				top: 1
 			}
 		},
-		colors: ["#0d6efd", "#212529", "#17a00e"],
+		colors: ["#E65100", "#212529", "#17a00e"],
 		title: {
 			text: 'Radar Chart - Multi Series'
 		},
@@ -541,7 +541,7 @@ $(function () {
 		title: {
 			text: 'Radar with Polygon Fill'
 		},
-		colors: ["#0d6efd"],
+		colors: ["#E65100"],
 		markers: {
 			size: 4,
 			colors: ['#fff'],
@@ -629,7 +629,7 @@ $(function () {
             }
           }
         },
-		colors: ["#0d6efd", "#17a00e", "#f41127", "#ffc107"],
+		colors: ["#E65100", "#17a00e", "#f41127", "#ffc107"],
         labels: ['Apples', 'Oranges', 'Bananas', 'Berries'],
         };
 
