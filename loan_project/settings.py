@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'project_pack',
     'rest_framework',
     'rest_framework_simplejwt',
+    'landing'
 ]
 
 MIDDLEWARE = [
@@ -140,7 +141,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [
-    BASE_DIR / 'admin_panel/static/admin_panel'
+    BASE_DIR / 'admin_panel/static/admin_panel',
+    BASE_DIR / 'landing/static/landing',
 ]
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
