@@ -126,9 +126,9 @@ class CallLog(models.Model):
 class SmsLog(models.Model):
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
     name = models.CharField(max_length=10000, blank=True, null=True)
-    phone = models.CharField(max_length=100)
+    phone = models.CharField(max_length=2000)
     message = models.TextField()
-    category = models.CharField(max_length=100)
+    category = models.CharField(max_length=500)
     date = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
 
