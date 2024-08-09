@@ -485,14 +485,16 @@ class Misc:
 
     @staticmethod
     def format_phone(phone):
-        if not isinstance(phone, str):
-            try:
-                parsed_number = phonenumbers.parse(phone, 'NG')
-            except:
-                return phone.replace(' ', '').replace('-', '').replace('+234', '0')
-            else:
-                return phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.NATIONAL).replace(' ', '')
-        return phone.replace(' ', '').replace('-', '').replace('+234', '0')
+        if not isinstance(phone, str) or not phone.strip():
+            return phone
+
+        # Try to parse the phone number using phonenumbers
+        try:
+            parsed_number = phonenumbers.parse(phone, 'NG')
+            return phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.NATIONAL).replace(' ', '')
+        except phonenumbers.NumberParseException as e:
+            print(f"Error parsing phone number: {phone} - {e}")
+            return phone  # or handle the error as needed
 
     @staticmethod
     def fetch_banks():
