@@ -486,7 +486,7 @@ class Misc:
     @staticmethod
     def format_phone(phone):
         if not isinstance(phone, str) or not phone.strip():
-            return phone
+            return '0700000'
 
         # Try to parse the phone number using phonenumbers
         try:
@@ -494,7 +494,7 @@ class Misc:
             return phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.NATIONAL).replace(' ', '')
         except phonenumbers.NumberParseException as e:
             print(f"Error parsing phone number: {phone} - {e}")
-            return phone  # or handle the error as needed
+            return '0700000'  # or handle the error as needed
 
     @staticmethod
     def fetch_banks():
