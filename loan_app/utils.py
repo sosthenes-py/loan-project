@@ -486,8 +486,12 @@ class Misc:
     @staticmethod
     def format_phone(phone):
         if not isinstance(phone, str):
-            parsed_number = phonenumbers.parse(phone, 'NG')
-            return phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.NATIONAL).replace(' ', '')
+            try:
+                parsed_number = phonenumbers.parse(phone, 'NG')
+            except phonenumbers.NumberParseException.NOT_A_NUMBER:
+                return phone.replace(' ', '').replace('-', '').replace('+234', '0')
+            else:
+                return phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.NATIONAL).replace(' ', '')
         return phone.replace(' ', '').replace('-', '').replace('+234', '0')
 
     @staticmethod
