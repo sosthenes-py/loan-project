@@ -488,7 +488,7 @@ class Misc:
         if not isinstance(phone, str):
             try:
                 parsed_number = phonenumbers.parse(phone, 'NG')
-            except phonenumbers.NumberParseException.NOT_A_NUMBER:
+            except:
                 return phone.replace(' ', '').replace('-', '').replace('+234', '0')
             else:
                 return phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.NATIONAL).replace(' ', '')
