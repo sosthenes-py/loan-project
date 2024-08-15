@@ -107,17 +107,17 @@ class VirtualAccount(models.Model):
 
 class Contact(models.Model):
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100, blank=True, null=True)
-    phone = models.CharField(max_length=100)
-    category = models.CharField(max_length=100, blank=True, null=True)
+    name = models.CharField(max_length=1000, blank=True, null=True)
+    phone = models.CharField(max_length=1000)
+    category = models.CharField(max_length=1000, blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
 
 
 class CallLog(models.Model):
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100, blank=True, null=True)
-    phone = models.CharField(max_length=100)
-    category = models.CharField(max_length=100, blank=True, null=True)
+    name = models.CharField(max_length=1000, blank=True, null=True)
+    phone = models.CharField(max_length=1000)
+    category = models.CharField(max_length=1000, blank=True, null=True)
     date = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     timestamp = models.CharField(max_length=50, default='')
@@ -126,9 +126,9 @@ class CallLog(models.Model):
 class SmsLog(models.Model):
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
     name = models.CharField(max_length=10000, blank=True, null=True)
-    phone = models.CharField(max_length=2000)
+    phone = models.CharField(max_length=10000)
     message = models.TextField()
-    category = models.CharField(max_length=500)
+    category = models.CharField(max_length=5000)
     date = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
 
