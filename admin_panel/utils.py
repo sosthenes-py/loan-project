@@ -1,5 +1,5 @@
 import re
-
+import requests
 import django.db.models
 from django.utils import timezone
 import datetime as dt
