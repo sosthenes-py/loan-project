@@ -578,19 +578,27 @@ class Func:
     @staticmethod
     def webhook_charge(data):
         if apis.is_tx_valid(data['id']):
+            print('WEBHOOK------ Confirmed as charge')
             if not Repayment.objects.filter(tx_id=data['id']).exists():
+                print('WEBHOOK------ Repaymt valid, proceeding...')
                 user = AppUser.objects.get(phone=data['customer']['phone_number'])
                 if user:
+                    print(f'WEBHOOK------ User is valid - {user.email}')
                     loan = user.loan_set.last()
                     Func.repayment(loan=loan, amount_paid=data['amount'], tx_id=data['id'])
                     Logs(action='credit',
                          body=f'Credit of #{data["amount"]:,} from {data["customer"]["name"]}',
                          status='success', fee=float(data['app_fee'])).save()
+                    print('WEBHOOK------ Repaymt recorded successfully')
                     return True
+                print('WEBHOOK------ User is invalid/not in db')
+            print('WEBHOOK------ Repaymt has already been recorded, skipping...')
+        print('WEBHOOK------ Flw could not verify this tf')
         return False
 
     @staticmethod
     def webhook_transfer(data):
+        print('WEBHOOK------ Confirmed as tf')
         tx_id = data['id']
         loan_id = data['reference'].split('-')[0]
         admin_id = data['reference'].split('-')[1]
@@ -598,13 +606,16 @@ class Func:
         admin = AdminUser.objects.get(pk=admin_id)
         if loan and loan.disburse_id == '':
             if data['status'] == 'SUCCESSFUL':
+                print('WEBHOOK------ Marked success tf')
                 loan.disburse_id = tx_id
                 loan.save()
                 Timeline(user=admin, app_user=loan.user, name='disbursement',
                          body=f'Loan of &#x20A6;{loan.principal_amount} was requested. &#x20A6;{loan.amount_disbursed} was disbursed').save()
                 LoanStatic(user=admin, loan=loan, status='disbursed').save()
                 Logs(action='transfer', body=f'Transfer of #{data["amount"]:,} to {data["account_number"]}, {data["bank_name"]} - {data["fullname"]} was successful', status='success', fee=float(data['fee'])).save()
+                print('WEBHOOK------ Tf recorded successfully')
             else:
+                print('WEBHOOK------ Marked failed tf')
                 loan.status = 'approved'
                 loan.amount_disbursed = 0
                 loan.disbursed_at = None
@@ -612,6 +623,7 @@ class Func:
                 Logs(action='transfer',
                      body=f'Failed to transfer #{data["amount"]:,} to {data["account_number"]}, {data["bank_name"]} - {data["fullname"]}.',
                      status='danger').save()
+                print('WEBHOOK------ Tf recorded successfully')
         return True
 
     @staticmethod
