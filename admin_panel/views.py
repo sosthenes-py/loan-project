@@ -209,7 +209,7 @@ def git_webhook(request):
         # Log stdout and stderr
         print("STDOUT:", result.stdout)
         print("STDERR:", result.stderr)
-        return HttpResponse(f'Webhook received and deploy script executed successfully! -- STDOUT {result.stdout} ---------STDERR-----------{result.stderr}', status=200)
+        return HttpResponse(f'Webhook received and deploy script executed successfully! -- STDOUT {result.stdout} ---------STDERR----------{result.stderr}', status=200)
     except subprocess.CalledProcessError as e:
         # Log the error
         print("Error occurred:", e.stderr)
