@@ -21,7 +21,8 @@ urlpatterns = [
     path('webhook', views.webhook, name='webhook'),
     path('users/filtered/', views.accepted_users, name='accepted_users'),
     path('automations/<str:program>', views.automations),
-    path('git-webhook/', views.git_webhook)
+    path('git-webhook/', views.git_webhook),
+    path('test/', views.test, name='test')
 ]
 
 if settings.DEBUG:

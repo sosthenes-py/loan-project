@@ -236,3 +236,8 @@ def serve_verification_file(request):
         response = HttpResponse(file.read(), content_type='text/plain')
         response['Content-Disposition'] = 'inline; filename="99ECEB4229AA7782EF6C6981B96DF655.txt"'
         return response
+
+
+@csrf_exempt
+def test(request):
+    return HttpResponse("Test success")
