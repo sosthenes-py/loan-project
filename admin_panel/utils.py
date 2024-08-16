@@ -584,12 +584,16 @@ class Func:
                 user = AppUser.objects.get(phone=data['customer']['phone_number'])
                 if user:
                     print(f'WEBHOOK------ User is valid - {user.email}')
-                    loan = user.loan_set.last()
-                    Func.repayment(loan=loan, amount_paid=data['amount'], tx_id=data['id'])
-                    Logs(action='credit',
-                         body=f'Credit of #{data["amount"]:,} from {data["customer"]["name"]}',
-                         status='success', fee=float(data['app_fee'])).save()
-                    print('WEBHOOK------ Repaymt recorded successfully')
+                    try:
+                        loan = user.loan_set.last()
+                    except:
+                        print(f'WEBHOOK------ User does not have valid loans to repay, exiting..')
+                    else:
+                        Func.repayment(loan=loan, amount_paid=data['amount'], tx_id=data['id'])
+                        Logs(action='credit',
+                             body=f'Credit of #{data["amount"]:,} from {data["customer"]["name"]}',
+                             status='success', fee=float(data['app_fee'])).save()
+                        print('WEBHOOK------ Repaymt recorded successfully')
                     return True
                 print('WEBHOOK------ User is invalid/not in db')
             print('WEBHOOK------ Repaymt has already been recorded, skipping...')
