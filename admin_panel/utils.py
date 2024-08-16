@@ -589,11 +589,14 @@ class Func:
                     except:
                         print(f'WEBHOOK------ User does not have valid loans to repay, exiting..')
                     else:
-                        Func.repayment(loan=loan, amount_paid=data['amount'], tx_id=data['id'])
-                        Logs(action='credit',
-                             body=f'Credit of #{data["amount"]:,} from {data["customer"]["name"]}',
-                             status='success', fee=float(data['app_fee'])).save()
-                        print('WEBHOOK------ Repaymt recorded successfully')
+                        if loan.status in ('disbursed', 'partpayment'):
+                            Func.repayment(loan=loan, amount_paid=data['amount'], tx_id=data['id'])
+                            Logs(action='credit',
+                                 body=f'Credit of #{data["amount"]:,} from {data["customer"]["name"]}',
+                                 status='success', fee=float(data['app_fee'])).save()
+                            print('WEBHOOK------ Repaymt recorded successfully')
+                        else:
+                            print(f'WEBHOOK------ User does not have valid loans to repay, exiting..')
                     return True
                 print('WEBHOOK------ User is invalid/not in db')
             print('WEBHOOK------ Repaymt has already been recorded, skipping...')
