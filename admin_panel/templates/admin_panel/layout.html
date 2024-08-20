@@ -427,6 +427,37 @@
 	</div>
 	<!--end wrapper-->
 
+
+    <div id="modifyBankModal" tabindex="-1" class="modal fade" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content bg-primary">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modify Bank Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <div class="col-md-12">
+                        <label for="modify_bank_bank">Select Bank</label>
+                        <select id="modify_bank_bank" class="form-control">
+                            <option value="0">Loading banks...</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-12 mt-3">
+                        <label for="modify_bank_number" class="form-label">Account Number</label>
+                        <input type="number" class="form-control" id="modify_bank_number" >
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-info" style="text-transform: capitalize" onclick="modify_bank()">Modify</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     {% block switcher %}{% endblock switcher %}
 
 
@@ -613,6 +644,62 @@
              success: function (data) {
                  loadOff()
                  notify(data.status, data.message)
+             },
+             error: function (err1, err2) {
+                 loadOff()
+                 notify('error', JSON.stringify(err1))
+             },
+             beforeSend: function (xhr, settings) {
+                 xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+             }
+         })
+     }
+
+     function fetch_banks(){
+         $.ajax({
+             url: '{% url "users" %}',
+             data: {
+                 action: 'fetch_banks'
+             },
+             dataType: 'json',
+             type: 'post',
+             success: function (data) {
+                 $('#modify_bank_bank').html(data.content)
+             },
+             error: function (err1, err2) {
+                 loadOff()
+                 notify('error', JSON.stringify(err1))
+             },
+             beforeSend: function (xhr, settings) {
+                 xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+             }
+         })
+     }
+
+     function modify_bank(){
+         var number = $('#modify_bank_number').val()
+         var bank_name = $('#modify_bank_bank option:selected').text()
+         var bank_code = $('#modify_bank_bank').val()
+         loadOn()
+         $.ajax({
+             url: '{% url "users" %}',
+             data: {
+                 action: 'modify_bank',
+                 bank_code: bank_code,
+                 bank_name: bank_name,
+                 number: number,
+                 user_id: $("#selected_user_id").val()
+             },
+             dataType: 'json',
+             type: 'post',
+             success: function (data) {
+                 loadOff()
+                 notify(data.status, data.message)
+                 if(data.status === 'success'){
+                     $('#modifyBankModal').modal('hide')
+                     $('.bankdetails_number').text(number)
+                     $('.bankdetails_bank').text(bank_name)
+                 }
              },
              error: function (err1, err2) {
                  loadOff()

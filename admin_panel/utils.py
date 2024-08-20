@@ -263,8 +263,7 @@ class Func:
             {
                 'bank_code': loan.user.disbursementaccount.bank_code,
                 'account_number': loan.user.disbursementaccount.number,
-                # 'amount': loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount),
-                'amount': 2000,
+                'amount': loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount),
                 'currency': 'NGN',
                 'narration': 'MG Loan',
                 'reference': f'{loan.loan_id}-{admin_user.id}',
@@ -672,6 +671,15 @@ class Func:
         sms = user.smslog_set.values('phone').annotate(sms_count=Count('id')).values('sms_count', 'phone')
         return len(sms)
 
+    @staticmethod
+    def fetch_banks():
+        response = apis.fetch_banks()['data']
+        content = ''
+        for bank in response:
+            if 'Microfinance' not in bank['name']:
+                content += f"""<option value='{bank["code"]}'>{bank['name']}</option>"""
+        return content
+
 
 class UserUtils:
     def __init__(self, request, **kwargs):
@@ -799,6 +807,25 @@ class UserUtils:
         else:
             self._message = 'Nothing changed'
             self._status = 'info'
+
+    def modify_bank(self):
+        res = apis.fetch_account_details(self.kwargs['bank_code'], self.kwargs['number'])
+        if res['status'] == 'success':
+            res = res['data']
+            account_name = res['account_name']
+            if self.user.first_name.lower() in account_name.lower() or self.user.last_name.lower() in account_name.lower():
+                self.user.disbursementaccount.bank_name = self.kwargs['bank_name']
+                self.user.disbursementaccount.bank_code = self.kwargs['bank_code']
+                self.user.disbursementaccount.number = self.kwargs['number']
+                self.user.disbursementaccount.save()
+                self._status = 'success'
+                self._message = 'Bank updated successfully'
+            else:
+                self._status = 'error'
+                self._message = f'Account name does not match user names - {account_name}'
+        else:
+            self._status = 'error'
+            self._message = 'Invalid account details'
 
     def fetch_files_in_table(self):
         self._content2 = ''
@@ -1053,6 +1080,8 @@ class UserUtils:
                 end=self.kwargs.get('end'),
                 filters=self.kwargs.get('filters')
             )
+        elif self.action == 'fetch_banks':
+            self._content = Func.fetch_banks()
         else:
             self.user = AppUser.objects.get(user_id=self.kwargs['user_id'])
             if self.action == "get_other_details":
@@ -1084,6 +1113,8 @@ class UserUtils:
                 self.delete_user()
             elif self.action == 'fetch_call':
                 self.fetch_call()
+            elif self.action == 'modify_bank':
+                self.modify_bank()
 
     def add_table_content(self, _for='', **kwargs):
         if _for == 'all_users_table':
@@ -1234,10 +1265,10 @@ class UserUtils:
         elif _for == 'call':
             call = kwargs['call']
             if call.category == 'incoming':
-                call_class = 'primary'
+                call_class = 'secondary'
                 icon = 'phone-incoming'
             elif call.category == 'outgoing':
-                call_class = 'primary'
+                call_class = 'secondary'
                 icon = 'phone-outgoing'
             elif call.category == 'missed':
                 call_class = 'danger'
