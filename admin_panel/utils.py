@@ -2302,8 +2302,14 @@ class LoanUtils:
             self.loan = loan
             if not kwargs['single']:
                 attach_user = f"{loan.user.last_name} {loan.user.first_name}"
+                checkbox = ''
             else:
                 attach_user = ''
+                checkbox = """
+                <div class="loan-checkbox-cont">
+					<input class="form-check-input me-3 loan-checkbox border-primary border-2" type="checkbox" value="" aria-label="...">
+				</div>
+                """
 
             avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") else "/static/admin_panel/images/avatars/user.png"
 
@@ -2348,9 +2354,7 @@ class LoanUtils:
                            
                            <td>
 								<div class="d-flex align-items-center">
-									<div class="loan-checkbox-cont">
-										<input class="form-check-input me-3 loan-checkbox border-primary border-2" type="checkbox" value="" aria-label="...">
-									</div>
+									{checkbox}
 									<div class="ms-2">
 										<h6 class="mb-0 font-14 fw-bold">{loan.loan_id}
 										<span style="font-size: 11px" class="fw-bold text-{'warning' if loan.reloan == 1 else 'info'}">{'1st' if loan.reloan == 1 else f'({loan.reloan})'}</span>
