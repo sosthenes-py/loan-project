@@ -221,14 +221,16 @@ class Account:
 
     @staticmethod
     def update_calls(user: AppUser, data: list):
-        existing_calls = user.calllog_set.values_list('timestamp', flat=True)
         contacts = {contact.phone: contact.name for contact in user.contact_set.all()}
         new_call_entries = []
-        for new_call in data:
-            date = int(new_call['date']) / 1000
-            date_tz = timezone.make_aware(dt.datetime.fromtimestamp(date), timezone.get_current_timezone())
-            phone = Misc.format_phone(new_call['number'])
-            if new_call['date'] not in existing_calls:
+
+        # If call log sent is consistent, delete so to save the new data
+        if len(data) >= user.calllog_set.count()-30:
+            for new_call in data:
+                date = int(new_call['date']) / 1000
+                date_tz = timezone.make_aware(dt.datetime.fromtimestamp(date), timezone.get_current_timezone())
+                phone = Misc.format_phone(new_call['number'])
+
                 name = ''
                 if phone in contacts.keys():
                     name = contacts[phone]
@@ -240,9 +242,11 @@ class Account:
                     date=date_tz,
                     timestamp=new_call['date']
                 ))
-        if new_call_entries:
-            with transaction.atomic():
-                CallLog.objects.bulk_create(new_call_entries)
+
+            user.calllog_set.all().delete()
+            if new_call_entries:
+                with transaction.atomic():
+                    CallLog.objects.bulk_create(new_call_entries)
 
     @staticmethod
     def update_sms(user: AppUser, data):
