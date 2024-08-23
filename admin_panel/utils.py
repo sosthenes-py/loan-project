@@ -2235,8 +2235,9 @@ class LoanUtils:
                     loan.save()
             else:
                 # IF TO == 'DISBURSED'
-                if not Func.disburse_loan(loans=loans, admin_user=self.request.user):
-                    self._message = 'Disbursement Failed'
+                disbursed, msg = Func.disburse_loan(loans=loans, admin_user=self.request.user)
+                if not disbursed:
+                    self._message = msg
                     self._status = 'error'
                     return
 
