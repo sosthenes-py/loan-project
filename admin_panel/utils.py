@@ -284,13 +284,13 @@ class Func:
         # print(res)
         if res['status'] != 'success':
             print(res)
-            return False
+            return False, res['message']
         for loan in loans:
             loan.status = 'disbursed'
             loan.amount_disbursed = loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount)
             loan.disbursed_at = timezone.now()
             loan.save()
-        return True
+        return True, 'Disbursement successful'
 
     @staticmethod
     def set_progressive():
@@ -2164,8 +2164,9 @@ class LoanUtils:
                     return
 
             if to == "disbursed":
-                if not Func.disburse_loan(loans=[loan], admin_user=self.request.user):
-                    self._message = 'Disbursement Failed'
+                disbursed, msg = Func.disburse_loan(loans=[loan], admin_user=self.request.user)
+                if not disbursed:
+                    self._message = msg
                     self._status = 'error'
                     return
 
