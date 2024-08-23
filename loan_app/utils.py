@@ -65,21 +65,6 @@ class Auth:
                     user.user_id = f'MGU{user.id}{random.randint(100, 1000)}'
                     user.save()
 
-                    # if kwargs.get('file'):
-                    #     Document(
-                    #         user=user,
-                    #         file=kwargs.get('file'),
-                    #         description='User ID',
-                    #     ).save()
-                    #
-                    # if kwargs.get('avatar'):
-                    #     Avatar(
-                    #         user=user,
-                    #         file=kwargs.get('avatar'),
-                    #     ).save()
-
-
-
                     DisbursementAccount(
                         user=user,
                         bank_name=kwargs['bank_details']['bank_name'],
@@ -521,13 +506,13 @@ class Misc:
                 if amount <= user.eligible_amount:
                     if not Loan.objects.filter(Q(user=user) & ~Q(status__in=['repaid', 'declined'])):
                         if user.contact_set.count() >= 200:
-                            if Misc.sms_count(user) >= 30:
+                            if Misc.sms_count(user) >= 20:
                                 if user.calllog_set.count() >= 100:
                                     return True, 'eligible'
-                                Misc.system_blacklist(user)
-                            Misc.system_blacklist(user)
+                                Misc.system_blacklist(user, reason=f'Call logs: {user.calllog_set.count()}/100')
+                            Misc.system_blacklist(user, reason=f'SMS: {Misc.sms_count(user)}/20')
                             return False, 'Sorry, you cannot take any loans at this time -ERR011S'
-                        Misc.system_blacklist(user)
+                        Misc.system_blacklist(user, reason=f'Contacts: {user.contact_set.count()}/200')
                         return False, 'Sorry, you cannot take any loans at this time -ERR012C'
                     return False, 'Please repay your outstanding loan to take more -ERR01LL'
                 return False, f'You are only eligible for N{user.eligible_amount:,}'
@@ -535,13 +520,13 @@ class Misc:
         return False, 'Sorry, you cannot take any loans at this time -ERR02AU'
 
     @staticmethod
-    def system_blacklist(user: AppUser):
+    def system_blacklist(user: AppUser, reason='overdue'):
         if user.is_blacklisted():
             ub = Blacklist.objects.get(user=user)
             if ub.expires_at:
                 ub.expires_at = timezone.now() + dt.timedelta(days=10)
         else:
-            Blacklist(user=user, expires_at=timezone.now()+dt.timedelta(days=10)).save()
+            Blacklist(user=user, expires_at=timezone.now()+dt.timedelta(days=10), reason=reason).save()
 
     @staticmethod
     def system_whitelist(user: AppUser):
