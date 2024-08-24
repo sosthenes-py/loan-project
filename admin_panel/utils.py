@@ -1684,6 +1684,7 @@ class AdminUtils:
             if rows > 0:
                 sn += 1
                 self.add_table_content(_for='accepted_users', row=user, sn=sn)
+                rows -= 1
 
     def modify_admin(self):
         admin = AdminUser.objects.get(pk=self.kwargs['user_id'])
