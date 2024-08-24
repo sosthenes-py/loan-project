@@ -645,7 +645,7 @@ class Func:
                                     return True, f'Eligible - User can borrow up to &#x20A6;{user.eligible_amount:,}'
                                 return False, 'Ineligible - User Call Log < 100'
                             return False, 'Ineligible - User SMS < 20'
-                        return False, 'Ineligible - User contacts < 1000'
+                        return False, 'Ineligible - User contacts < 200'
                     return False, 'User has an outstanding loan'
                 return False, f'User can only loan up to N{user.eligible_amount:,}'
             return False, 'Ineligible - User was blacklisted by system'
