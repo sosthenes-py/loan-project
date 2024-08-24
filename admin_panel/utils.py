@@ -1979,7 +1979,12 @@ class AdminUtils:
         elif self.action == 'accepted_user':
             self.accepted_users()
         elif self.action == 'fetch_accepted_users':
-            self.fetch_accepted_users()
+            self.fetch_accepted_users(
+                rows=self.kwargs.get('rows', 15),
+                start=self.kwargs.get('start'),
+                end=self.kwargs.get('end'),
+                filters=self.kwargs.get('filters'),
+            )
 
     @staticmethod
     def overdue_days(loan):
