@@ -78,18 +78,18 @@ class Func:
         if loan.disbursed_at is not None and loan.status in ['disbursed', 'partpayment']:
             due_date = loan.disbursed_at + dt.timedelta(days=loan.duration)
             diff = timezone.now() - due_date
-            if diff.days == -1:
-                return 'S-1'
-            elif diff.days == 0:
+            if diff.days == 0:
                 return 'S0'
-            elif 1 <= diff.days <= 3:
+            elif diff.days == 1:
                 return 'S1'
-            elif 4 <= diff.days <= 7:
+            elif 2 <= diff.days <= 3:
                 return 'S2'
-            elif 8 <= diff.days <= 15:
+            elif 4 <= diff.days <= 7:
                 return 'S3'
-            elif 16 <= diff.days <= 30:
+            elif 8 <= diff.days <= 15:
                 return 'S4'
+            elif 16 <= diff.days <= 30:
+                return 'S5'
             elif diff.days > 30:
                 return 'M1'
         return ''
@@ -398,7 +398,7 @@ class Func:
                 Q(disbursed_at__isnull=False) & Q(status='disbursed') & ~Q(pk__in=exempt_loans)).all()
         else:
             loans = Loan.objects.filter(Q(disbursed_at__isnull=False) & Q(status='disbursed')).all()
-        stages = ['S-1', 'S0', 'S1', 'S2', 'S3', 'S4', 'M1']
+        stages = ['S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'M1']
         staged_loans = {}
         for stage in stages:
             staged_loans[stage] = []
@@ -431,17 +431,17 @@ class Func:
         """
         collections = Collection.objects.all()
         for col in collections:
-            if col.stage in ['S-1', 'S0']:
+            if col.stage in ['S0', 'S1']:
                 col.delete()
             else:
                 # CLEAR COLLECTIONS AT THE LAST DAY OF EACH STAGE
-                if col.stage == 'S1' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 3:
+                if col.stage == 'S2' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 3:
                     col.delete()
-                elif col.stage == 'S2' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 7:
+                elif col.stage == 'S3' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 7:
                     col.delete()
-                elif col.stage == 'S3' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 15:
+                elif col.stage == 'S4' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 15:
                     col.delete()
-                elif col.stage == 'S4' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 30:
+                elif col.stage == 'S5' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 30:
                     col.delete()
 
     @staticmethod
@@ -1405,12 +1405,12 @@ class AdminUtils:
     def fetch_assigned(self, loan):
         collectors = AdminUser.objects.filter(level='staff').annotate(
             sort_index=Case(
-                When(stage='S-1', then=1),
-                When(stage='S0', then=2),
-                When(stage='S1', then=3),
-                When(stage='S2', then=4),
-                When(stage='S3', then=5),
-                When(stage='S4', then=6),
+                When(stage='S0', then=1),
+                When(stage='S1', then=2),
+                When(stage='S2', then=3),
+                When(stage='S3', then=4),
+                When(stage='S4', then=5),
+                When(stage='S5', then=6),
                 When(stage='M1', then=7),
                 output_field=django.db.models.IntegerField()
             )
@@ -1467,12 +1467,12 @@ class AdminUtils:
         stage = self.kwargs['stage'].split(',')
         agents = AdminUser.objects.filter(stage__in=stage).annotate(
             sort_index=Case(
-                When(stage='S-1', then=1),
-                When(stage='S0', then=2),
-                When(stage='S1', then=3),
-                When(stage='S2', then=4),
-                When(stage='S3', then=5),
-                When(stage='S4', then=6),
+                When(stage='S0', then=1),
+                When(stage='S1', then=2),
+                When(stage='S2', then=3),
+                When(stage='S3', then=4),
+                When(stage='S4', then=5),
+                When(stage='S5', then=6),
                 When(stage='M1', then=7),
                 default=0,
                 output_field=django.db.models.IntegerField()
@@ -2656,7 +2656,7 @@ class Analysis:
         self._result = final_list
 
     def get_collections(self,
-                        stage='S-1,S0',
+                        stage='S0,S1',
                         start=f'{dt.date.today() - dt.timedelta(days=500):%Y-%m-%d}',
                         end=f'{dt.date.today():%Y-%m-%d}',
                         ):
@@ -3014,18 +3014,18 @@ class Analysis:
         due_date = disbursed_at + dt.timedelta(days=duration)
         diff = timezone.now() - due_date
         stage = 'S0'
-        if diff.days == -1:
-            stage = 'S-1'
-        elif diff.days == 0:
+        if diff.days == 0:
             stage = 'S0'
-        elif 1 <= diff.days <= 3:
+        elif diff.days == 1:
             stage = 'S1'
-        elif 4 <= diff.days <= 7:
+        elif 2 <= diff.days <= 3:
             stage = 'S2'
-        elif 8 <= diff.days <= 15:
+        elif 4 <= diff.days <= 7:
             stage = 'S3'
-        elif 16 <= diff.days <= 30:
+        elif 8 <= diff.days <= 15:
             stage = 'S4'
+        elif 16 <= diff.days <= 30:
+            stage = 'S5'
         elif diff.days > 30:
             stage = 'M1'
         if cat == stage:
