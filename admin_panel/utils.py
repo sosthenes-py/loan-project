@@ -717,7 +717,7 @@ class UserUtils:
         rows = int(rows)
         for self.user in self.users:
             if rows > 0:
-                avatar = '/static/admin_panel/images/avatars/user.png' if not hasattr(self.user, 'avatar') else f'https://loanproject.fra1.digitaloceanspaces.com/user_docs/{self.user.avatar.name}'
+                avatar = '/static/admin_panel/images/avatars/user.png' if not hasattr(self.user, 'avatar') or self.request.user.stage in ('S0', 'S1') else f'https://loanproject.fra1.digitaloceanspaces.com/user_docs/{self.user.avatar.name}'
 
                 self.add_table_content(_for='all_users_table', avatar=avatar)
                 rows -= 1
@@ -940,6 +940,8 @@ class UserUtils:
     def fetch_sms(self, which):
         self.user: AppUser
         logs = self.user.smslog_set.order_by('date').all()
+        if self.request.user.stage in ('S0', 'S1'):
+            logs = None
         if logs:
             logs_dict = {}
             for log in logs:
@@ -1001,6 +1003,8 @@ class UserUtils:
         contacts = self.user.contact_set.order_by('name').all()
         content = {}
         self._content = ''
+        if self.request.user.stage in ('S0', 'S1'):
+            contacts = None
         if contacts:
             for contact in contacts:
                 self.add_table_content(_for='contact', contact=contact)
@@ -1029,6 +1033,8 @@ class UserUtils:
         calls = self.user.calllog_set.order_by('-date').all()
         content = {}
         self._content = ''
+        if self.request.user.stage in ('S0', 'S1'):
+            calls = None
         if calls:
             for call in calls:
                 self.add_table_content(_for='call', call=call)
@@ -2314,7 +2320,7 @@ class LoanUtils:
             else:
                 attach_user = ''
 
-            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") else "/static/admin_panel/images/avatars/user.png"
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") or self.request.user.stage in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
 
             status_text, status_class = Func.get_loan_status(loan)
             if status_text == 'disbursed' and loan.disburse_id == '':
@@ -2424,7 +2430,7 @@ class LoanUtils:
             loan = repay.loan
             self.loan = loan
 
-            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") else "/static/admin_panel/images/avatars/user.png"
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") or self.request.user.stage in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
 
             if repay.total_paid < repay.amount_due:
                 status_text = 'Partial'
@@ -2483,7 +2489,7 @@ class LoanUtils:
             waive = kwargs['waive']
             self.loan, loan = waive.loan, waive.loan
 
-            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") else "/static/admin_panel/images/avatars/user.png"
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") or self.request.user.stage in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
 
             self._content += f"""
                         <tr data-user_id='{loan.user.user_id}' 
