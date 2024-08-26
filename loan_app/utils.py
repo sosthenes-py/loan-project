@@ -39,46 +39,49 @@ class Auth:
         if not AppUser.objects.filter(phone=phone).exists():
             if not AppUser.objects.filter(bvn=kwargs['bvn']).exists():
                 if not DisbursementAccount.objects.filter(bank_name=kwargs['bank_details']['bank_name'], number=kwargs['bank_details']['account_number']).exists():
-                    user = AppUser(
-                        first_name=kwargs['first_name'],
-                        last_name=kwargs['last_name'],
-                        middle_name=kwargs.get('middle_name'),
-                        email=kwargs['email'],
-                        email2=kwargs['alternative_email'],
-                        marital_status=kwargs['marital_status'],
-                        nationality=kwargs['nationality'],
-                        password=make_password(kwargs['password']),
-                        phone=phone,
-                        username=phone,
-                        phone2=kwargs['alternative_phone'],
-                        bvn=kwargs['bvn'],
-                        address=kwargs['address'],
-                        dob=dt.datetime.strptime(kwargs['dob'], '%Y-%m-%d'),
-                        gender=kwargs['gender'],
-                        education=kwargs['education'],
-                        children=kwargs['children'],
-                        employment=kwargs['employment'],
-                        state=kwargs['state'],
-                        lga=kwargs['lga'],
-                    )
-                    user.save()
-                    user.user_id = f'MGU{user.id}{random.randint(100, 1000)}'
-                    user.save()
+                    try:
+                        with transaction.atomic():
+                            user = AppUser(
+                                first_name=kwargs['first_name'],
+                                last_name=kwargs['last_name'],
+                                middle_name=kwargs.get('middle_name'),
+                                email=kwargs['email'],
+                                email2=kwargs['alternative_email'],
+                                marital_status=kwargs['marital_status'],
+                                nationality=kwargs['nationality'],
+                                password=make_password(kwargs['password']),
+                                phone=phone,
+                                username=phone,
+                                phone2=kwargs['alternative_phone'],
+                                bvn=kwargs['bvn'],
+                                address=kwargs['address'],
+                                dob=dt.datetime.strptime(kwargs['dob'], '%Y-%m-%d'),
+                                gender=kwargs['gender'],
+                                education=kwargs['education'],
+                                children=kwargs['children'],
+                                employment=kwargs['employment'],
+                                state=kwargs['state'],
+                                lga=kwargs['lga'],
+                            )
+                            user.save()
+                            user.user_id = f'MGU{user.id}{random.randint(100, 1000)}'
+                            user.save()
 
-                    DisbursementAccount(
-                        user=user,
-                        bank_name=kwargs['bank_details']['bank_name'],
-                        number=kwargs['bank_details']['account_number'],
-                        bank_code=kwargs['bank_details']['bank_code']
-                    ).save()
-                    Account.update_contacts(user, kwargs['user_contacts'])
-                    # Account.update_sms(user, kwargs['user_sms'])
-                    # Account.update_calls(user, kwargs['user_calls'])
-                    Account.create_virtual_account(user)
+                            DisbursementAccount(
+                                user=user,
+                                bank_name=kwargs['bank_details']['bank_name'],
+                                number=kwargs['bank_details']['account_number'],
+                                bank_code=kwargs['bank_details']['bank_code']
+                            ).save()
+                            Account.update_contacts(user, kwargs['user_contacts'])
+                            # Account.update_sms(user, kwargs['user_sms'])
+                            # Account.update_calls(user, kwargs['user_calls'])
+                            Account.create_virtual_account(user)
 
-                    refresh = RefreshToken.for_user(user)
-                    access_token = str(refresh.access_token)
-
+                            refresh = RefreshToken.for_user(user)
+                            access_token = str(refresh.access_token)
+                    except:
+                        return {'status': 'error', 'message': 'An error occurred, please check your BVN or try again later'}
                     return {'status': 'success', 'message': 'Account created', 'user_id': user.user_id, 'access_token': access_token}
                 return {'status': 'error', 'message': 'User already exists -ERR101BA'}
             return {'status': 'error', 'message': 'User already exists -ERR102BV'}

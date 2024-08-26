@@ -1583,32 +1583,33 @@ class AdminUtils:
         response['loans_count'] = Collection.objects.filter(user=operator).count()
         response['repayments_count'] = Repayment.objects.filter(admin_user=operator).count()
         response['notes_count'] = Note.objects.filter(user=operator).count()
-        response['mini_show'] = f"""
-                <ul class="list-group">
+        if cols:
+            response['mini_show'] = f"""
                     <ul class="list-group">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div class="col-6 pe-0">Total</div>
-                            <div class="col-6 text-end">
-                                <span class="badge bg-primary p-2">{cols[0]['total_count']}</span>
-                                <span class="badge bg-secondary p-2">&#x20A6; {cols[0]['total_held']:,}</span>
-                            </div>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div class="col-6 pe-0">New</div>
-                            <div class="col-6 text-end">
-                                <span class="badge bg-primary p-2">{cols[0]['new_count']}</span>
-                                <span class="badge bg-secondary p-2">&#x20A6; {cols[0]['new_held']:,}</span>
-                            </div>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div class="col-6 pe-0">Repaid</div>
-                            <div class="col-6 text-end">
-                                <span class="badge bg-primary p-2">{cols[0]['paid_count']}</span>
-                                <span class="badge bg-secondary p-2">&#x20A6; {cols[0]['paid_sum']:,}</span>
-                            </div>
-                        </li>
-                    </ul>
-        """
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="col-6 pe-0">Total</div>
+                                <div class="col-6 text-end">
+                                    <span class="badge bg-primary p-2">{cols[0]['total_count']}</span>
+                                    <span class="badge bg-secondary p-2">&#x20A6; {cols[0]['total_held']:,}</span>
+                                </div>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="col-6 pe-0">New</div>
+                                <div class="col-6 text-end">
+                                    <span class="badge bg-primary p-2">{cols[0]['new_count']}</span>
+                                    <span class="badge bg-secondary p-2">&#x20A6; {cols[0]['new_held']:,}</span>
+                                </div>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="col-6 pe-0">Repaid</div>
+                                <div class="col-6 text-end">
+                                    <span class="badge bg-primary p-2">{cols[0]['paid_count']}</span>
+                                    <span class="badge bg-secondary p-2">&#x20A6; {cols[0]['paid_sum']:,}</span>
+                                </div>
+                            </li>
+                        </ul>
+            """
         self._content = response
 
     def add_admin(self):
