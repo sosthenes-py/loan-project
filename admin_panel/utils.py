@@ -42,9 +42,9 @@ class Func:
         due_date = disbursed_at + dt.timedelta(days=duration)
         diff = timezone.now() - due_date
         if obj:
-            return diff + dt.timedelta(days=1)
+            return diff
         else:
-            return diff.days+1
+            return diff.days
 
     @staticmethod
     def get_loan_status(loan):
@@ -1483,7 +1483,6 @@ class AdminUtils:
                 output_field=django.db.models.IntegerField()
             )
         ).order_by('sort_index').all()
-        print(agents)
 
         recs = Recovery.objects.values('user').annotate(
             total_rate=Sum('rate'),
@@ -2569,7 +2568,7 @@ class LoanUtils:
     def overdue_days(self):
         if self.loan.disbursed_at:
             diff = Func.overdue_days(self.loan.disbursed_at, self.loan.duration, obj=True)
-            if diff.days < -1:
+            if diff.days < 0:
                 return '-' if self.loan.status != 'repaid' else f'<span class="fw-bold text-success">repaid:</span> {self.loan.repaid_at:%b %d}'
             return diff.days if self.loan.status != 'repaid' else f'<span class="fw-bold text-success">repaid:</span> {self.loan.repaid_at:%b %d}'
         return '-'
