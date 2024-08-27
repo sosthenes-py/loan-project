@@ -146,7 +146,7 @@ class Loan(models.Model):
     amount_due = models.FloatField(max_length=10, default=0)
     # amount_due = principal amount (overdue charges will accumulate here too)
     amount_paid = models.FloatField(max_length=10, default=0)
-    duration = models.IntegerField(default=5)
+    duration = models.IntegerField(default=4)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     disbursed_at = models.DateTimeField(blank=True, null=True)

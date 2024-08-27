@@ -18,7 +18,7 @@ import phonenumbers
 from django.db import transaction
 
 
-LOAN_DURATION = 5
+LOAN_DURATION = 4
 LEVEL1_BASE_AMOUNT = 10000
 LEVEL2_BASE_AMOUNT = 20000
 LEVEL3_BASE_AMOUNT = 50000
