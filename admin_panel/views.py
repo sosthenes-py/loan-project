@@ -56,6 +56,10 @@ def register(request):
 
 @login_required
 def dashboard(request):
+    if request.user.level == 'admin':
+        return redirect('analysis')
+    elif request.user.level != 'super admin':
+        return redirect('loans')
     return render(request, 'admin_panel/dashboard.html')
 
 

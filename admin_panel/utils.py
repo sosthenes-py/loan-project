@@ -38,16 +38,18 @@ class Func:
             return f'0{num}'
 
     @staticmethod
-    def overdue_days(disbursed_at, duration):
+    def overdue_days(disbursed_at, duration, obj=False):
         due_date = disbursed_at + dt.timedelta(days=duration)
         diff = timezone.now() - due_date
-        return diff.days
+        if obj:
+            return diff + dt.timedelta(days=1)
+        else:
+            return diff.days+1
 
     @staticmethod
     def get_loan_status(loan):
         if loan.disbursed_at is not None:
-            due_date = loan.disbursed_at + dt.timedelta(days=loan.duration)
-            diff = timezone.now() - due_date
+            diff = Func.overdue_days(loan.disbursed_at, loan.duration, obj=True)
             if diff.days == 0:
                 status = 'due'
             elif diff.days > 0 and loan.amount_paid < loan.amount_due:
@@ -76,8 +78,7 @@ class Func:
     @staticmethod
     def get_stage(loan):
         if loan.disbursed_at is not None and loan.status in ['disbursed', 'partpayment']:
-            due_date = loan.disbursed_at + dt.timedelta(days=loan.duration)
-            diff = timezone.now() - due_date
+            diff = Func.overdue_days(loan.disbursed_at, loan.duration, obj=True)
             if diff.days == 0:
                 return 'S0'
             elif diff.days == 1:
@@ -1003,8 +1004,6 @@ class UserUtils:
         contacts = self.user.contact_set.order_by('name').all()
         content = {}
         self._content = ''
-        if self.request.user.stage in ('S0', 'S1'):
-            contacts = None
         if contacts:
             for contact in contacts:
                 self.add_table_content(_for='contact', contact=contact)
@@ -2088,10 +2087,13 @@ class LoanUtils:
                                 if Func.get_loan_status(loan)[0] == 'overdue' and loan.status != 'repaid':
                                     self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
                             elif loan.status == 'disbursed':
-                                if 'disbursed' in statuses and overdue_days < 0:
+                                if 'disbursed' in statuses and overdue_days <= 0:
+                                    self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
+                                elif 'disbursed' in statuses and len(statuses) > 1:
                                     self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
                             elif loan.status in statuses:
                                 self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
+
                             rows -= 1
         else:
             self.user = AppUser.objects.get(user_id=self.kwargs['user_id'])
@@ -2320,7 +2322,7 @@ class LoanUtils:
             else:
                 attach_user = ''
 
-            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") or self.request.user.stage in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.request.user.stage not in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
 
             status_text, status_class = Func.get_loan_status(loan)
             if status_text == 'disbursed' and loan.disburse_id == '':
@@ -2430,7 +2432,7 @@ class LoanUtils:
             loan = repay.loan
             self.loan = loan
 
-            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") or self.request.user.stage in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.request.user.stage not in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
 
             if repay.total_paid < repay.amount_due:
                 status_text = 'Partial'
@@ -2489,7 +2491,7 @@ class LoanUtils:
             waive = kwargs['waive']
             self.loan, loan = waive.loan, waive.loan
 
-            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") or self.request.user.stage in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.request.user.stage not in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
 
             self._content += f"""
                         <tr data-user_id='{loan.user.user_id}' 
@@ -2566,9 +2568,8 @@ class LoanUtils:
                 self.waive_loan()
 
     def overdue_days(self):
-        if self.loan.disbursed_at is not None:
-            due_date = self.loan.disbursed_at + dt.timedelta(days=self.loan.duration)
-            diff = timezone.now() - due_date
+        if self.loan.disbursed_at:
+            diff = Func.overdue_days(self.loan.disbursed_at, self.loan.duration, obj=True)
             if diff.days < -1:
                 return '-' if self.loan.status != 'repaid' else f'<span class="fw-bold text-success">repaid:</span> {self.loan.repaid_at:%b %d}'
             return diff.days if self.loan.status != 'repaid' else f'<span class="fw-bold text-success">repaid:</span> {self.loan.repaid_at:%b %d}'
@@ -3009,16 +3010,14 @@ class Analysis:
 
     @staticmethod
     def is_in_progressive_category(disbursed_at, day):
-        due_date = disbursed_at + dt.timedelta(days=LOAN_DURATION)
-        diff = timezone.now() - due_date
+        diff = Func.overdue_days(disbursed_at, LOAN_DURATION, obj=True)
         if diff.days == day:
             return True
         return False
 
     @staticmethod
     def is_in_category(disbursed_at, cat, duration):
-        due_date = disbursed_at + dt.timedelta(days=duration)
-        diff = timezone.now() - due_date
+        diff = Func.overdue_days(disbursed_at, duration, obj=True)
         stage = 'S0'
         if diff.days == 0:
             stage = 'S0'

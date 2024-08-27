@@ -148,7 +148,7 @@
 						</div>
 						<div class="menu-title">Home</div>
 					</a>
-                    {% if user.level == 'admin' or user.level == 'super admin' %}
+                    {% if user.level == 'super admin' %}
 					<ul>
 						<li> <a href="{% url 'dashboard' %}"><i class="bx bx-right-arrow-alt"></i>Dashboard</a>
 						</li>
@@ -215,7 +215,7 @@
 						<div class="menu-title">Other Menu</div>
 					</a>
 
-                    {% if user.level != 'admin' %}
+                    {% if user.level != 'admin' and user.level != 'staff' %}
                      <ul>
 						<li> <a href="{% url 'repayments' %}"><i class="bx bx-right-arrow-alt"></i>Repayments</a>
 						</li>

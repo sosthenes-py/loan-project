@@ -56,6 +56,133 @@
     <div class="page-wrapper">
         <div class="page-content">
 
+
+
+
+{% if user.level == 'staff' or user.level == 'team leader' %}
+{#------------   COLLECTORS DATA ANALYSIS#}
+                <div class="row row-cols-1 row-cols-md-12 row-cols-xl-12 mb-5">
+					<div class="">
+						<div class="card radius-10">
+                            <div class="pt-3 ps-3 pb-0" style="display: inline-block">
+                                <p style="float: left" class="fw-bold fs-6">Collectors Data</p>
+
+                            </div>
+                            <div style="margin-bottom: -1em; width: 100%;">
+                                <div style="float: right; width: 25%; display: inline-block" class="pe-4">
+                                    <div style="width: 40%; float: left">
+                                        <label for="cda_start">From:</label>
+                                        <input type="date" id="cda_start" class="me-2" value="" >
+                                    </div>
+
+                                    <div style="width: 40%; float: right">
+                                        <label for="cda_end">To:</label>
+                                        <input type="date" id="cda_end" class="me-2" value="" readonly>
+                                    </div>
+                                    <div class="mt-3" style="width: 30%; float: right">
+                                        <button id="cda_search" type="button" class="btn btn-primary px-3 radius-30" onclick="get_analysis('cda')">Search</button>
+                                    </div>
+
+                                </div>
+
+                                <div style="width: 70%; float: left" class="d-flex align-items-center gap-2 mb-1">
+                                    <div class="form-check">
+
+                                        <label class="form-check-label fw-bold" for="flexRadioDefault1">
+                                          Collection Stage:
+                                        </label>
+                                      </div>
+                                      {% if user.level == 'super admin' %}
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="S0,S1,S2,S3,S4,S5,M1" checked>
+                                        <label class="form-check-label" for="flexRadioSuccess">
+                                          All
+                                        </label>
+                                      </div>
+                                      {% endif %}
+
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="S0">
+                                        <label class="form-check-label" for="flexRadioWarning">
+                                          S0 (0)
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="S1">
+                                        <label class="form-check-label" for="flexRadioDark">
+                                          S1 (1)
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="S2">
+                                        <label class="form-check-label" for="flexRadioDark">
+                                          S2 (2-3)
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="S3">
+                                        <label class="form-check-label" for="flexRadioDark">
+                                          S3 (4-7)
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="S4">
+                                        <label class="form-check-label" for="flexRadioDark">
+                                          S4 (8-15)
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="S5">
+                                        <label class="form-check-label" for="flexRadioDark">
+                                          S5 (16-30)
+                                        </label>
+                                      </div>
+                                      <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="M1">
+                                        <label class="form-check-label" for="flexRadioDark">
+                                          M1 (31+)
+                                        </label>
+                                      </div>
+
+                                </div>
+
+
+                            </div>
+
+
+
+                            <hr>
+							<div class="rdp-table-container">
+								<table class="table table-bordered mb-0" >
+									<thead class="table-dark rdp-thead">
+										<tr>
+											<th scope="col" class="rdp-th">Account</th>
+											<th scope="col" class="rdp-th">CIQ</th>
+											<th scope="col" class="rdp-th">New</th>
+											<th scope="col" class="rdp-th">Amount Held</th>
+											<th scope="col" class="rdp-th">Paid</th>
+                                            <th scope="col" class="rdp-th">PartlyPaid</th>
+                                            <th scope="col" class="rdp-th">Paid Rate</th>
+                                            <th scope="col" class="rdp-th">Amount Paid</th>
+                                            <th scope="col" class="rdp-th">Amt Paid Rate</th>
+                                            <th scope="col" class="rdp-th">Notes</th>
+										</tr>
+									</thead>
+									<tbody id="cda_show" class="rdp-tbody">
+
+									</tbody>
+								</table>
+							</div>
+
+						</div>
+					</div>
+				</div>
+{% endif %}
+
+
+
+
+
             <!--end row-->
 
             <div class="card radius-10">
@@ -77,7 +204,7 @@
                             <div class="me-2">
                                 <label for="history_rows" class="form-label me-1">Rows:</label>
                                 <select id="history_rows" class="form-select d-inline-block" style="width: auto;">
-                                    <option value="15">15</option>
+                                    <option selected value="25">25</option>
                                     <option value="50">50</option>
                                     <option value="200">200</option>
                                     <option value="500">500</option>
@@ -1462,6 +1589,69 @@
             return `${year}-${month}-${day}`;
         }
 
+            function get_current_day(cc = 1) {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + cc).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            function get_analysis(fetch='cda'){
+                var items = fetch.split(',')
+                {#loadOn()#}
+                $.ajax({
+                    url: '{% url "analysis" %}',
+                    data: {
+                        action: 'get_analysis',
+                        fetch: fetch,
+                        cda_start: $('#cda_start').val(),
+                        cda_end: $('#cda_end').val(),
+                        cda_stage: get_cda_stage()
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        $.each(items, function (index, value){
+                            if(value !== 'crc'){
+                                $(`#${value}_show`).html(data.content[value])
+                            }
+                        })
+                        update_crc_chart(data.content['crc']['x'], data.content['crc']['y'])
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            }
+
+            function get_cda_stage(){
+                const stage = '{{ user.stage }}'
+                const level = '{{ user.level }}'
+                if(level === 'super admin'){
+                    return $('input[name="cda_stage"]:checked').val();
+                }else{
+                    return stage
+                }
+
+            }
+
+            $('input[name="cda_stage"]').each(function (){
+                const value = $(this).val()
+                const level = '{{ user.level }}'
+                const stage = '{{ user.stage }}'
+                if(value !== stage && level !== 'super admin'){
+                    $(this).prop('disabled', true)
+                }else{
+                    $(this).prop('checked', true)
+                }
+            })
+
         $('#history_month_end').change(function () {
             var start_date = new Date($("#history_month_start").val())
             var end_date = new Date($(this).val())
@@ -1536,6 +1726,7 @@
                     })
 
                 } else {
+                    get_analysis('cda')
                     $.ajax({
                         url: "{% url 'operators' %}",
                         dataType: "json",
@@ -1831,6 +2022,8 @@
         $(function () {
             $('#history_month_start').val(get_current_month(-1))
             $('#history_month_end').val(get_current_month())
+            $('#cda_start').val(get_current_day(-1))
+            $('#cda_end').val(get_current_day())
 
             start()
 
