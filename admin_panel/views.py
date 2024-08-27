@@ -226,7 +226,7 @@ def automations(request, program):
         hour = dt.datetime.now().hour
         if program == 'progressive' and hour >= 23:
             utils.Func.set_progressive()
-        elif program == 'collection' and hour == 0:
+        elif program == 'collection':
             utils.Func.set_collectors()
         elif program == 'recovery':
             utils.Func.set_recovery()
