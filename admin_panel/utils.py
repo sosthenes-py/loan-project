@@ -1854,7 +1854,7 @@ class AdminUtils:
                         <td>&#x20A6;{loan.amount_due:,}</td>
                         <td>&#x20A6;{loan.amount_paid:,.2f} {'<span class="rounded-pill badge text-bg-dark">waive</span>' if loan.waive_set.exists() else ''}</td>
                         <td>{loan.disbursed_at:%b %d, %Y}</td>
-                        <td>{AdminUtils.get_due_date(loan)}</td>
+                        <td>{Func.get_due_date(loan)}</td>
                         <td>{AdminUtils.overdue_days(loan)}</td>
                         <td>
                             <div class='badge rounded-pill w-100 text-bg-{status_class}'>{status_text.title()} {Func.get_stage(loan)}</div>
@@ -1996,8 +1996,7 @@ class AdminUtils:
     @staticmethod
     def overdue_days(loan):
         if loan.disbursed_at is not None:
-            due_date = loan.disbursed_at + dt.timedelta(days=loan.duration)
-            diff = timezone.now() - due_date
+            diff = Func.overdue_days(loan.disbursed_at, loan.duration, obj=True)
             if diff.days < -1:
                 return '-' if loan.status != 'repaid' else f'repaid: {loan.repaid_at:%b %d}'
             return diff.days if loan.status != 'repaid' else f'repaid: {loan.repaid_at:%b %d}'
@@ -3018,7 +3017,7 @@ class Analysis:
     @staticmethod
     def is_in_category(disbursed_at, cat, duration):
         diff = Func.overdue_days(disbursed_at, duration, obj=True)
-        stage = 'S0'
+        stage = 'A'
         if diff.days == 0:
             stage = 'S0'
         elif diff.days == 1:
