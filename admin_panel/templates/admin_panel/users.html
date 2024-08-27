@@ -2320,7 +2320,8 @@
                     url: '{% url "users" %}',
                     data: {
                         user_id: user_id,
-                        action: 'blacklist'
+                        action: 'blacklist',
+                        main_action: $(this).text()
                     },
                     dataType: 'json',
                     type: 'post',

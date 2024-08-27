@@ -171,9 +171,14 @@ class Loan(models.Model):
 
 class Blacklist(models.Model):
     user = models.OneToOneField(AppUser, on_delete=models.CASCADE)
-    reason = models.CharField(max_length=10, default='overdue')
+    reason = models.CharField(max_length=100, default='default')
     created_at = models.DateTimeField(default=timezone.now)
     expires_at = models.DateTimeField(blank=True, null=True)
+
+
+class Whitelist(models.Model):
+    user = models.OneToOneField(AppUser, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(default=timezone.now)
 
 
 class Notification(models.Model):

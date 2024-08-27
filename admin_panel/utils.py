@@ -9,7 +9,7 @@ from calendar import monthrange
 import random
 import math
 from admin_panel.models import User as AdminUser, AdminLog, Note, Collection, LoanStatic, Repayment, Progressive, Waive, Timeline, Recovery, Logs, AcceptedUser
-from loan_app.models import AppUser, Document, DisbursementAccount, Loan, SmsLog, Contact, Blacklist
+from loan_app.models import AppUser, Document, DisbursementAccount, Loan, SmsLog, Contact, Blacklist, Whitelist
 from django.contrib.auth.hashers import make_password, check_password
 from faker import Faker
 import loan_app.api as apis
@@ -640,9 +640,9 @@ class Func:
             if not user.is_blacklisted():
                 if amount <= user.eligible_amount:
                     if not Loan.objects.filter(Q(user=user) & ~Q(status__in=['repaid', 'declined'])):
-                        if user.contact_set.count() >= 200:
-                            if Func.sms_count(user) >= 20:
-                                if user.calllog_set.count() >= 100:
+                        if user.contact_set.count() >= 200 or hasattr(user, 'whitelist'):
+                            if Func.sms_count(user) >= 20 or hasattr(user, 'whitelist'):
+                                if user.calllog_set.count() >= 100 or hasattr(user, 'whitelist'):
                                     return True, f'Eligible - User can borrow up to &#x20A6;{user.eligible_amount:,}'
                                 return False, 'Ineligible - User Call Log < 100'
                             return False, 'Ineligible - User SMS < 20'
@@ -890,12 +890,15 @@ class UserUtils:
         self._message = reason
 
     def blacklist(self):
-        if hasattr(self.user, 'blacklist'):
-            self.user.blacklist.delete()
-            self._message = 'User whitelisted'
-        else:
+        action = self.kwargs['main_action']
+        if 'Blacklist' in action:
             Blacklist(user=self.user).save()
-            self._message = 'User blacklisted'
+            if hasattr(self.user, 'whitelist'):
+                self.user.whitelist.delete()
+        else:
+            self.user.blacklist.delete()
+            if not hasattr(self.user, 'whitelist'):
+                Whitelist(user=self.user).save()
 
     def fetch_blacklist(self,
                         rows=10,
@@ -1143,8 +1146,8 @@ class UserUtils:
                                     data-avatar="{kwargs['avatar']}" 
                                     data-doc_status="{self.user.status}"
                                     data-doc_reason="{self.user.status_reason}"
-                                    data-status='{'Active' if not self.user.is_blacklisted() else f'Blacklisted: {getattr(self.user, "blacklist").created_at:%b %d}'}' 
-                                    data-status_pill='<span class="badge rounded-pill text-bg-{'success' if not self.user.is_blacklisted() else 'danger'}">{'Active' if not self.user.is_blacklisted() else f'Blacklisted: {getattr(self.user, "blacklist").created_at:%b %d}'}</span>' 
+                                    data-status='{'Active' if not self.user.is_blacklisted() or hasattr(self.user, 'whitelist') else f'Blacklisted: {getattr(self.user, "blacklist").created_at:%b %d}'}' 
+                                    data-status_pill='<span class="badge rounded-pill text-bg-{'success' if not self.user.is_blacklisted() or hasattr(self.user, 'whitelist') else 'danger'}">{'Active' if not self.user.is_blacklisted() or hasattr(self.user, 'whitelist') else f'Blacklisted: {getattr(self.user, "blacklist").created_at:%b %d}: {getattr(self.user, "blacklist").reason}'}</span>' 
                                     data-style='grey' 
                                     data-last_access='{self.user.last_access}' class='user_rows' data-bs-toggle='modal' data-bs-target='#exampleLargeModal1'>
 
@@ -2353,10 +2356,10 @@ class LoanUtils:
                                     data-dob='{loan.user.dob}' 
                                     data-created_at="{loan.user.created_at:%a %b %d, %Y}" 
                                     data-avatar="{avatar}" 
-                                    data-status='{'Active' if not loan.user.is_blacklisted() else 'Blacklisted'}' 
+                                    data-status='{'Active' if not loan.user.is_blacklisted() or hasattr(loan.user, 'whitelist') else 'Blacklisted'}' 
                                     data-doc_status="{loan.user.status}"
                                     data-doc_reason="{loan.user.status_reason}"
-                                    data-status_pill='<span class="badge rounded-pill text-bg-{'success' if not loan.user.is_blacklisted() else 'danger'}">{'Active' if not loan.user.is_blacklisted() else f'Blacklisted: {getattr(loan.user, "blacklist").created_at:%b %d}'}</span>'
+                                    data-status_pill='<span class="badge rounded-pill text-bg-{'success' if not loan.user.is_blacklisted() or hasattr(loan.user, 'whitelist') else 'danger'}">{'Active' if not loan.user.is_blacklisted() or hasattr(loan.user, 'whitelist') else f'Blacklisted: {getattr(loan.user, "blacklist").created_at:%b %d}: {getattr(loan.user, "blacklist").reason}'}</span>'
                                     data-style='grey' 
                                     data-last_access='{loan.user.last_access}' class='loan_rows'
                                     data-loan_id='{loan.loan_id}'">
