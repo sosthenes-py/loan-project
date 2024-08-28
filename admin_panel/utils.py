@@ -1053,7 +1053,6 @@ class UserUtils:
                     """
                 for contact in contacts
             ]
-            print(len(contact_html))
             self._content = ''.join(contact_html)
             content['sidebar'] = self._content
         else:
@@ -1074,6 +1073,7 @@ class UserUtils:
                     </div>
                 """
         self._content = content
+        print(len(contact_html))
 
     def fetch_call(self):
         self.user: AppUser
