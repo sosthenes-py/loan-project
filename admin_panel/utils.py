@@ -959,9 +959,24 @@ class UserUtils:
             if which == 'sidebar':
                 self._content = ''
                 logs_dict = UserUtils.reverse_dict(logs_dict)
-                for phone, logs_list in logs_dict.items():
-                    last_log = logs_list[len(logs_list)-1]
-                    self.add_table_content(_for='sms_sidebar', log=last_log)
+                content_html = [
+                    f"""
+                        <a href="javascript:;" class="list-group-item sms_sidebar_item phonebook_item" data-name="{logs_list[-1].name}" data-message="{logs_list[-1].message}" data-phone="{logs_list[-1].phone}">
+                			<div class="d-flex">
+                				<div class="chat-user-offline">
+                					<img src="/static/admin_panel/images/avatars/user.png" width="42" height="42" class="rounded-circle" alt="">
+                				</div>
+                				<div class="flex-grow-1 ms-2">
+                					<h6 class="mb-0 chat-title">{logs_list[-1].name}</h6>
+                					<p class="mb-0 chat-msg">{logs_list[-1].message if len(logs_list[-1].message) < 15 else f'{logs_list[-1].message[:15]}...'}</p>
+                				</div>
+                				<div class="chat-time">{logs_list[-1].date:%b %d, %I:%M %p}</div>
+                			</div>
+                		</a>
+                    """
+                    for phone, logs_list in logs_dict.items()
+                ]
+                self._content = "".join(content_html)
                 content['sidebar'] = self._content
                 content['content'] = """
                     <div style="justify-content: center; height: 100%; align-items: center; display: flex;">
@@ -1005,12 +1020,40 @@ class UserUtils:
 
     def fetch_contact(self):
         self.user: AppUser
-        contacts = self.user.contact_set.order_by('name').all()
+        contacts = self.user.contact_set.order_by('name').values('name', 'phone')
         content = {}
         self._content = ''
         if contacts:
-            for contact in contacts:
-                self.add_table_content(_for='contact', contact=contact)
+            contact_html = [
+                f"""
+                    <a href="javascript:;" class="list-group-item contact_item phonebook_item" 
+                       data-name="{contact['name']}" 
+                       data-message="" 
+                       data-phone="{contact['phone']}">
+                        <div class="d-flex">
+                            <div class="chat-user-offline">
+                                <img src="/static/admin_panel/images/avatars/user.png" 
+                                     width="42" 
+                                     height="42" 
+                                     class="rounded-circle" 
+                                     alt="">
+                            </div>
+                            <div class="flex-grow-1 ms-2">
+                                <h6 class="mb-0 chat-title">{contact['name']}</h6>
+                                <p class="mb-0 chat-msg">{contact['phone']}</p>
+                            </div>
+                            <div class="chat-time">
+                                <span class='badge text-bg-primary' 
+                                      onclick="copy_to_clipboard('{contact['phone']}')">
+                                      <i class='bx bx-copy'></i> copy
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                    """
+                for contact in contacts
+            ]
+            self._content = ''.join(contact_html)
             content['sidebar'] = self._content
         else:
             content['sidebar'] = """
@@ -1039,8 +1082,31 @@ class UserUtils:
         if self.request.user.stage in ('S0', 'S1'):
             calls = None
         if calls:
-            for call in calls:
-                self.add_table_content(_for='call', call=call)
+            category_mapping = {
+                'incoming': ('secondary', 'phone-incoming'),
+                'outgoing': ('secondary', 'phone-outgoing'),
+                'missed': ('danger', 'phone-incoming'),
+                'rejected': ('danger', 'block'),
+                'blocked': ('danger', 'block')
+            }
+            content_html = [
+                f"""
+                    <a href="javascript:;" class="list-group-item contact_item phonebook_item" data-name="{call.name}" data-message="" data-phone="{call.phone}">
+                        <div class="d-flex">
+                        	<div class="chat-user-offline">
+                        		<img src="/static/admin_panel/images/avatars/user.png" width="42" height="42" class="rounded-circle" alt="">
+                        	</div>
+                        	<div class="flex-grow-1 ms-2">
+                        		<h6 class="mb-0 chat-title fw-bold text-{category_mapping[call.category][0]}">{'Unsaved' if call.name == '' else call.name} <i class='bx bx-{category_mapping[call.category][1]} text-{category_mapping[call.category][0]}'></i></h6>
+                        		<p class="mb-0 chat-msg" >{call.phone}</p>
+                        	</div>
+                        	<div class="chat-time"><span class='badge text-bg-primary' onclick="copy_to_clipboard('{call.phone}')"><i class='bx bx-copy'></i> copy</span></div>
+                        </div>
+                    </a>
+                """
+                for call in calls
+            ]
+            self._content = ''.join(content_html)
             content['sidebar'] = self._content
 
             # Get Data For Call Chart
@@ -1273,24 +1339,15 @@ class UserUtils:
 
         elif _for == 'call':
             call = kwargs['call']
-            if call.category == 'incoming':
-                call_class = 'secondary'
-                icon = 'phone-incoming'
-            elif call.category == 'outgoing':
-                call_class = 'secondary'
-                icon = 'phone-outgoing'
-            elif call.category == 'missed':
-                call_class = 'danger'
-                icon = 'phone-incoming'
-            elif call.category == 'rejected':
-                call_class = 'danger'
-                icon = 'block'
-            elif call.category == 'blocked':
-                call_class = 'danger'
-                icon = 'block'
-            else:
-                call_class = 'info'
-                icon = 'phone'
+            category_mapping = {
+                'incoming': ('secondary', 'phone-incoming'),
+                'outgoing': ('secondary', 'phone-outgoing'),
+                'missed': ('danger', 'phone-incoming'),
+                'rejected': ('danger', 'block'),
+                'blocked': ('danger', 'block')
+            }
+
+            call_class, icon = category_mapping.get(call.category, ('info', 'phone'))
 
             self._content += f"""
                             <a href="javascript:;" class="list-group-item contact_item phonebook_item" data-name="{call.name}" data-message="" data-phone="{call.phone}">
