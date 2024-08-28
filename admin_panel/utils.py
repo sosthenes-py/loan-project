@@ -39,6 +39,7 @@ class Func:
 
     @staticmethod
     def overdue_days(disbursed_at, duration, obj=False):
+        disbursed_at = disbursed_at.replace(hour=0, minute=0, second=0, microsecond=0)
         due_date = disbursed_at + dt.timedelta(days=duration)
         diff = timezone.now() - due_date
         if obj:
