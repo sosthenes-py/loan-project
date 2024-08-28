@@ -223,8 +223,7 @@ def git_webhook(request):
 @csrf_exempt
 def automations(request, program):
     if request.method == "GET":
-        hour = dt.datetime.now().hour
-        if program == 'progressive' and hour >= 23:
+        if program == 'progressive':
             utils.Func.set_progressive()
         elif program == 'collection':
             utils.Func.set_collectors()

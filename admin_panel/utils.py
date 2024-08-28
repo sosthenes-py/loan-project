@@ -831,7 +831,7 @@ class UserUtils:
 
     def fetch_files_in_table(self):
         self._content2 = ''
-        if hasattr(self.user, 'avatar'):
+        if hasattr(self.user, 'avatar') and self.request.user.stage not in ('S0', 'S1'):
             self.add_table_content(_for='file', file=self.user.avatar)
         for file in self.user.document_set.all():
             self.add_table_content(_for='file', file=file)
@@ -1817,7 +1817,7 @@ class AdminUtils:
             loan = col.loan
 
             status_text, status_class = Func.get_loan_status(loan)
-            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") else "/static/admin_panel/images/avatars/user.png"
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.admin_user.stage not in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
 
             self._content += f"""
                 <tr data-user_id='{loan.user.user_id}' 
@@ -2086,7 +2086,7 @@ class LoanUtils:
                             statuses = status.split(',')
                             sn += 1
                             if len(statuses) == 1 and 'overdue' in statuses:
-                                if Func.get_loan_status(loan)[0] == 'overdue' and loan.status != 'repaid':
+                                if Func.get_loan_status(loan)[0] in ('overdue', 'due') and loan.status != 'repaid':
                                     self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
                             elif loan.status == 'disbursed':
                                 if 'disbursed' in statuses and overdue_days <= 0:
@@ -2324,7 +2324,7 @@ class LoanUtils:
             else:
                 attach_user = ''
 
-            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.request.user.stage not in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_doc/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.request.user.stage not in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
 
             status_text, status_class = Func.get_loan_status(loan)
             if status_text == 'disbursed' and loan.disburse_id == '':
