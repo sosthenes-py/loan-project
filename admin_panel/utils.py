@@ -2381,7 +2381,7 @@ class LoanUtils:
             else:
                 attach_user = ''
 
-            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_doc/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.request.user.stage not in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.request.user.stage not in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
 
             status_text, status_class = Func.get_loan_status(loan)
             if status_text == 'disbursed' and loan.disburse_id == '':
