@@ -1023,7 +1023,6 @@ class UserUtils:
         contacts = self.user.contact_set.order_by('name').values('name', 'phone')
         content = {}
         self._content = ''
-        print(contacts)
         if contacts:
             contact_html = [
                 f"""
@@ -1054,6 +1053,7 @@ class UserUtils:
                     """
                 for contact in contacts
             ]
+            print(len(contact_html))
             self._content = ''.join(contact_html)
             content['sidebar'] = self._content
         else:
