@@ -1023,6 +1023,7 @@ class UserUtils:
         contacts = self.user.contact_set.order_by('name').values('name', 'phone')
         content = {}
         self._content = ''
+        print(contacts)
         if contacts:
             contact_html = [
                 f"""
