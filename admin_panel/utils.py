@@ -2843,7 +2843,7 @@ class Analysis:
             if stage != 'M1':
                 data_x.append(stage)
                 data_y.append(f'{perc:.1f}')
-        if recoverys:
+        if recoverys and 'M1' in recoverys.keys():
             # now add M1 as the last item
             data_x.append('M1')
             data_y.append(f"{recoverys['M1']:.1f}")
