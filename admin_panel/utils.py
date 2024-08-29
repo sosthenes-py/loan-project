@@ -19,6 +19,7 @@ from django.db import transaction
 
 
 LOAN_DURATION = 4
+LOAN_DURATION2 = 10
 LEVEL1_BASE_AMOUNT = 10000
 LEVEL2_BASE_AMOUNT = 20000
 LEVEL3_BASE_AMOUNT = 50000
@@ -2143,7 +2144,7 @@ class LoanUtils:
         self.request = request
         self._status, self._message = 'success', 'success'
 
-    def fetch_loans(self, size="single", rows=10, start=f'{dt.date.today()-dt.timedelta(days=60):%Y-%m-%d}', end=f'{dt.date.today():%Y-%m-%d}', status='pending,approved,disbursed,declined,partpayment,repaid,overdue', overdue_start=-LOAN_DURATION, overdue_end=365, filters=''):
+    def fetch_loans(self, size="single", rows=10, start=f'{dt.date.today()-dt.timedelta(days=60):%Y-%m-%d}', end=f'{dt.date.today():%Y-%m-%d}', status='pending,approved,disbursed,declined,partpayment,repaid,overdue', overdue_start=-LOAN_DURATION2, overdue_end=365, filters=''):
         if size != 'single':
             start_date = dt.datetime.strptime(start, '%Y-%m-%d')
             start_date = timezone.make_aware(start_date, timezone.get_current_timezone())
@@ -2163,7 +2164,7 @@ class LoanUtils:
                 )
             ).order_by('-created_at').all()
 
-            overdue_from = -LOAN_DURATION if overdue_start == '' else int(overdue_start)
+            overdue_from = -LOAN_DURATION2 if overdue_start == '' else int(overdue_start)
             overdue_to = 365 if overdue_end == '' else int(overdue_end)
             rows = int(rows)
 
@@ -2181,6 +2182,7 @@ class LoanUtils:
 
                         if loan.status == 'repaid' and overdue_start != '':
                             overdue_days = -10
+
                         if overdue_from <= overdue_days <= overdue_to:
                             statuses = status.split(',')
                             sn += 1
@@ -2192,6 +2194,7 @@ class LoanUtils:
                                     self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
                                 elif 'disbursed' in statuses and len(statuses) > 1:
                                     self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
+
                             elif loan.status in statuses:
                                 self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
 

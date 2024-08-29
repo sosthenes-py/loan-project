@@ -14,6 +14,7 @@ import loan_app.api as apis
 from admin_panel.utils import Func
 import phonenumbers
 from django.db import transaction
+from admin_panel.utils import LOAN_DURATION, LOAN_DURATION2
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.tokens import AccessToken
@@ -319,7 +320,7 @@ class Account:
             principal_amount = amount
             amount_due = principal_amount
             reloan = Loan.objects.filter(user=user, status='repaid').count() + 1
-            duration = 5 if user.borrow_level == 1 else 10
+            duration = LOAN_DURATION if user.borrow_level == 1 else LOAN_DURATION2
             status = 'pending' if reloan == 1 else 'approved'
             new_loan = Loan(user=user, principal_amount=principal_amount,
                             amount_due=amount_due, reloan=reloan, duration=duration, purpose=purpose, status=status)
