@@ -366,6 +366,10 @@
                                             <a href="#0" class="dropdown-item text-warning blacklist"
                                                style="font-weight: bold"><i class="lni lni-ban"></i>
                                                 Blacklist</a>
+
+                                             <a href="#0" class="dropdown-item text-warning whitelist"
+                                               style="font-weight: bold"><i class="lni lni-hand"></i>
+                                                Permanent Whitelist</a>
                                             {% endif %}
                                             {% if user.level == 'admin' or user.level == 'super admin' or user.level == 'approval admin' %}
                                             <a href="#" class="dropdown-item" style="color: red; font-weight: bold"
@@ -1350,7 +1354,7 @@
 										<a class="nav-link phonebook_nav active" onclick="load_sms()" data-bs-toggle="pill" href="javascript:;" aria-selected="true" role="tab">
 											<div class="font-24"><i class="bx bx-conversation"></i>
 											</div>
-											<div><small>SMS</small>
+											<div><small>SMS <span class="phonebook_count text-warning-emphasis" data-item="sms">(0)</span></small>
 											</div>
 										</a>
 									</li>
@@ -1358,7 +1362,7 @@
 										<a class="nav-link phonebook_nav" onclick="load_call()" data-bs-toggle="pill" href="javascript:;" aria-selected="false" role="tab" tabindex="-1">
 											<div class="font-24"><i class="bx bx-phone"></i>
 											</div>
-											<div><small>Calls</small>
+											<div><small >Calls <span class="phonebook_count text-warning-emphasis" data-item="call">(0)</span></small>
 											</div>
 										</a>
 									</li>
@@ -1366,7 +1370,7 @@
 										<a class="nav-link phonebook_nav" data-bs-toggle="pill" href="javascript:;" aria-selected="false" role="tab" tabindex="-1" onclick="load_contact()">
 											<div class="font-24"><i class="bx bxs-contact"></i>
 											</div>
-											<div><small>Contacts</small>
+											<div><small>Contacts <span class="phonebook_count text-warning-emphasis" data-item="contact">(0)</span></small>
 											</div>
 										</a>
 									</li>
@@ -1862,6 +1866,10 @@
                         $('.sms_phone').attr('href', 'tel:0000')
                         $('.sms_last_updated').text('...')
                     }
+                    $('.phonebook_count').each(function (){
+                        var item = $(this).data('item')
+                        $(this).text(`(${data.content['count'][item]})`)
+                    })
                 },
                 error: function (err1, err2) {
                     loadOff()
@@ -2462,6 +2470,35 @@
                 })
             })
 
+            $('.whitelist').click(function () {
+                var user_id = $("#selected_user_id").val();
+                loadOn();
+                $.ajax({
+                    url: '{% url "users" %}',
+                    data: {
+                        user_id: user_id,
+                        action: 'whitelist'
+                    },
+                    dataType: 'json',
+                    type: 'post',
+                    success: function (data) {
+                        loadOff()
+                        notify(data.status, data.message)
+                        if (data.status === 'success') {
+                            start(true)
+                            $('#exampleLargeModal1').modal('hide')
+                        }
+
+                    },
+                    error: function (err1, err2) {
+                        loadOff()
+                        notify('error', JSON.stringify(err1))
+                    },
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                    }
+                })
+            })
 
 
             // NOTE BLOCK

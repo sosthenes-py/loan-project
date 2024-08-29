@@ -834,7 +834,7 @@ class UserUtils:
 
     def fetch_files_in_table(self):
         self._content2 = ''
-        if hasattr(self.user, 'avatar') and self.request.user.stage not in ('S0', 'S1'):
+        if hasattr(self.user, 'avatar') and self.request.user.stage != 'S0':
             self.add_table_content(_for='file', file=self.user.avatar)
         for file in self.user.document_set.all():
             self.add_table_content(_for='file', file=file)
@@ -901,8 +901,10 @@ class UserUtils:
                 self.user.whitelist.delete()
         else:
             self.user.blacklist.delete()
-            if not hasattr(self.user, 'whitelist'):
-                Whitelist(user=self.user).save()
+
+    def whitelist(self):
+        if not hasattr(self.user, 'whitelist'):
+            Whitelist(user=self.user).save()
 
     def fetch_blacklist(self,
                         rows=10,
@@ -931,8 +933,9 @@ class UserUtils:
         rows = int(rows)
         for item in items:
             if rows > 0:
-                self.add_table_content(_for='blacklist', row=item)
-                rows -= 1
+                if not hasattr(item.user, 'whitelist'):
+                    self.add_table_content(_for='blacklist', row=item)
+                    rows -= 1
 
     def get_timeline(self):
         timelines = Timeline.objects.filter(app_user=self.user).order_by('-created_at').all()
@@ -947,18 +950,24 @@ class UserUtils:
 
     def fetch_sms(self, which):
         self.user: AppUser
+        counts = {
+            'sms': f'{Func.sms_count(self.user):,}',
+            'call': f'{self.user.calllog_set.count():,}',
+            'contact': f'{self.user.contact_set.count():,}'
+        }
+
         logs = self.user.smslog_set.order_by('date').all()
         if self.request.user.stage in ('S0', 'S1'):
             logs = None
         if logs:
             logs_dict = {}
+            content = {}
             for log in logs:
                 if log.phone not in logs_dict.keys():
                     logs_dict[log.phone] = [log]
                 else:
                     logs_dict[log.phone].append(log)
 
-            content = {}
             if which == 'sidebar':
                 self._content = ''
                 logs_dict = UserUtils.reverse_dict(logs_dict)
@@ -986,6 +995,8 @@ class UserUtils:
                         <i>Click on a conversation to view...</i>
                     </div>
                 """
+                content['count'] = counts
+
             else:
                 self._content = ''
                 logs_list = logs_dict[which]
@@ -1016,7 +1027,8 @@ class UserUtils:
                     <div style="justify-content: center; height: 100%; align-items: center; display: flex;">
                         <i>Click on a conversation to view...</i>
                     </div>
-                """
+                """,
+                'count': counts
             }
             self._status = 'error'
             self._message = 'No data available'
@@ -1183,6 +1195,8 @@ class UserUtils:
                 self.fetch_contact()
             elif self.action == 'blacklist':
                 self.blacklist()
+            elif self.action == 'whitelist':
+                self.whitelist()
             elif self.action == 'doc_decide':
                 self.doc_decide()
             elif self.action == 'check_eligibility':
@@ -1223,7 +1237,7 @@ class UserUtils:
 
                                     <td>
                                 		<div class='d-flex align-items-center'>
-                                		<div class="user-presence user-{'online' if not self.user.is_blacklisted() else 'offline'}" data-user_id="{self.user.user_id}">
+                                		<div class="user-presence user-{'online' if not self.user.is_blacklisted() or hasattr(self.user, 'whitelist') else 'offline'}" data-user_id="{self.user.user_id}">
                                 			<img src="{kwargs['avatar']}" width="10" height="10" alt="" class="rounded-circle"></div>
                                 		</div>
                                 	</td>
@@ -1416,7 +1430,7 @@ class UserUtils:
             row = kwargs['row']
             user = row.user
             avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{user.avatar.name}" if hasattr(
-                user, "avatar") and self.request.user.stage not in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
+                user, "avatar") and self.request.user.stage != 'S0' else "/static/admin_panel/images/avatars/user.png"
 
             self._content += f"""
                 <tr
@@ -1902,7 +1916,7 @@ class AdminUtils:
             loan = col.loan
 
             status_text, status_class = Func.get_loan_status(loan)
-            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.admin_user.stage not in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.admin_user.stage != 'S0' else "/static/admin_panel/images/avatars/user.png"
 
             self._content += f"""
                 <tr data-user_id='{loan.user.user_id}' 
@@ -1921,8 +1935,8 @@ class AdminUtils:
                                     data-dob='{loan.user.dob}' 
                                     data-created_at="{loan.user.created_at:%a %b %d, %Y}" 
                                     data-avatar="{avatar}" 
-                                    data-status='{'Active' if not loan.user.is_blacklisted() else 'Blacklisted'}' 
-                                    data-status_pill='<span class="badge rounded-pill text-bg-{'success' if not loan.user.is_blacklisted() else 'danger'}">{'Active' if not loan.user.is_blacklisted() else f'Blacklisted: {getattr(loan.user, "blacklist").created_at:%b %d}'}</span>'
+                                    data-status='{'Active' if not loan.user.is_blacklisted() or hasattr(loan.user, 'whitelist') else 'Blacklisted'}' 
+                                    data-status_pill='<span class="badge rounded-pill text-bg-{'success' if not loan.user.is_blacklisted() or hasattr(loan.user, 'whitelist') else 'danger'}">{'Active' if not loan.user.is_blacklisted() or hasattr(loan.user, 'whitelist') else f'Blacklisted: {getattr(loan.user, "blacklist").created_at:%b %d}'}</span>'
                                     data-style='grey' 
                                     data-last_access='{loan.user.last_access}' class='loan_rows'
                                     data-loan_id='{loan.loan_id}'">
@@ -1933,7 +1947,7 @@ class AdminUtils:
 										<h6 class="mb-0 font-14 fw-bold">{loan.loan_id}
 										<span style="font-size: 11px" class="fw-bold text-{'warning' if loan.reloan == 1 else 'info'}">{'1st' if loan.reloan == 1 else f'({loan.reloan})'}</span>
 										</h6>
-										<p class="mb-0 font-13 text-{'danger' if loan.user.is_blacklisted() else 'secondary'}">{loan.user.last_name} {loan.user.first_name}</p>
+										<p class="mb-0 font-13 text-{'danger' if loan.user.is_blacklisted() and not hasattr(loan.user, 'whitelist') else 'secondary'}">{loan.user.last_name} {loan.user.first_name}</p>
 									</div>
 								</div>
 							</td>
@@ -2004,7 +2018,7 @@ class AdminUtils:
 										<h6 class="mb-0 font-14 fw-bold">{loan.loan_id}
 										<span style="font-size: 11px" class="fw-bold text-{'warning' if loan.reloan == 1 else 'info'}">{'1st' if loan.reloan == 1 else f'({loan.reloan})'}</span>
 										</h6>
-										<p class="mb-0 font-13 text-{'danger' if loan.user.is_blacklisted() else 'secondary'}">{loan.user.last_name} {loan.user.first_name}</p>
+										<p class="mb-0 font-13 text-{'danger' if loan.user.is_blacklisted() and not hasattr(loan.user, 'whitelist') else 'secondary'}">{loan.user.last_name} {loan.user.first_name}</p>
 									</div>
 								</div>
 							</td>
@@ -2409,7 +2423,7 @@ class LoanUtils:
             else:
                 attach_user = ''
 
-            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.request.user.stage not in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.request.user.stage != 'S0' else "/static/admin_panel/images/avatars/user.png"
 
             status_text, status_class = Func.get_loan_status(loan)
             if status_text == 'disbursed' and loan.disburse_id == '':
@@ -2459,7 +2473,7 @@ class LoanUtils:
 										<h6 class="mb-0 font-14 fw-bold">{loan.loan_id}
 										<span style="font-size: 11px" class="fw-bold text-{'warning' if loan.reloan == 1 else 'info'}">{'1st' if loan.reloan == 1 else f'({loan.reloan})'}</span>
 										</h6>
-										<p class="mb-0 font-13 text-{'danger' if loan.user.is_blacklisted() else 'secondary'}">{attach_user}</p>
+										<p class="mb-0 font-13 text-{'danger' if loan.user.is_blacklisted() and not hasattr(loan.user, 'whitelist') else 'secondary'}">{attach_user}</p>
 									</div>
 								</div>
 							</td>
@@ -2519,7 +2533,7 @@ class LoanUtils:
             loan = repay.loan
             self.loan = loan
 
-            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.request.user.stage not in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.request.user.stage != 'S0' else "/static/admin_panel/images/avatars/user.png"
 
             if repay.total_paid < repay.amount_due:
                 status_text = 'Partial'
@@ -2557,7 +2571,7 @@ class LoanUtils:
 										<h6 class="mb-0 font-14 fw-bold">{loan.loan_id}
 										<span style="font-size: 11px" class="fw-bold text-{'warning' if loan.reloan == 1 else 'info'}">{'1st' if loan.reloan == 1 else f'({loan.reloan})'}</span>
 										</h6>
-										<p class="mb-0 font-13 text-{'danger' if loan.user.is_blacklisted() else 'secondary'}">{loan.user.last_name} {loan.user.first_name}</p>
+										<p class="mb-0 font-13 text-{'danger' if loan.user and not hasattr(self.user, 'whitelist') else 'secondary'}">{loan.user.last_name} {loan.user.first_name}</p>
 									</div>
 								</div>
 							</td>
@@ -2578,7 +2592,7 @@ class LoanUtils:
             waive = kwargs['waive']
             self.loan, loan = waive.loan, waive.loan
 
-            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.request.user.stage not in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{loan.user.avatar.name}" if hasattr(loan.user, "avatar") and self.request.user.stage != 'S0' else "/static/admin_panel/images/avatars/user.png"
 
             self._content += f"""
                         <tr data-user_id='{loan.user.user_id}' 
