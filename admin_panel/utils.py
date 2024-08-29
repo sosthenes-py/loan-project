@@ -268,7 +268,7 @@ class Func:
                 'amount': loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount),
                 'currency': 'NGN',
                 'narration': 'MG Loan',
-                'reference': f'{loan.loan_id}0-{admin_user.id}',
+                'reference': f'{loan.loan_id}-{admin_user.id}',
                 'meta': [
                     {
                         'email': loan.user.email,
