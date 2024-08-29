@@ -86,12 +86,13 @@ def create_bulk_tf(bdata, admin_user):
             "debit_currency": "NGN"
         }
         url = 'https://api.flutterwave.com/v3/transfers'
+        data = json.dumps(data)
 
     headers = {
         'Authorization': f'Bearer {RAVE_PRIVATE_KEY}',
         'content-type': 'application/json',
     }
-    res = requests.post(url=url, headers=headers, data=json.dumps(data))
+    res = requests.post(url=url, headers=headers, data=data)
     print(res.json())
     return res.json()
 
