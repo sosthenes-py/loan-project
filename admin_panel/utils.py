@@ -1416,7 +1416,7 @@ class UserUtils:
                     <td>{row.user.user_id}</td>
                     <td>{row.user.last_name} {row.user.first_name}</td>
                     <td>{row.user.phone}</td>
-                    <td>{row.user.email}</td>
+                    <td>{row.reason}</td>
                     <td>{row.created_at:%a %b %d, %Y}</td>
                     <td><a href="#0" class="blacklist" data-user_id="{row.user.user_id}">Whitelist</a></td>
                     
