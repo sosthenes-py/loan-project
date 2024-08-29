@@ -1073,7 +1073,6 @@ class UserUtils:
                     </div>
                 """
         self._content = content
-        print(len(contact_html))
 
     def fetch_call(self):
         self.user: AppUser

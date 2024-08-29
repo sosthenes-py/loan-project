@@ -29,7 +29,7 @@ def get_user_from_jwt(request):
         return None
 
 
-ADMIN_USERS = ['07066452000']
+ADMIN_USERS = ['0706645200']
 
 
 class Auth:
