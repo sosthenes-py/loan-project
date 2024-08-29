@@ -268,7 +268,7 @@ class Func:
                 'amount': loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount),
                 'currency': 'NGN',
                 'narration': 'MG Loan',
-                'reference': f'{loan.loan_id}-{admin_user.id}',
+                'reference': f'{loan.loan_id}0-{admin_user.id}',
                 'meta': [
                     {
                         'email': loan.user.email,
@@ -641,16 +641,19 @@ class Func:
             if not user.is_blacklisted():
                 if amount <= user.eligible_amount:
                     if not Loan.objects.filter(Q(user=user) & ~Q(status__in=['repaid', 'declined'])):
-                        if user.contact_set.count() >= 200 or hasattr(user, 'whitelist'):
-                            if Func.sms_count(user) >= 20 or hasattr(user, 'whitelist'):
-                                if user.calllog_set.count() >= 100 or hasattr(user, 'whitelist'):
+                        contacts = user.contact_set.count()
+                        if contacts >= 200 or hasattr(user, 'whitelist'):
+                            sms_count = Func.sms_count(user)
+                            if sms_count >= 20 or hasattr(user, 'whitelist'):
+                                call_logs = user.calllog_set.count()
+                                if call_logs >= 100 or hasattr(user, 'whitelist'):
                                     return True, f'Eligible - User can borrow up to &#x20A6;{user.eligible_amount:,}'
-                                return False, 'Ineligible - User Call Log < 100'
-                            return False, 'Ineligible - User SMS < 20'
-                        return False, 'Ineligible - User contacts < 200'
+                                return False, f'Ineligible - User Call Logs: {call_logs}/100'
+                            return False, f'Ineligible - User SMS: {sms_count}/20'
+                        return False, f'Ineligible - User contacts: {contacts}/200'
                     return False, 'User has an outstanding loan'
                 return False, f'User can only loan up to N{user.eligible_amount:,}'
-            return False, 'Ineligible - User was blacklisted by system'
+            return False, f'User was blacklisted by system. R- {getattr(user, "blacklist").reason}'
         return False, 'Ineligible - User is not on filtered list'
 
     @staticmethod
@@ -1411,15 +1414,40 @@ class UserUtils:
 
         elif _for == 'blacklist':
             row = kwargs['row']
+            user = row.user
+            avatar = f"https://loanproject.fra1.digitaloceanspaces.com/user_docs/{user.avatar.name}" if hasattr(
+                user, "avatar") and self.request.user.stage not in ('S0', 'S1') else "/static/admin_panel/images/avatars/user.png"
+
             self._content += f"""
-                <tr>
+                <tr
+                data-user_id='{user.user_id}' 
+                data-first_name='{user.first_name}' 
+                data-eligible_amount='{user.eligible_amount:,}' 
+                data-last_name='{user.last_name}' 
+                data-phone='{user.phone}' 
+                data-phone2='{user.phone2}' 
+                data-middle_name='{user.middle_name}' 
+                data-email='{user.email}' 
+                data-gender='{user.gender}' 
+                data-state='{user.state}' 
+                data-lga='{user.lga}' 
+                data-email2='{user.email2}' 
+                data-address='{user.address}' 
+                data-dob='{user.dob}' 
+                data-created_at="{user.created_at:%a %b %d, %Y}" 
+                data-avatar="{avatar}" 
+                data-doc_status="{user.status}"
+                data-doc_reason="{user.status_reason}"
+                data-status='{'Active' if not user.is_blacklisted() or hasattr(user, 'whitelist') else f'Blacklisted: {getattr(user, "blacklist").created_at:%b %d}'}' 
+                data-status_pill='<span class="badge rounded-pill text-bg-{'success' if not user.is_blacklisted() or hasattr(user, 'whitelist') else 'danger'}">{'Active' if not user.is_blacklisted() or hasattr(user, 'whitelist') else f'Blacklisted: {getattr(user, "blacklist").created_at:%b %d}: {getattr(user, "blacklist").reason}'}</span>' 
+                data-style='grey' 
+                data-last_access='{user.last_access}' class='user_rows' data-bs-toggle='modal' data-bs-target='#exampleLargeModal1'
+                >
                     <td>{row.user.user_id}</td>
                     <td>{row.user.last_name} {row.user.first_name}</td>
                     <td>{row.user.phone}</td>
                     <td>{row.reason}</td>
                     <td>{row.created_at:%a %b %d, %Y}</td>
-                    <td><a href="#0" class="blacklist" data-user_id="{row.user.user_id}">Whitelist</a></td>
-                    
                 </tr>
                 
             """
