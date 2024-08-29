@@ -320,12 +320,13 @@ class Account:
             amount_due = principal_amount
             reloan = Loan.objects.filter(user=user, status='repaid').count() + 1
             duration = 5 if user.borrow_level == 1 else 10
+            status = 'pending' if reloan == 1 else 'approved'
             new_loan = Loan(user=user, principal_amount=principal_amount,
-                            amount_due=amount_due, reloan=reloan, duration=duration, purpose=purpose)
+                            amount_due=amount_due, reloan=reloan, duration=duration, purpose=purpose, status=status)
             new_loan.save()
             new_loan.loan_id = f'MGL{new_loan.id}{random.randint(100, 1000)}'
             new_loan.save()
-            LoanStatic(loan=new_loan, status='pending').save()
+            LoanStatic(loan=new_loan, status=status).save()
             loans = Account.fetch_loans(user)
             user.notification_set.create(
                 message=f'Your loan request of N{amount:,} has been received and is being processed',
@@ -486,7 +487,6 @@ class Misc:
             parsed_number = phonenumbers.parse(phone, 'NG')
             return phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.NATIONAL).replace(' ', '')
         except phonenumbers.NumberParseException as e:
-            print(f"Error parsing phone number: {phone} - {e}")
             return '0700000'  # or handle the error as needed
 
     @staticmethod
