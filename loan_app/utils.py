@@ -157,7 +157,7 @@ class Auth:
                 # requires: otp, password
                 if hasattr(user, 'otp') and user.otp.expires_at > timezone.now():
                     if data['otp'] == user.otp.code:
-                        user.password = make_password('2222')
+                        user.password = make_password(data['password'])
                         user.save()
                         return {'status': 'success', 'message': 'Password updated successfully'}
                     return {'error': {'status': 401, 'error': 'Token is incorrect'}, 'message': 'Http Exception'}
