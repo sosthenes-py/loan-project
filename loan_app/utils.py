@@ -1,5 +1,6 @@
 import uuid
 from django.http import JsonResponse
+import re
 
 from loan_app.models import Loan, DisbursementAccount, VirtualAccount, AppUser, Blacklist, Notification, Otp, Avatar, Document, SmsLog, CallLog, Contact
 from admin_panel.models import LoanStatic, AcceptedUser, Logs
@@ -18,6 +19,11 @@ from admin_panel.utils import LOAN_DURATION, LOAN_DURATION2
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.tokens import AccessToken
+
+
+def clean_string(s):
+    # Remove any NUL characters
+    return re.sub(r'\x00', '', s)
 
 
 def get_user_from_jwt(request):
@@ -196,15 +202,12 @@ class Account:
     @staticmethod
     def update_contacts(user: AppUser, data: list):
         existing_phones = user.contact_set.values_list('phone')
-        new_contact_entries = []
-        for new_contact in data:
-            phone = Misc.format_phone(new_contact['phone'])
-            if phone not in existing_phones:
-                new_contact_entries.append(Contact(
-                    user=user,
-                    phone=phone,
-                    name=new_contact['name']
-                ))
+        new_contact_entries = [
+            Contact(user=user, phone=Misc.format_phone(new_contact['phone']), name=new_contact['name'])
+            for new_contact in data
+            if Misc.format_phone(new_contact['phone']) not in existing_phones
+        ]
+
         if new_contact_entries:
             with transaction.atomic():
                 Contact.objects.bulk_create(new_contact_entries)
@@ -255,7 +258,7 @@ class Account:
                             user=user,
                             name=phone,
                             phone=phone,
-                            message=sms['body'],
+                            message=clean_string(sms['body']),
                             category=category,
                             date=date_tz
                         ))

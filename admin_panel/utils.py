@@ -438,13 +438,13 @@ class Func:
                 col.delete()
             else:
                 # CLEAR COLLECTIONS AT THE LAST DAY OF EACH STAGE
-                if col.stage == 'S2' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 3:
+                if col.stage == 'S2' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 4:
                     col.delete()
-                elif col.stage == 'S3' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 7:
+                elif col.stage == 'S3' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 8:
                     col.delete()
-                elif col.stage == 'S4' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 15:
+                elif col.stage == 'S4' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 16:
                     col.delete()
-                elif col.stage == 'S5' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 30:
+                elif col.stage == 'S5' and Func.overdue_days(col.loan.disbursed_at, col.loan.duration) == 31:
                     col.delete()
 
     @staticmethod
