@@ -1587,9 +1587,13 @@
 
         function get_current_month(cc = 1) {
             const today = new Date();
+            today.setMonth(today.getMonth() + cc);
+
+            // Normalize the date
             const year = today.getFullYear();
-            const month = String(today.getMonth() + cc).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0'); // getMonth() is zero-based
             const day = String(today.getDate()).padStart(2, '0');
+
             return `${year}-${month}-${day}`;
         }
 
