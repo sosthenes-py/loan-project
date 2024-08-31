@@ -639,7 +639,7 @@ class Func:
     def is_eligible(user: AppUser, amount):
         if AcceptedUser.objects.filter(phone=user.phone).exists():
             Func.system_whitelist(user)
-            if not user.is_blacklisted():
+            if not user.is_blacklisted() or hasattr(user, 'whitelist'):
                 if amount <= user.eligible_amount:
                     if not Loan.objects.filter(Q(user=user) & ~Q(status__in=['repaid', 'declined'])):
                         contacts = user.contact_set.count()
