@@ -525,6 +525,7 @@ class Misc:
                     return False, 'Please repay your outstanding loan to take more -ERR01LL'
                 return False, f'You are only eligible for N{user.eligible_amount:,}'
             return False, 'Sorry, you cannot take any loans at this time -ERR01SBL'
+        Misc.system_blacklist(user, reason=f'Unfiltered')
         return False, 'Sorry, you cannot take any loans at this time -ERR02AU'
 
     @staticmethod
