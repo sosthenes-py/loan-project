@@ -807,13 +807,6 @@
                 toastr[status](message)
             }
 
-            function get_current_month(cc = 1) {
-                const today = new Date();
-                const year = today.getFullYear();
-                const month = String(today.getMonth() + cc).padStart(2, '0');
-                const day = String(today.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
-            }
 
             $('#history_month_end').change(function (){
                 var start_date = new Date($("#history_month_start").val())
@@ -916,8 +909,8 @@
 
    <script>
 	    $(function(){
-            $('#history_month_start').val(get_current_month(-1))
-            $('#history_month_end').val(get_current_month())
+            $('#history_month_start').val(get_current_day(-1))
+            $('#history_month_end').val(get_current_day())
 
             start()
 
