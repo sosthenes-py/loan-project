@@ -715,6 +715,23 @@
          })
      }
 
+     function get_current_day(cc = 1) {
+         var date = new Date();
+         var day = ("0" + date.getDate()).slice(-2); // Get day and ensure two digits
+         var month = ("0" + (date.getMonth() + cc)).slice(-2); // Get month and ensure two digits
+         var year = date.getFullYear();
+
+         return year + '-' + month + '-' + day;
+     }
+
+     function get_current_month(cc = 1) {
+         var date = new Date();
+         var month = ("0" + (date.getMonth() + cc)).slice(-2); // Get month and ensure two digits
+         var year = date.getFullYear();
+
+         return year + '-' + month;
+     }
+
      $('body').on('click', '.see_reason', function () {
          $('#ReasonModal').modal('show')
          $('.reason_head').text($(this).data('reason_head'))

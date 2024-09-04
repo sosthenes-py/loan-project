@@ -4,7 +4,7 @@ import django.db.models
 from django.utils import timezone
 import datetime as dt
 from django.db.models import Sum, Count, Case, When, Value, F, DecimalField, Q
-from django.db.models.functions import TruncDay, TruncMonth
+from django.db.models.functions import TruncDay, TruncMonth, Coalesce
 from calendar import monthrange
 import random
 import math
@@ -2152,17 +2152,20 @@ class LoanUtils:
             end_date = dt.datetime.strptime(end, '%Y-%m-%d') + dt.timedelta(days=1)
             end_date = timezone.make_aware(end_date, timezone.get_current_timezone())
 
-            loans = Loan.objects.filter(
-                (
-                        Q(created_at__gte=start_date) & Q(created_at__lte=end_date)
+            loans = Loan.objects.annotate(
+                effective_date=Coalesce(
+                    'disbursed_at', 'created_at'
                 )
-                &
-                (
-                        Q(loan_id__startswith=filters) | Q(user__phone__startswith=filters) |
-                        Q(user__bvn__startswith=filters) | Q(user__first_name__startswith=filters) |
+            ).filter(
+                Q(effective_date__gte=start_date) & Q(effective_date__lte=end_date)
+                & (
+                        Q(loan_id__startswith=filters) |
+                        Q(user__phone__startswith=filters) |
+                        Q(user__bvn__startswith=filters) |
+                        Q(user__first_name__startswith=filters) |
                         Q(user__last_name__startswith=filters)
                 )
-            ).order_by('-created_at').all()
+            ).order_by('-effective_date').all()
 
             overdue_from = -LOAN_DURATION2 if overdue_start == '' else int(overdue_start)
             overdue_to = 365 if overdue_end == '' else int(overdue_end)
@@ -2192,7 +2195,10 @@ class LoanUtils:
                             elif loan.status == 'disbursed':
                                 if 'disbursed' in statuses and overdue_days <= 0:
                                     self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
-                                elif 'disbursed' in statuses and len(statuses) > 1:
+                                elif 'disbursed' in statuses:
+                                    self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
+                            elif loan.status == 'repaid':
+                                if 'disbursed' in statuses:
                                     self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
 
                             elif loan.status in statuses:
