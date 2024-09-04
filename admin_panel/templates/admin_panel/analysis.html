@@ -450,16 +450,15 @@
                 toastr[status](message)
             }
 
-
             function get_current_month(cc = 1) {
                 const today = new Date();
                 today.setMonth(today.getMonth() + cc);
 
-                // Normalize the date
+                // Get the normalized year and month
                 const year = today.getFullYear();
                 const month = String(today.getMonth() + 1).padStart(2, '0'); // getMonth() is zero-based
-                const day = String(today.getDate()).padStart(2, '0');
 
+                // Return the value in the format YYYY-MM
                 return `${year}-${month}`;
             }
 

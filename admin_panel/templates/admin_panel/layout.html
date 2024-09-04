@@ -222,7 +222,8 @@
 					</ul>
                     {% endif %}
 
-                    {% if user.level == 'admin' or user.level == 'super admin' %}
+                    {% if user.level == 'admin' or user.level == 'super admin' or user.level == 'approval admin' %}
+                        {% if user.level == 'admin' or user.level == 'super admin' %}
 					<ul>
 						<li> <a href="{% url 'waiver' %}"><i class="bx bx-right-arrow-alt"></i>Waiver</a>
 						</li>
@@ -239,13 +240,16 @@
 						</li>
 					</ul>
 
-					<ul>
-						<li> <a href="{% url 'users' %}"><i class="bx bx-right-arrow-alt"></i>Registered Users</a>
-						</li>
-					</ul>
 
                      <ul>
 						<li> <a href="{% url 'logs' %}"><i class="bx bx-right-arrow-alt"></i>Api Logs</a>
+						</li>
+					</ul>
+
+                     {% endif %}
+
+                    <ul>
+						<li> <a href="{% url 'users' %}"><i class="bx bx-right-arrow-alt"></i>Registered Users</a>
 						</li>
 					</ul>
 
