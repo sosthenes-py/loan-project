@@ -2204,8 +2204,6 @@ class LoanUtils:
                             elif loan.status == 'repaid':
                                 if 'disbursed' in statuses:
                                     self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
-                                else:
-                                    self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
 
                             elif loan.status in statuses:
                                 self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
