@@ -52,10 +52,10 @@ class Func:
     def get_loan_status(loan):
         if loan.disbursed_at is not None:
             diff = Func.overdue_days(loan.disbursed_at, loan.duration, obj=True)
-            if diff.days == 0:
-                status = 'due'
-            elif diff.days == 0 and loan.amount_paid >= loan.amount_due:
+            if diff.days == 0 and loan.amount_paid >= loan.amount_due:
                 status = 'repaid'
+            elif diff.days == 0:
+                status = 'due'
             elif diff.days > 0 and loan.amount_paid < loan.amount_due:
                 status = 'overdue'
             else:
