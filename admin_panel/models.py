@@ -130,6 +130,9 @@ class Repayment(models.Model):
 class Progressive(models.Model):
     objects = ProjectManager()
 
+    def __str__(self):
+        return f"D:{self.disbursed_at}; TC:{self.total_count}; TS:{self.total_sum}; UC:{self.unpaid_count}; US:{self.unpaid_sum}"
+
     def save(self, *args, **kwargs):
         if not self.pk:
             self.project = current_project

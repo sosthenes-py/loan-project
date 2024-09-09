@@ -303,7 +303,7 @@ class Func:
         Must be run at the end of each day
         :return:
         """
-        loans = Loan.objects.filter(disbursed_at__gte=timezone.now() - dt.timedelta(days=37))
+        loans = Loan.objects.filter(disbursed_at__gte=timezone.now() - dt.timedelta(days=(30+LOAN_DURATION+1)))
         daily_loans = loans.annotate(day=TruncDay('disbursed_at')).values('day').annotate(
             total_count=Count(
                 Case(
@@ -366,14 +366,15 @@ class Func:
             )
         ).values('day', 'total_count', 'total_sum', 'unpaid_sum', 'unpaid_count', 'total_count_reloan',
                  'total_sum_reloan', 'unpaid_sum_reloan', 'unpaid_count_reloan')
+        print(daily_loans)
 
-        # Progressive(disbursed_at=(timezone.now()-dt.timedelta(days=7)).date()).save()
         for day in range(-1, 32):
             for loan in daily_loans:
-                if Analysis.is_in_progressive_category(loan['day'], day):
-                    current_row, created = Progressive.objects.get_or_create(
-                        disbursed_at=timezone.make_aware(dt.datetime.combine(loan['day'].date(), dt.time.min),
-                                                         timezone.get_current_timezone()))
+                loan_day = timezone.localtime(loan['day']+timezone.timedelta(hours=1))
+                if Analysis.is_in_progressive_category(loan_day, day):
+                    print(f"{day}:  {loan_day}")
+                    current_row, created = Progressive.objects.get_or_create(disbursed_at=loan_day)
+                    print(created)
                     column = f'day{day}' if day >= 0 else 'a'
                     setattr(current_row, 'total_count', loan['total_count'])
                     setattr(current_row, 'total_sum', loan['total_sum'])
@@ -384,7 +385,8 @@ class Func:
                     setattr(current_row, f'{column}_sum', loan['unpaid_sum'])
                     setattr(current_row, f'{column}_count_reloan', loan['unpaid_count_reloan'])
                     setattr(current_row, f'{column}_sum_reloan', loan['unpaid_sum_reloan'])
-                    current_row.save()
+                    print(current_row)
+                    # current_row.save()
 
     @staticmethod
     def set_collectors():
