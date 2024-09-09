@@ -159,7 +159,8 @@
 					<div class="">
 						<div class="card radius-10">
                             <div class="pt-3 ps-3 pb-0" style="display: inline-block">
-                                <p style="float: left" class="fw-bold fs-6">Real-Days Progressive</p>
+                                <p style="float: left" class="fw-bold fs-6">Real-Days Progressive</p><br>
+                                <small style="float: left" class="text-danger">*updated at the end of each day</small>
 
                             </div>
                             <div class="card-body" style="margin-bottom: -1em">
@@ -299,14 +300,11 @@
                             <div style="margin-bottom: -1em; width: 100%;">
                                 <div style="float: right; width: 25%; display: inline-block" class="pe-4">
                                     <div style="width: 40%; float: left">
-                                        <label for="cda_start">From:</label>
-                                        <input type="date" id="cda_start" class="me-2" value="" >
+                                        <label for="cda_date">Date:</label>
+                                        <input type="date" id="cda_date" class="me-2" value="" >
                                     </div>
 
-                                    <div style="width: 40%; float: right">
-                                        <label for="cda_end">To:</label>
-                                        <input type="date" id="cda_end" class="me-2" value="" readonly>
-                                    </div>
+
                                     <div class="mt-3" style="width: 30%; float: right">
                                         <button id="cda_search" type="button" class="btn btn-primary px-3 radius-30" onclick="get_analysis('cda')">Search</button>
                                     </div>
@@ -464,8 +462,7 @@
                         rdp_loan_type: get_rdp_loan_type(),
                         rdp_dimension: get_rdp_dimension(),
                         fetch: fetch,
-                        cda_start: $('#cda_start').val(),
-                        cda_end: $('#cda_end').val(),
+                        cda_date: $('#cda_date').val(),
                         cda_stage: get_cda_stage()
                     },
                     dataType: 'json',
@@ -599,8 +596,7 @@
             $('#rd_month_input').val(get_current_month())
             $('#rdp_start').val(get_current_day(-1))
             $('#rdp_end').val(get_current_day())
-            $('#cda_start').val(get_current_day(-1))
-            $('#cda_end').val(get_current_day())
+            $('#cda_date').val(get_current_day())
 
             get_analysis()
 

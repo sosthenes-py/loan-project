@@ -852,7 +852,8 @@
                                 $("#repayment_history").html(data.content);
                                 var table = $('#repayment_table').DataTable({
                                     lengthChange: false,
-                                    buttons: ['copy', 'excel', 'pdf', 'print']
+                                    buttons: ['copy', 'excel', 'pdf', 'print'],
+                                    order: [['desc', 7]]
                                 });
                                 table.buttons().container().appendTo('#loan_table_wrapper .col-md-6:eq(0)');
                             }, 10)

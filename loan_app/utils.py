@@ -52,7 +52,7 @@ class Auth:
                                 first_name=kwargs['first_name'],
                                 last_name=kwargs['last_name'],
                                 middle_name=kwargs.get('middle_name'),
-                                email=kwargs['email'],
+                                email=kwargs['email'].replace(' ', ''),
                                 email2=kwargs['alternative_email'],
                                 marital_status=kwargs['marital_status'],
                                 nationality=kwargs['nationality'],

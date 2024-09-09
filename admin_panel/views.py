@@ -151,8 +151,7 @@ def analysis(request):
             content['rdp'] = progressive
         if 'cda' in fetch:
             cda = analysis_.get_collections(
-                start=request.POST.get('cda_start', '2024-5-1'),
-                end=request.POST.get('cda_end', f'{dt.date.today():%Y-%m-%d}'),
+                date=request.POST.get('cda_date', f'{dt.date.today():%Y-%m-%d}'),
                 stage=request.POST.get('cda_stage', 'S0,S1,S2,S3,S4,S5,M1')
             )
             content['cda'] = cda
@@ -229,6 +228,8 @@ def automations(request, program):
             utils.Func.set_collectors()
         elif program == 'recovery':
             utils.Func.set_recovery()
+        elif program == 'collection_snap':
+            utils.Func.set_collection_snap()
         return JsonResponse({'status': 'success'})
 
 

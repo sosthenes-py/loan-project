@@ -3,12 +3,12 @@ import requests
 import django.db.models
 from django.utils import timezone
 import datetime as dt
-from django.db.models import Sum, Count, Case, When, Value, F, DecimalField, Q
+from django.db.models import Sum, Count, Case, When, Value, F, DecimalField, Q, OuterRef, Subquery, IntegerField, FloatField
 from django.db.models.functions import TruncDay, TruncMonth, Coalesce, Lower
 from calendar import monthrange
 import random
 import math
-from admin_panel.models import User as AdminUser, AdminLog, Note, Collection, LoanStatic, Repayment, Progressive, Waive, Timeline, Recovery, Logs, AcceptedUser
+from admin_panel.models import User as AdminUser, AdminLog, Note, Collection, LoanStatic, Repayment, Progressive, Waive, Timeline, Recovery, Logs, AcceptedUser, CollectionSnapshot
 from loan_app.models import AppUser, Document, DisbursementAccount, Loan, SmsLog, Contact, Blacklist, Whitelist
 from django.contrib.auth.hashers import make_password, check_password
 from faker import Faker
@@ -366,15 +366,12 @@ class Func:
             )
         ).values('day', 'total_count', 'total_sum', 'unpaid_sum', 'unpaid_count', 'total_count_reloan',
                  'total_sum_reloan', 'unpaid_sum_reloan', 'unpaid_count_reloan')
-        print(daily_loans)
 
         for day in range(-1, 32):
             for loan in daily_loans:
                 loan_day = timezone.localtime(loan['day']+timezone.timedelta(hours=1))
                 if Analysis.is_in_progressive_category(loan_day, day):
-                    print(f"{day}:  {loan_day}")
                     current_row, created = Progressive.objects.get_or_create(disbursed_at=loan_day)
-                    print(created)
                     column = f'day{day}' if day >= 0 else 'a'
                     setattr(current_row, 'total_count', loan['total_count'])
                     setattr(current_row, 'total_sum', loan['total_sum'])
@@ -385,8 +382,7 @@ class Func:
                     setattr(current_row, f'{column}_sum', loan['unpaid_sum'])
                     setattr(current_row, f'{column}_count_reloan', loan['unpaid_count_reloan'])
                     setattr(current_row, f'{column}_sum_reloan', loan['unpaid_sum_reloan'])
-                    print(current_row)
-                    # current_row.save()
+                    current_row.save()
 
     @staticmethod
     def set_collectors():
@@ -689,6 +685,126 @@ class Func:
             if 'Microfinance' not in bank['name']:
                 content += f"""<option value='{bank["code"]}'>{bank['name']}</option>"""
         return content
+
+    @staticmethod
+    def collection_snapshot(stage=None):
+        if not stage:
+            stage = ['S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'M1']
+
+        # Subqueries to ensure that sums are calculated accurately without duplication
+        collections_base = Collection.objects.filter(
+            stage__in=stage
+        ).values('user')
+
+        amount_held_subquery = collections_base.annotate(
+            total_held=Sum(
+                Case(
+                    When(amount_paid__lt=F('amount_due'), then=F('amount_due') - F('amount_paid')),
+                    default=Value(0.0),
+                    output_field=FloatField()
+                )
+            )
+        ).filter(user=OuterRef('user')).values('total_held')
+
+        amount_paid_subquery = collections_base.annotate(
+            total_paid=Sum('amount_paid')
+        ).filter(user=OuterRef('user')).values('total_paid')
+
+        total_amount_subquery = collections_base.annotate(
+            total_due=Sum('amount_due')
+        ).filter(user=OuterRef('user')).values('total_due')
+
+        # Subquery to calculate distinct collection count (ciq) for each user
+        ciq_subquery = Collection.objects.filter(
+            stage__in=stage,
+            user=OuterRef('user')
+        ).values('user').annotate(
+            ciq=Count('id', distinct=True)
+        ).values('ciq')
+
+        # Subquery to count distinct paid collections for each user
+        paid_count_subquery = Collection.objects.filter(
+            stage__in=stage,
+            user=OuterRef('user'),
+            amount_paid__gte=F('amount_due')
+        ).values('user').annotate(
+            paid_count=Count('id', distinct=True)
+        ).values('paid_count')
+
+        # Subquery to count distinct part payment collections for each user
+        partpayment_count_subquery = Collection.objects.filter(
+            stage__in=stage,
+            user=OuterRef('user'),
+            amount_paid__lt=F('amount_due'),
+            amount_paid__gt=0
+        ).values('user').annotate(
+            partpayment_count=Count('id', distinct=True)
+        ).values('partpayment_count')
+
+        # Subquery to count distinct notes for each user
+        notes_count_subquery = Collection.objects.filter(
+            stage__in=stage,
+            user=OuterRef('user')
+        ).values('user').annotate(
+            notes_count=Count('user__note', distinct=True)
+        ).values('notes_count')
+
+        # Subquery to count new entries for each user
+        new_count_subquery = Collection.objects.filter(
+            stage__in=stage,
+            user=OuterRef('user'),
+            created_at__date=timezone.now().date()
+        ).values('user').annotate(
+            new_count=Count('id', distinct=True)
+        ).values('new_count')
+
+        collections = Collection.objects.filter(
+            stage__in=stage,
+        ).values('user').annotate(
+            ciq=Subquery(ciq_subquery),
+            amount_held=Subquery(amount_held_subquery),
+            amount_paid=Subquery(amount_paid_subquery),
+            total_amount=Subquery(total_amount_subquery),
+            paid_count=Subquery(paid_count_subquery),
+            partpayment_count=Subquery(partpayment_count_subquery),
+            notes_count=Subquery(notes_count_subquery),
+            new_count=Subquery(new_count_subquery)
+        ).values(
+            'user', 'ciq', 'amount_held', 'amount_paid', 'total_amount',
+            'paid_count', 'partpayment_count', 'notes_count', 'new_count'
+        )
+
+        sorted_col = []
+        for collection in collections:
+            if collection not in sorted_col:
+                sorted_col.append(collection)
+
+        return sorted_col
+
+    @staticmethod
+    def set_collection_snap():
+        """
+        Must be run at the end of each day. In no particular order wrt other settings
+        :return:
+        """
+        collections = Func.collection_snapshot()
+        bulk_col = [
+            CollectionSnapshot(
+                user=AdminUser.objects.get(pk=col['user']),
+                ciq=col['ciq'] if col['ciq'] else 0,
+                new_count=col['new_count'] if col['new_count'] else 0,
+                amount_held=col['amount_held'] if col['amount_held'] else 0,
+                paid_count=col['paid_count'] if col['paid_count'] else 0,
+                partly_paid_count=col['partpayment_count'] if col['partpayment_count'] else 0,
+                amount_paid=col['amount_paid'] if col['amount_paid'] else 0,
+                notes_count=col['notes_count'] if col['notes_count'] else 0,
+                stage=AdminUser.objects.get(pk=col['user']).stage
+            )
+            for col in collections
+        ]
+        if bulk_col:
+            with transaction.atomic():
+                CollectionSnapshot.objects.bulk_create(bulk_col)
 
 
 class UserUtils:
@@ -2245,7 +2361,7 @@ class LoanUtils:
             end_date = dt.datetime.strptime(end, '%Y-%m-%d') + dt.timedelta(days=1)
             end_date = timezone.make_aware(end_date, timezone.get_current_timezone())
 
-            repayments = Repayment.objects.filter(created_at__gte=start_date, created_at__lte=end_date).order_by('-id').all()
+            repayments = Repayment.objects.filter(created_at__gte=start_date, created_at__lte=end_date).order_by('-created_at').all()
 
             self._content = ''
             rows = int(rows)
@@ -2260,7 +2376,7 @@ class LoanUtils:
         else:
             self.user = AppUser.objects.get(user_id=self.kwargs['user_id'])
             # IF SIZE IS SINGLE
-            repayments = self.user.repayment_set.order_by('-id').all()
+            repayments = self.user.repayment_set.order_by('-created_at').all()
             self._content = ''
             sn = 0
             for repay in repayments:
@@ -2350,6 +2466,8 @@ class LoanUtils:
                         status = 'approved'
                     elif to == 'decline':
                         status = 'declined'
+                    elif to == 'write-off':
+                        status = 'repaid'
                     else:
                         status = ''
                     loan_static = LoanStatic(user=self.request.user, loan=loan, status=status)
@@ -2779,62 +2897,41 @@ class Analysis:
 
     def get_collections(self,
                         stage='S0,S1',
-                        start=f'{dt.date.today() - dt.timedelta(days=500):%Y-%m-%d}',
-                        end=f'{dt.date.today():%Y-%m-%d}',
+                        date=f'{dt.date.today():%Y-%m-%d}',
                         ):
-        start_date = dt.datetime.strptime(start, '%Y-%m-%d')
-        start_date = timezone.make_aware(start_date, timezone.get_current_timezone())
+        date = dt.datetime.strptime(date, '%Y-%m-%d')
+        date = timezone.make_aware(date, timezone.get_current_timezone())
 
-        end_date = dt.datetime.strptime(end, '%Y-%m-%d') + dt.timedelta(days=1)
-        end_date = timezone.make_aware(end_date, timezone.get_current_timezone())
-
-        stage = stage.split(',')
-        collections = Collection.objects.filter(stage__in=stage, loan__disbursed_at__gte=start_date, loan__disbursed_at__lte=end_date).values('user').annotate(
-            ciq=Count('id'),
-            amount_held=Sum(
-                Case(
-                    When(amount_paid__lt=F('amount_due'), then=F('amount_due')-F('amount_paid')),
-                    default=Value(0),
-                    output_field=django.db.models.FloatField()
-                )
-            ),
-            paid_count=Count(
-                Case(
-                    When(amount_paid__gte=F('amount_due'), then='id'),
-                    default=Value(None),
-                    output_field=django.db.models.IntegerField()
-                )
-            ),
-            partpayment_count=Count(
-                Case(
-                    When(Q(amount_paid__lt=F('amount_due')) & ~Q(amount_paid=Value(0)), then='id'),
-                    default=Value(None),
-                    output_field=django.db.models.IntegerField()
-                )
-            ),
-            amount_paid=Sum('amount_paid'),
-            total_amount=Sum('amount_due'),
-            notes_count=Count('user__note'),
-            new_count=Count(
-                Case(
-                    When(created_at__date=timezone.now().date(), then='id'),
-                    default=Value(None)
-                )
-            )
-        ).values('user', 'ciq', 'amount_held', 'paid_count', 'partpayment_count', 'amount_paid', 'total_amount', 'notes_count', 'new_count')
-        result = {
-            AdminUser.objects.get(pk=col['user']): {
-                'ciq': col['ciq'],
-                'amount_held': col['amount_held'],
-                'paid_count': col['paid_count'],
-                'partpayment_count': col['partpayment_count'],
-                'amount_paid': col['amount_paid'],
-                'total_amount': col['total_amount'],
-                'notes': col['notes_count'],
-                'new': col['new_count']
+        stages = stage.split(',')
+        if date.date() == timezone.now().date():
+            collections = Func.collection_snapshot(stages)
+            result = {
+                AdminUser.objects.get(pk=col['user']): {
+                    'ciq': col['ciq'],
+                    'amount_held': col['amount_held'] if col['amount_held'] else 0.0,
+                    'paid_count': col['paid_count'] if col['paid_count'] else 0,
+                    'partpayment_count': col['partpayment_count'] if col['partpayment_count'] else 0,
+                    'amount_paid': col['amount_paid'] if col['amount_paid'] else 0.0,
+                    'total_amount': col['total_amount'] if col['total_amount'] else 0.0,
+                    'notes': col['notes_count'] if col['notes_count'] else 0,
+                    'new': col['new_count'] if col['new_count'] else 0
+                }
+                for col in collections
             }
-            for col in collections
-        }
+        else:
+            result = {
+                col.user: {
+                    'ciq': col.ciq,
+                    'amount_held': col.amount_held,
+                    'amount_paid': col.amount_paid,
+                    'total_amount': col.amount_held + col.amount_paid,
+                    'paid_count': col.paid_count,
+                    'partpayment_count': col.partly_paid_count,
+                    'notes': col.notes_count,
+                    'new': col.new_count
+                }
+                for col in CollectionSnapshot.objects.filter(stage__in=stages, created_at=date)
+            }
 
         self._content = ''
         for user, fields in result.items():

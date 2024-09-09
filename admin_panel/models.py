@@ -99,6 +99,24 @@ class Collection(models.Model):
         return f"{self.user.stage}-{self.user.stage_id} Collection"
 
 
+class CollectionSnapshot(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ciq = models.IntegerField(default=0)
+    new_count = models.IntegerField(default=0)
+    amount_held = models.FloatField(default=0.0)
+    paid_count = models.IntegerField(default=0)
+    partly_paid_count = models.IntegerField(default=0)
+    amount_paid = models.FloatField(max_length=10, default=0)
+    paid_rate = models.FloatField(default=0.0, null=True, blank=True)
+    amount_paid_rate = models.FloatField(default=0.0, null=True, blank=True)
+    notes_count = models.IntegerField(default=0)
+    stage = models.CharField(default='', max_length=10)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.user.stage}-{self.user.stage_id} Collection Snapshot"
+
+
 class LoanStatic(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
