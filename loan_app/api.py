@@ -66,6 +66,15 @@ def is_tx_valid(id_):
     return res.json()['status'] == 'success'
 
 
+def is_tf_valid(id_):
+    headers = {
+        'Authorization': f'Bearer {RAVE_PRIVATE_KEY}'
+    }
+    url = f'https://api.flutterwave.com/v3/transfers/{id_}'
+    res = requests.get(url=url, headers=headers)
+    return res.json()
+
+
 def create_bulk_tf(bdata, admin_user):
     data = {
         'title': f"Disb by {admin_user.level} - {admin_user.first_name}",
