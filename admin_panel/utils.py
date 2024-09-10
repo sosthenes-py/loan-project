@@ -746,7 +746,9 @@ class Func:
             stage__in=stage,
             user=OuterRef('user')
         ).values('user').annotate(
-            notes_count=Count('user__note', distinct=True)
+            notes_count=Count('id',
+                              filter=Q(user__note__created_at__date=dt.date.today()),
+                              distinct=True)
         ).values('notes_count')
 
         # Subquery to count new entries for each user
@@ -2930,7 +2932,7 @@ class Analysis:
                     'notes': col.notes_count,
                     'new': col.new_count
                 }
-                for col in CollectionSnapshot.objects.filter(stage__in=stages, created_at=date)
+                for col in CollectionSnapshot.objects.filter(stage__in=stages, created_at__date=date)
             }
 
         self._content = ''
