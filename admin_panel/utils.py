@@ -2298,7 +2298,7 @@ class LoanUtils:
             self._content = ''
             sn = 0
             for loan in loans:
-                if self.request.user.level in ('super admin', 'approval admin') or (self.request.user.level == 'team leader' and self.request.user.stage == Func.get_stage(loan)):
+                if self.request.user.level in ('super admin', 'approval admin', 'team leader'):
                     if rows > 0:
                         if loan.status not in ('disbursed', 'partpayment') and overdue_start == '':
                             overdue_days = overdue_from  # When filter not given, show loan even if not disbursed yet

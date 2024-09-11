@@ -170,10 +170,14 @@
 						</div>
 						<div class="menu-title">Loan Tracker</div>
 					</a>
+
+                    {% if user.level == 'super admin' or user.level == 'approval admin' %}
 					<ul>
 						<li> <a href="{% url 'loans' %}"><i class="bx bx-right-arrow-alt"></i>All Loans</a>
 						</li>
 					</ul>
+                     {% endif %}
+
                     {% if user.level == 'super admin' or user.level == 'approval admin' or user.level == 'team leader' %}
 
                         {% if user.level == 'super admin' or user.level == 'approval admin' %}
