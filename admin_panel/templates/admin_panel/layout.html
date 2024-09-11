@@ -174,7 +174,9 @@
 						<li> <a href="{% url 'loans' %}"><i class="bx bx-right-arrow-alt"></i>All Loans</a>
 						</li>
 					</ul>
-                    {% if user.level == 'super admin' or user.level == 'approval admin' %}
+                    {% if user.level == 'super admin' or user.level == 'approval admin' or user.level == 'team leader' %}
+
+                        {% if user.level == 'super admin' or user.level == 'approval admin' %}
                     <ul>
 						<li> <a href="{% url 'loans_with_status' 'pending' %}"><i class="bx bx-right-arrow-alt"></i>Pending Loans</a>
 						</li>
@@ -183,10 +185,14 @@
 						<li> <a href="{% url 'loans_with_status' 'approved' %}"><i class="bx bx-right-arrow-alt"></i>Approved Loans</a>
 						</li>
 					</ul>
+                       {% endif %}
+
                     <ul>
 						<li> <a href="{% url 'loans_with_status' 'disbursed' %}"><i class="bx bx-right-arrow-alt"></i>Disbursed Loans</a>
 						</li>
 					</ul>
+
+                        {% if user.level == 'super admin' or user.level == 'approval admin' %}
 
                     <ul>
 						<li> <a href="{% url 'loans_with_status' 'partpayment' %}"><i class="bx bx-right-arrow-alt"></i>Partly Paid Loans</a>
@@ -196,14 +202,19 @@
 						<li> <a href="{% url 'loans_with_status' 'repaid' %}"><i class="bx bx-right-arrow-alt"></i>Repaid Loans</a>
 						</li>
 					</ul>
+                       {% endif %}
+
                     <ul>
 						<li> <a href="{% url 'loans_with_status' 'overdue' %}"><i class="bx bx-right-arrow-alt"></i>Overdue Loans</a>
 						</li>
 					</ul>
+
+                        {% if user.level == 'super admin' or user.level == 'approval admin' %}
                     <ul>
 						<li> <a href="{% url 'loans_with_status' 'declined' %}"><i class="bx bx-right-arrow-alt"></i>Declined Loans</a>
 						</li>
 					</ul>
+                       {% endif %}
                     {% endif %}
 				</li>
             {% endif %}
