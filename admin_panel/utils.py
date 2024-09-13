@@ -2355,15 +2355,28 @@ class LoanUtils:
             sn += 1
             self.add_table_content(_for='waives', waive=waive, sn=sn)
 
-    def fetch_repayments(self, size="single", rows=10, start=f'{dt.date.today()-dt.timedelta(days=60):%Y-%m-%d}', end=f'{dt.date.today():%Y-%m-%d}'):
+    def fetch_repayments(self, size="single", rows=10, start=f'{dt.date.today()-dt.timedelta(days=60):%Y-%m-%d}', end=f'{dt.date.today():%Y-%m-%d}', filters=''):
         if size != 'single':
             start_date = dt.datetime.strptime(start, '%Y-%m-%d')
             start_date = timezone.make_aware(start_date, timezone.get_current_timezone())
 
             end_date = dt.datetime.strptime(end, '%Y-%m-%d') + dt.timedelta(days=1)
             end_date = timezone.make_aware(end_date, timezone.get_current_timezone())
+            print(f'F: {filters}, rows: {rows}')
 
-            repayments = Repayment.objects.filter(created_at__gte=start_date, created_at__lte=end_date).order_by('-created_at').all()
+            repayments = Repayment.objects.annotate(
+                lower_first_name=Lower('user__first_name'),
+                lower_last_name=Lower('user__last_name')
+            ).filter(
+                Q(created_at__gte=start_date) & Q(created_at__lte=end_date)
+                & (
+                        Q(loan__loan_id__startswith=filters) |
+                        Q(user__phone__startswith=filters) |
+                        Q(user__bvn__startswith=filters) |
+                        Q(lower_first_name__startswith=filters.lower()) |
+                        Q(lower_last_name__startswith=filters.lower())
+                )
+            ).order_by('-created_at').all()
 
             self._content = ''
             rows = int(rows)
@@ -2790,7 +2803,13 @@ class LoanUtils:
                 else:
                     self.status_update(self.kwargs['main_action'])
             elif self.action == "fetch_all_repayments":
-                self.fetch_repayments(size='multiple', rows=self.kwargs.get('rows', 10))
+                self.fetch_repayments(
+                    size='multiple',
+                    rows=self.kwargs.get('rows', 10),
+                    start=self.kwargs.get('start'),
+                    end=self.kwargs.get('end'),
+                    filters=self.kwargs.get('filters'),
+                )
             elif self.action == "fetch_repayments":
                 self.fetch_repayments(size='single', rows=self.kwargs.get('rows', 10))
             elif self.action == "fetch_waives":
@@ -2903,7 +2922,7 @@ class Analysis:
                         ):
         date = dt.datetime.strptime(date, '%Y-%m-%d')
         date = timezone.make_aware(date, timezone.get_current_timezone())
-
+        print(stage)
         stages = stage.split(',')
         if date.date() == timezone.now().date():
             collections = Func.collection_snapshot(stages)

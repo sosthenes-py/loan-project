@@ -17,36 +17,56 @@
 
 				<div class="card radius-10">
 					<div class="card-body">
-						<div class="d-flex align-items-center text-bg-">
-							<div class="pt-3 ps-3 pb-0" style="display: inline-block; width: 100%">
-                                <p style="float: left" class="fw-bold fs-6">{% if user.level == 'staff' or user.level == 'team leader' %}{{ user.stage }}{% endif %}  Repayments</p>
-                                <div style="float: right; width: 30%; display: inline-block">
-                                    <div style="width: 40%; float: left">
-                                        <label for="history_month_start">From:</label>
-                                        <input  type="date" id="history_month_start"
-                                           class="me-2" value="" onchange="start(true)" >
-                                    </div>
 
-                                    <div style="width: 40%; float: right">
-                                        <label for="history_month_end">To:</label>
-                                        <input  type="date" id="history_month_end"
-                                           class="me-2" value="" onchange="start(true)">
-                                    </div>
 
-                                    <div style="width: 20%; float: right">
-                                        <label for="history_rows">Rows:</label>
-                                        <select id="history_rows" class="" onchange="start(true)">
-                                            <option value="10">10</option>
-                                            <option value="20">20</option>
-                                            <option value="50">50</option>
-                                            <option value="100">100</option>
-                                            <option value="500">500</option>
-                                        </select>
-                                    </div>
-                                </div>
+                        <div class="d-flex align-items-center bg-light">
+                        <div class="me-auto fw-bold fs-6">{% if user.level == 'staff' or user.level == 'team leader' %}{{ user.stage }}{% endif %} Repayments</div>
+                        <div class="d-flex align-items-center">
+                            <div class="me-2">
+                                <label for="history_month_start" class="form-label me-1">From:</label>
+                                <input type="date" id="history_month_start" class="form-control d-inline-block" value=""
+                                       style="width: auto;">
+                            </div>
+                            <div class="me-2">
+                                <label for="history_month_end" class="form-label me-1">To:</label>
+                                <input type="date" id="history_month_end" class="form-control d-inline-block" value=""
+                                       style="width: auto;">
+                            </div>
+                            <div class="me-2">
+                                <label for="history_rows" class="form-label me-1">Rows:</label>
+                                <select id="history_rows" class="form-select d-inline-block" style="width: auto;">
+                                    <option selected value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="200">200</option>
+                                    <option value="500">500</option>
+                                    <option value="2000">2000</option>
+                                    <option value="10000">2000+</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="d-flex align-items-center bg-light">
+                        <div class="me-auto fw-bold fs-6"></div>
+                        <div class="d-flex align-items-center">
+
+                            <div class="me-2">
+                                <label for="filter" class="form-label me-1">Filters:</label>
+                                <input type="text" placeholder="Search by L.ID, Phone, BVN, Fname, Lname" id="filters" class="form-control d-inline-block" value=""
+                                       style="width: 22em;">
                             </div>
 
-						</div>
+                            <div>
+                                <button id="search_rdp" type="button" class="btn btn-primary px-3 radius-30"
+                                        onclick="start(true)">Search
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+
 						<hr/>
 						<div class="table-responsive">
 							<table class="table align-middle mb-5" id="repayment_table">
@@ -839,7 +859,8 @@
                             action: 'fetch_all_repayments',
                             rows: $('#history_rows').val(),
                             start: $('#history_month_start').val(),
-                            end: $('#history_month_end').val()
+                            end: $('#history_month_end').val(),
+                            filters: $('#filters').val()
                         },
                         dataType: 'json',
                         type: 'post',
@@ -853,7 +874,7 @@
                                 var table = $('#repayment_table').DataTable({
                                     lengthChange: false,
                                     buttons: ['copy', 'excel', 'pdf', 'print'],
-                                    order: [['desc', 7]]
+                                    order: [[7, 'desc']]
                                 });
                                 table.buttons().container().appendTo('#loan_table_wrapper .col-md-6:eq(0)');
                             }, 10)

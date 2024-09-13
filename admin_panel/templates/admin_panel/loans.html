@@ -61,7 +61,7 @@
 
 {% if user.level == 'staff' or user.level == 'team leader' %}
 {#------------   COLLECTORS DATA ANALYSIS#}
-                <div class="row row-cols-1 row-cols-md-12 row-cols-xl-12 mb-5">
+                <div class="row row-cols-1 row-cols-md-12 row-cols-xl-12">
 					<div class="">
 						<div class="card radius-10">
                             <div class="pt-3 ps-3 pb-0" style="display: inline-block">
@@ -71,14 +71,11 @@
                             <div style="margin-bottom: -1em; width: 100%;">
                                 <div style="float: right; width: 25%; display: inline-block" class="pe-4">
                                     <div style="width: 40%; float: left">
-                                        <label for="cda_start">From:</label>
-                                        <input type="date" id="cda_start" class="me-2" value="" >
+                                        <label for="cda_date">Date:</label>
+                                        <input type="date" id="cda_date" class="me-2" value="" >
                                     </div>
 
-                                    <div style="width: 40%; float: right">
-                                        <label for="cda_end">To:</label>
-                                        <input type="date" id="cda_end" class="me-2" value="" readonly>
-                                    </div>
+
                                     <div class="mt-3" style="width: 30%; float: right">
                                         <button id="cda_search" type="button" class="btn btn-primary px-3 radius-30" onclick="get_analysis('cda')">Search</button>
                                     </div>
@@ -92,14 +89,13 @@
                                           Collection Stage:
                                         </label>
                                       </div>
-                                      {% if user.level == 'super admin' %}
+
                                       <div class="form-check form-check-primary">
-                                        <input class="form-check-input" type="radio" name="cda_stage" value="S0,S1,S2,S3,S4,S5,M1" checked>
+                                        <input class="form-check-input" type="radio" name="cda_stage" value="S0,S1,S2,S3,S4,S5,M1" checked id="cda_stage_all">
                                         <label class="form-check-label" for="flexRadioSuccess">
                                           All
                                         </label>
                                       </div>
-                                      {% endif %}
 
                                       <div class="form-check form-check-primary">
                                         <input class="form-check-input" type="radio" name="cda_stage" value="S0">
@@ -177,6 +173,7 @@
 						</div>
 					</div>
 				</div>
+
 {% endif %}
 
 
@@ -426,7 +423,7 @@
 
                                                          <div class="col mt-3">
                                                             <div class="btn-group" role="group" aria-label="Basic example">
-                                                                <button type="button" class="btn btn-outline-primary px-3">
+                                                                <button type="button" class="btn btn-outline-primary px-3" onclick="check_eligibility()">
                                                                     Check Eligibility
                                                                 </button>
                                                                 <button type="button" class="btn btn-outline-primary px-3" data-bs-toggle='modal' data-bs-target='#PhoneModal' onclick="load_sms()">
@@ -1587,14 +1584,13 @@
 
             function get_analysis(fetch='cda'){
                 var items = fetch.split(',')
-                {#loadOn()#}
+                loadOn()
                 $.ajax({
                     url: '{% url "analysis" %}',
                     data: {
                         action: 'get_analysis',
                         fetch: fetch,
-                        cda_start: $('#cda_start').val(),
-                        cda_end: $('#cda_end').val(),
+                        cda_date: $('#cda_date').val(),
                         cda_stage: get_cda_stage()
                     },
                     dataType: 'json',
@@ -1606,7 +1602,7 @@
                                 $(`#${value}_show`).html(data.content[value])
                             }
                         })
-                        update_crc_chart(data.content['crc']['x'], data.content['crc']['y'])
+                        {#update_crc_chart(data.content['crc']['x'], data.content['crc']['y'])#}
                     },
                     error: function (err1, err2) {
                         loadOff()
@@ -1621,24 +1617,8 @@
             function get_cda_stage(){
                 const stage = '{{ user.stage }}'
                 const level = '{{ user.level }}'
-                if(level === 'super admin'){
-                    return $('input[name="cda_stage"]:checked').val();
-                }else{
-                    return stage
-                }
-
+                return $('input[name="cda_stage"]:checked').val();
             }
-
-            $('input[name="cda_stage"]').each(function (){
-                const value = $(this).val()
-                const level = '{{ user.level }}'
-                const stage = '{{ user.stage }}'
-                if(value !== stage && level !== 'super admin'){
-                    $(this).prop('disabled', true)
-                }else{
-                    $(this).prop('checked', true)
-                }
-            })
 
         $('#history_month_end').change(function () {
             var start_date = new Date($("#history_month_start").val())
@@ -1670,6 +1650,10 @@
                 notify('error', 'Overdue days filter error')
             }else{
                 loadOn()
+                $("#loan_history").html(`<tr><td colspan="9" style="text-align: center">loading data...</td></tr>`)
+                if(level === 'staff' || level === 'team leader'){
+                    get_analysis('cda')
+                }
                 if (level !== 'staff') {
                     $.ajax({
                         url: '{% url "loans" %}',
@@ -1714,7 +1698,6 @@
                     })
 
                 } else {
-                    get_analysis('cda')
                     $.ajax({
                         url: "{% url 'operators' %}",
                         dataType: "json",
@@ -2014,10 +1997,24 @@
         $(function () {
             $('#history_month_start').val(get_current_day(-1))
             $('#history_month_end').val(get_current_day())
-            $('#cda_start').val(get_current_day(-1))
-            $('#cda_end').val(get_current_day())
+            $('#cda_date').val(get_current_day())
 
             start()
+
+            $('input[name="cda_stage"]').each(function (){
+                const value = $(this).val()
+                const level = '{{ user.level }}'
+                const stage = '{{ user.stage }}'
+                if(level === 'super admin' || level === 'team leader'){
+                    $('#cda_stage_all').prop('checked', true)
+                }else{
+                    if(value !== stage){
+                        $(this).prop('disabled', true)
+                    }else{
+                        $(this).prop('checked', true)
+                    }
+                }
+            })
 
             $('.device_details').click(function () {
                 $('.device_details_name').text($(this).data('name'))
