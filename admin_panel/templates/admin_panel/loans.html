@@ -90,12 +90,14 @@
                                         </label>
                                       </div>
 
+                                     {% if user.level == 'super admin' or user.level == 'team leader' %}
                                       <div class="form-check form-check-primary">
                                         <input class="form-check-input" type="radio" name="cda_stage" value="S0,S1,S2,S3,S4,S5,M1" checked id="cda_stage_all">
                                         <label class="form-check-label" for="flexRadioSuccess">
                                           All
                                         </label>
                                       </div>
+                                      {% endif %}
 
                                       <div class="form-check form-check-primary">
                                         <input class="form-check-input" type="radio" name="cda_stage" value="S0">
