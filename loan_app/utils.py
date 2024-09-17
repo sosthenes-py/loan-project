@@ -528,7 +528,7 @@ class Misc:
                 return False, f'You are only eligible for N{user.eligible_amount:,}'
             return False, 'Sorry, you cannot take any loans at this time -ERR01SBL'
         Misc.system_blacklist(user, reason=f'Unfiltered')
-        return False, 'Sorry, you cannot take any loans at this time -ERR02AU'
+        return False, "Loan error. Contact support: 08157006179"
 
     @staticmethod
     def system_blacklist(user: AppUser, reason='overdue'):

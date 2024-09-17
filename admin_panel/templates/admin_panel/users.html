@@ -1616,7 +1616,8 @@
                         $("#members").html(data.content);
                         window.all_tickers = data.all_tickers
                         var table = $('#example2').DataTable({
-                            lengthChange: false,
+                            lengthChange: true,
+                            lengthMenu: [ [20, 70, 150, -1], [20, 70, 150, "All"] ],
                             pageLength: 15,
                             buttons: ['copy', 'excel', 'pdf', 'print']
                         });

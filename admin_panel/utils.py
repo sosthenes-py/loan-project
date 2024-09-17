@@ -840,7 +840,7 @@ class UserUtils:
                         Q(bvn__startswith=filters) | Q(first_name__startswith=filters) |
                         Q(last_name__startswith=filters)
                 )
-            ).order_by('-created_at').all()
+            ).prefetch_related('loan_set').order_by('-created_at').all()
         self._content = ''
         rows = int(rows)
         for self.user in self.users:
@@ -1333,6 +1333,12 @@ class UserUtils:
 
     def add_table_content(self, _for='', **kwargs):
         if _for == 'all_users_table':
+            if self.user.loan_set.filter(~Q(status='repaid')):
+                ongoing = f"""
+                    <div class="badge rounded-pill w-100 text-primary"><i class="bx bx-radio-circle-marked bx-burst bx-rotate-90 align-middle font-18 me-1"></i></div>
+                """
+            else:
+                ongoing = ''
             self._content += f"""
                                 <tr 
                                     data-user_id='{self.user.user_id}' 
@@ -1362,6 +1368,7 @@ class UserUtils:
                                 		<div class='d-flex align-items-center'>
                                 		<div class="user-presence user-{'online' if not self.user.is_blacklisted() or hasattr(self.user, 'whitelist') else 'offline'}" data-user_id="{self.user.user_id}">
                                 			<img src="{kwargs['avatar']}" width="10" height="10" alt="" class="rounded-circle"></div>
+                                			{ongoing}
                                 		</div>
                                 	</td>
 
@@ -2922,7 +2929,6 @@ class Analysis:
                         ):
         date = dt.datetime.strptime(date, '%Y-%m-%d')
         date = timezone.make_aware(date, timezone.get_current_timezone())
-        print(stage)
         stages = stage.split(',')
         if date.date() == timezone.now().date():
             collections = Func.collection_snapshot(stages)
