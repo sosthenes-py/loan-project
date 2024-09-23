@@ -928,7 +928,7 @@ class UserUtils:
             action = f'Modified note: ({note.body[:15]}...)'
             AdminUtils.log(user=self.request.user, app_user=self.user, action_type='add_note', action=action)
             note.body = self.kwargs['note']
-            note.modified = timezone.now()
+            note.modified_at = timezone.now()
             note.modified = True
             note.save()
             self._message = 'Note modified successfully'
