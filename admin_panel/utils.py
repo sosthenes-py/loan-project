@@ -634,6 +634,7 @@ class Func:
                      status='danger').save()
                 print('WEBHOOK------ Tf recorded successfully')
                 print(f'Loan: {loan}')
+                print(f'Loan Amt: {loan.amount_disbursed}')
         return True
 
     @staticmethod
