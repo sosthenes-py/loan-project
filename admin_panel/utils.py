@@ -626,14 +626,14 @@ class Func:
             else:
                 print('WEBHOOK------ Marked failed tf')
                 loan.status = 'approved'
-                loan.amount_disbursed = 1
+                loan.amount_disbursed = 2
                 loan.disbursed_at = None
                 loan.save()
                 Logs(action='transfer',
                      body=f'Failed to transfer #{data["amount"]:,} to {data["account_number"]}, {data["bank_name"]} - {data["fullname"]}.',
                      status='danger').save()
                 print('WEBHOOK------ Tf recorded successfully')
-                print(f'Loan: {loan}')
+                loan = Loan.objects.get(loan_id=loan_id)
                 print(f'Loan Amt: {loan.amount_disbursed}')
         return True
 
