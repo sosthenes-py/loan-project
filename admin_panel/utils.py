@@ -626,7 +626,7 @@ class Func:
             else:
                 print('WEBHOOK------ Marked failed tf')
                 loan.status = 'approved'
-                loan.amount_disbursed = 0
+                loan.amount_disbursed = 1
                 loan.disbursed_at = None
                 loan.save()
                 Logs(action='transfer',
