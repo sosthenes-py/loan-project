@@ -633,6 +633,7 @@ class Func:
                      body=f'Failed to transfer #{data["amount"]:,} to {data["account_number"]}, {data["bank_name"]} - {data["fullname"]}.',
                      status='danger').save()
                 print('WEBHOOK------ Tf recorded successfully')
+                print(f'Loan: {loan}')
         return True
 
     @staticmethod
