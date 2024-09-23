@@ -36,7 +36,7 @@ def get_user_from_jwt(request):
         return None
 
 
-ADMIN_USERS = ['0706645200']
+ADMIN_USERS = ['07066452000']
 
 
 class Auth:
@@ -150,7 +150,7 @@ class Auth:
                 # requires: medium
                 res = apis.send_otp(user=user, length=6, medium=data.get('medium', ['sms', 'whatsapp']))
                 # register api fee log
-                Logs(action='OTP', body=f'A user {user.user_id} requested for password update and [sms,whatsapp] OTPs were sent', status='danger', fee=19).save()
+                Logs(action='OTP', body=f'A user {user.user_id} requested for password update and [sms,whatsapp] OTPs were sent', status='info', fee=19).save()
                 if res['status'] == 'success':
                     Otp.objects.update_or_create(user=user, defaults={'code': res["data"][0]["otp"], 'expires_at': timezone.now() + dt.timedelta(minutes=10)})
                     return {'status': 'success', 'message': 'A token has been sent to your phone'}
@@ -325,7 +325,7 @@ class Account:
             principal_amount = amount
             amount_due = principal_amount
             reloan = Loan.objects.filter(user=user, status='repaid').count() + 1
-            duration = LOAN_DURATION if user.borrow_level == 1 else LOAN_DURATION2
+            duration = LOAN_DURATION
             status = 'pending' if reloan == 1 else 'approved'
             new_loan = Loan(user=user, principal_amount=principal_amount,
                             amount_due=amount_due, reloan=reloan, duration=duration, purpose=purpose, status=status)

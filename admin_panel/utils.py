@@ -2214,7 +2214,12 @@ class AdminUtils:
         elif self.action == "delete_operator":
             self.delete_operator()
         elif self.action == 'fetch_logs':
-            self.fetch_logs()
+            self.fetch_logs(
+                rows=self.kwargs.get('rows', 10),
+                start=self.kwargs.get('start'),
+                end=self.kwargs.get('end'),
+                filters=self.kwargs.get('filters')
+            )
         elif self.action == 'accepted_user':
             self.accepted_users()
         elif self.action == 'fetch_accepted_users':
