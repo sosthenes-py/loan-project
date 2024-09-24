@@ -283,7 +283,7 @@ class Func:
             }
             for loan in loans if loan.amount_disbursed == 0
         ]
-        print(bulk_data)
+        # print(bulk_data)
         res = apis.create_bulk_tf(bulk_data, admin_user)
         # print('-------------------------------------')
         # print(res)
@@ -626,7 +626,7 @@ class Func:
             else:
                 print('WEBHOOK------ Marked failed tf')
                 loan.status = 'approved'
-                loan.amount_disbursed = 2
+                loan.amount_disbursed = 0
                 loan.disbursed_at = None
                 loan.save()
                 Logs(action='transfer',
