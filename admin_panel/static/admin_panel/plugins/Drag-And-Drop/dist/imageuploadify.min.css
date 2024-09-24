@@ -10,7 +10,7 @@
 	flex-direction: column;
 	text-align: center;
 	background-color: #fff;
-	color: #007bff
+	color: #E65100
 }
 .imageuploadify .imageuploadify-overlay {
 	z-index: 10;
@@ -46,15 +46,15 @@
 }
 .imageuploadify .imageuploadify-images-list span.imageuploadify-message {
 	font-size: 24px;
-	border-top: 1px solid #007bff;
-	border-bottom: 1px solid #007bff;
+	border-top: 1px solid #E65100;
+	border-bottom: 1px solid #E65100;
 	padding: 10px;
 	display: inline-block
 }
 .imageuploadify .imageuploadify-images-list button.btn-default {
 	display: block;
-	color: #007bff;
-	border-color: #007bff;
+	color: #E65100;
+	border-color: #E65100;
 	border-radius: 1em;
 	margin: 25px auto;
 	width: 100%;

@@ -54,7 +54,7 @@
 }
 .picker__select--month:focus,
 .picker__select--year:focus {
-  border-color: #007bff;
+  border-color: #E65100;
 }
 /**
  * The month navigation buttons.
@@ -194,7 +194,7 @@
   background: #b1dcfb;
 }
 .picker__day--highlighted {
-  border-color: #007bff;
+  border-color: #E65100;
 }
 .picker__day--highlighted:hover,
 .picker--focused .picker__day--highlighted {
@@ -205,7 +205,7 @@
 .picker__day--selected,
 .picker__day--selected:hover,
 .picker--focused .picker__day--selected {
-  background: #007bff;
+  background: #E65100;
   color: #fff;
 }
 .picker__day--disabled,
@@ -250,7 +250,7 @@
 .picker__button--clear:focus,
 .picker__button--close:focus {
   background: #b1dcfb;
-  border-color: #007bff;
+  border-color: #E65100;
   outline: none;
 }
 .picker__button--today:before,

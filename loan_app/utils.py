@@ -36,6 +36,14 @@ def get_user_from_jwt(request):
         return None
 
 
+def get_user_tk(token):
+    try:
+        access_token = AccessToken(token)
+        payload = access_token.payload
+        return AppUser.objects.get(pk=payload['user_id'])
+    except:
+        return None
+
 ADMIN_USERS = ['07066452000']
 
 
