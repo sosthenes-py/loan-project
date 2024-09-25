@@ -49,6 +49,8 @@
             border: 1px solid #dee2e6;
             border-radius: .25rem;
         }
+
+
     </style>
 
 
@@ -183,13 +185,14 @@
 
 
             <!--end row-->
+           <div class="row" >
 
-            <div class="card radius-10">
+            <div class="card radius-10 col-12">
                 <div class="card-body">
 
-                    <div class="d-flex align-items-center bg-light">
+                    <div class="d-flex align-items-center bg-light flex-wrap">
                         <div class="me-auto fw-bold fs-6">{% if user.level == 'staff' or user.level == 'team leader' %}{{ user.stage }}{% endif %} Loan Tracker</div>
-                        <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center flex-wrap">
                             <div class="me-2">
                                 <label for="history_month_start" class="form-label me-1">From:</label>
                                 <input type="date" id="history_month_start" class="form-control d-inline-block" value=""
@@ -216,9 +219,9 @@
 
 
 
-                    <div class="d-flex align-items-center bg-light">
+                    <div class="d-flex align-items-center bg-light flex-wrap">
                         <div class="me-auto fw-bold fs-6"></div>
-                        <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center flex-wrap">
 
                             <div class="me-2">
                                 <label for="filter" class="form-label me-1">Filters:</label>
@@ -274,6 +277,8 @@
                     </div>
                 </div>
             </div>
+
+           </div>
         </div>
     </div>
     <!--end page wrapper -->
