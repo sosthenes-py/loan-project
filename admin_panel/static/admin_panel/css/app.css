@@ -1780,7 +1780,7 @@ input::placeholder {
 		border-bottom-left-radius: .25rem
 	}
 	.chat-sidebar {
-		left: -370px
+		display: none;
 	}
 	.chat-content {
 		margin-left: 0
@@ -1792,7 +1792,7 @@ input::placeholder {
 		left: 0
 	}
 	.chat-toggled .chat-sidebar {
-		left: 0
+		display: block;
 	}
 	.chat-toggled .overlay {
 		position: absolute;
