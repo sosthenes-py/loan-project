@@ -2280,7 +2280,7 @@ class LoanUtils:
         self.request = request
         self._status, self._message = 'success', 'success'
 
-    def fetch_loans(self, size="single", rows=10, start=f'{dt.date.today()-dt.timedelta(days=60):%Y-%m-%d}', end=f'{dt.date.today():%Y-%m-%d}', status='pending,approved,disbursed,declined,partpayment,repaid,overdue', overdue_start=-LOAN_DURATION2, overdue_end=365, filters=''):
+    def fetch_loans(self, size="single", rows=10, start=f'{dt.date.today()-dt.timedelta(days=60):%Y-%m-%d}', end=f'{dt.date.today():%Y-%m-%d}', status='pending,approved,disbursed,declined,partpayment,repaid,overdue', overdue_start=-100, overdue_end=365, filters=''):
         if size != 'single':
             start_date = dt.datetime.strptime(start, '%Y-%m-%d')
             start_date = timezone.make_aware(start_date, timezone.get_current_timezone())
@@ -2305,7 +2305,7 @@ class LoanUtils:
                 )
             ).order_by('-effective_date').all()
 
-            overdue_from = -LOAN_DURATION2 if overdue_start == '' else int(overdue_start)
+            overdue_from = -100 if overdue_start == '' else int(overdue_start)
             overdue_to = 365 if overdue_end == '' else int(overdue_end)
             rows = int(rows)
 
