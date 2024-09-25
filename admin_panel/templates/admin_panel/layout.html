@@ -751,6 +751,150 @@
          return year + '-' + month;
      }
 
+
+     function load_sms() {
+           $('.chat-toggle-btn').trigger('click')
+            var user_id = $("#selected_user_id").val();
+            loadOn()
+            $.ajax({
+                url: '{% url "users" %}',
+                data: {
+                    user_id: user_id,
+                    action: 'fetch_sms',
+                    which: 'sidebar'
+                },
+                dataType: 'json',
+                type: 'post',
+                success: function (data) {
+                    loadOff()
+                    if (data.status === 'success') {
+                        $('.sms_sidebar').html(data.content['sidebar'])
+                        $('.sms_content').html(data.content['content'])
+                    } else {
+                        notify(data.status, data.message)
+                        $('.sms_sidebar').html(data.content['sidebar'])
+                        $('.sms_content').html(data.content['content'])
+                        $('.sms_name').text('...')
+                        $('.sms_phone').attr('href', 'tel:0000')
+                        $('.sms_last_updated').text('...')
+                    }
+                    $('.phonebook_count').each(function (){
+                        var item = $(this).data('item')
+                        $(this).text(`(${data.content['count'][item]})`)
+                    })
+                },
+                error: function (err1, err2) {
+                    loadOff()
+                    notify('error', JSON.stringify(err1))
+                },
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                }
+            })
+        }
+
+        function load_contact() {
+            var user_id = $("#selected_user_id").val();
+            loadOn()
+            $.ajax({
+                url: '{% url "users" %}',
+                data: {
+                    user_id: user_id,
+                    action: 'fetch_contact'
+                },
+                dataType: 'json',
+                type: 'post',
+                success: function (data) {
+                    loadOff()
+                    $('.sms_content').html(data.content['content'])
+                    $('.sms_name').text('...')
+                    $('.sms_phone').attr('href', 'tel:0000')
+                    $('.sms_last_updated').text('...')
+                    if (data.status === 'success') {
+                        $('.sms_sidebar').html(data.content['sidebar'])
+                    } else {
+                        notify(data.status, data.message)
+                        $('.sms_sidebar').html(data.content['sidebar'])
+                    }
+                },
+                error: function (err1, err2) {
+                    loadOff()
+                    notify('error', JSON.stringify(err1))
+                },
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                }
+            })
+        }
+
+        function load_call() {
+            var user_id = $("#selected_user_id").val();
+            loadOn()
+            $.ajax({
+                url: '{% url "users" %}',
+                data: {
+                    user_id: user_id,
+                    action: 'fetch_call'
+                },
+                dataType: 'json',
+                type: 'post',
+                success: function (data) {
+                    loadOff()
+                    $('.sms_content').html(data.content['content'])
+                    $('.sms_name').text('...')
+                    $('.sms_phone').attr('href', 'tel:0000')
+                    $('.sms_last_updated').text('...')
+                    if (data.status === 'success') {
+                        $('.sms_sidebar').html(data.content['sidebar'])
+                    } else {
+                        notify(data.status, data.message)
+                        $('.sms_sidebar').html(data.content['sidebar'])
+                    }
+                    load_call_chart(data.content['chart_phones'], data.content['chart_count'])
+                },
+                error: function (err1, err2) {
+                    loadOff()
+                    notify('error', JSON.stringify(err1))
+                },
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                }
+            })
+        }
+
+        function load_call_chart(phone, count){
+             var options = {
+                series: [{
+                    data: count
+                }],
+                chart: {
+                    foreColor: '#9ba7b2',
+                    type: 'bar',
+                    height: 300
+                },
+                colors: ["#E65100"],
+                plotOptions: {
+                    bar: {
+                        horizontal: true,
+                        columnWidth: '35%',
+                        endingShape: 'rounded'
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                xaxis: {
+                    categories: phone,
+                }
+            };
+            var chart = new ApexCharts(document.querySelector("#call-chart"), options);
+            chart.render();
+
+        }
+
+
+
+
      $('body').on('click', '.see_reason', function () {
          $('#ReasonModal').modal('show')
          $('.reason_head').text($(this).data('reason_head'))
