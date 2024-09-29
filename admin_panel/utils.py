@@ -1082,7 +1082,7 @@ class UserUtils:
         }
 
         logs = self.user.smslog_set.order_by('date').all()
-        if self.request.user.stage in ('S0', 'S1'):
+        if self.request.user.stage == 'S0':
             logs = None
         if logs:
             logs_dict = {}
@@ -1219,7 +1219,7 @@ class UserUtils:
         calls = self.user.calllog_set.order_by('-date').all()
         content = {}
         self._content = ''
-        if self.request.user.stage in ('S0', 'S1'):
+        if self.request.user.stage == 'S0':
             calls = None
         if calls:
             category_mapping = {
