@@ -2102,6 +2102,7 @@ class AdminUtils:
 									</div>
 								</div>
 							</td>
+						<td>{loan.user.phone}</td>
                         <td>&#x20A6;{loan.principal_amount:,}</td>
                         <td>&#x20A6;{loan.amount_disbursed:,}</td>
                         <td>&#x20A6;{loan.amount_due:,}</td>
