@@ -2327,13 +2327,12 @@ class LoanUtils:
             overdue_from = -20 if overdue_start == '' else int(overdue_start)
             overdue_to = 365 if overdue_end == '' else int(overdue_end)
             rows = int(rows)
-            print(rows)
 
             self._content = ''
             sn = 0
-            while rows > 0:
-                for loan in loans:
-                    if self.request.user.level in ('super admin', 'approval admin', 'team leader'):
+            for loan in loans:
+                if self.request.user.level in ('super admin', 'approval admin', 'team leader'):
+                    if rows > 0:
                         if loan.status not in ('disbursed', 'partpayment') and overdue_start == '':
                             overdue_days = overdue_from  # When filter not given, show loan even if not disbursed yet
                         elif loan.status not in ('disbursed', 'partpayment') and overdue_start != '':
@@ -2350,18 +2349,23 @@ class LoanUtils:
                             if len(statuses) == 1 and 'overdue' in statuses:
                                 if Func.get_loan_status(loan)[0] in ('overdue', 'due') and loan.status != 'repaid':
                                     self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
+                                    rows -= 1
                             elif loan.status == 'disbursed':
                                 if 'disbursed' in statuses and overdue_days <= 0:
                                     self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
+                                    rows -= 1
                                 elif 'disbursed' in statuses:
                                     self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
+                                    rows -= 1
                             elif loan.status == 'repaid' and 'disbursed' in statuses:
                                 self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
+                                rows -= 1
 
                             elif loan.status in statuses:
                                 self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
+                                rows -= 1
 
-                            rows -= 1
+
         else:
             self.user = AppUser.objects.get(user_id=self.kwargs['user_id'])
             # IF SIZE IS SINGLE
