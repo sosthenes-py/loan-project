@@ -78,6 +78,7 @@ class Auth:
                                     employment=kwargs['employment'],
                                     state=kwargs['state'],
                                     lga=kwargs['lga'],
+                                    device_id=kwargs['device_id']
                                 )
                                 user.save()
                                 user.user_id = f'MGU{user.id}{random.randint(100, 1000)}'
@@ -109,11 +110,12 @@ class Auth:
         return AppUser.objects.filter(phone=phone).exists()
 
     @staticmethod
-    def authenticate_user(username, password):
+    def authenticate_user(username, password, device_id):
         if AppUser.objects.filter(username=username).exists():
             user = AppUser.objects.get(username=username)
             if check_password(password, user.password):
                 user.last_access = timezone.now()
+                user.device_id = device_id
                 user.save()
                 refresh = RefreshToken.for_user(user)
                 access_token = str(refresh.access_token)

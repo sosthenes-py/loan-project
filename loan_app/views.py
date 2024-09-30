@@ -24,7 +24,8 @@ def authenticate(request):
             data = json.loads(request.body)
             username = data.get('username')
             password = data.get('password')
-            return utils.Auth.authenticate_user(username, password)
+            device_id = data.get('device_id', '')
+            return utils.Auth.authenticate_user(username, password, device_id)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
     return JsonResponse({'error': 'Invalid method'}, status=405)

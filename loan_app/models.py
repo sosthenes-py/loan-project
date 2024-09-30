@@ -33,6 +33,7 @@ class AppUser(models.Model):
     employment = models.CharField(max_length=100, default='', blank=True, null=True)
     borrow_level = models.IntegerField(default=1)
     suspend = models.BooleanField(default=False)
+    device_id = models.CharField(max_length=100, default='', blank=True, null=True)
 
     def is_blacklisted(self):
         return hasattr(self, 'blacklist')
