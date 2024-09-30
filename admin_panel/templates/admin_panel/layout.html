@@ -233,7 +233,7 @@
 						<div class="menu-title">Other Menu</div>
 					</a>
 
-                    {% if user.level != 'admin' and user.level != 'staff' %}
+                    {% if user.level != 'admin' %}
                      <ul>
 						<li> <a href="{% url 'repayments' %}"><i class="bx bx-right-arrow-alt"></i>Repayments</a>
 						</li>

@@ -81,7 +81,7 @@ class Func:
 
     @staticmethod
     def get_stage(loan):
-        if loan.disbursed_at is not None and loan.status in ['disbursed', 'partpayment']:
+        if loan.disbursed_at is not None and loan.status in ['disbursed', 'partpayment', 'repaid']:
             diff = Func.overdue_days(loan.disbursed_at, loan.duration, obj=True)
             if diff.days == 0:
                 return 'S0'
@@ -98,6 +98,25 @@ class Func:
             elif diff.days > 30:
                 return 'M1'
         return ''
+
+    @staticmethod
+    def get_stage_temp(days):
+        if days == 0:
+            return 'S0'
+        elif days == 1:
+            return 'S1'
+        elif 2 <= days <= 3:
+            return 'S2'
+        elif 4 <= days <= 7:
+            return 'S3'
+        elif 8 <= days <= 15:
+            return 'S4'
+        elif 16 <= days <= 30:
+            return 'S5'
+        elif days > 30:
+            return 'M1'
+        else:
+            return ''
 
     @staticmethod
     def get_due_date(loan, fmt='%b %d, %Y'):
@@ -2376,7 +2395,10 @@ class LoanUtils:
 
             end_date = dt.datetime.strptime(end, '%Y-%m-%d') + dt.timedelta(days=1)
             end_date = timezone.make_aware(end_date, timezone.get_current_timezone())
-            print(f'F: {filters}, rows: {rows}')
+            if self.request.user.level == 'staff':
+                stages = [self.request.user.stage]
+            else:
+                stages = ['S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'M1']
 
             repayments = Repayment.objects.annotate(
                 lower_first_name=Lower('user__first_name'),
@@ -2390,6 +2412,7 @@ class LoanUtils:
                         Q(lower_first_name__startswith=filters.lower()) |
                         Q(lower_last_name__startswith=filters.lower())
                 )
+                & Q(stage__in=stages)
             ).order_by('-created_at').all()
 
             self._content = ''
@@ -2423,7 +2446,7 @@ class LoanUtils:
                     self._status = 'error'
                     return
                 elif self.request.user.level not in ('super admin', 'approval admin'):
-                    self._message = 'Permission error. Please contact an approval admin'
+                    self._message = 'Permission error. Please contact admin'
                     self._status = 'error'
                     return
                 Func.repayment(loan=loan, amount_paid=loan.amount_due-loan.amount_paid)
@@ -2478,7 +2501,7 @@ class LoanUtils:
                             self._status = 'error'
                             return
                         elif self.request.user.level not in ('super admin', 'approval admin'):
-                            self._message = 'Permission error. Please contact an approval admin'
+                            self._message = 'Permission error. Please contact admin'
                             self._status = 'error'
                             return
                         Func.repayment(loan=loan, amount_paid=loan.amount_due - loan.amount_paid)
@@ -2519,12 +2542,16 @@ class LoanUtils:
                     return
 
     def trash_loan(self):
-        loan = Loan.objects.get(pk=self.kwargs['loan_id'])
-        loan.delete()
-        AdminUtils.log(user=self.request.user, app_user=loan.user, action_type='loan status', action=f'Deleted a loan with ID {loan.loan_id}')
-        self._message = f'Loan request deleted successfully'
-        self._status = 'success'
-        self.fetch_loans(size=self.kwargs['size'])
+        if self.request.user.level in ('super admin', 'approval admin'):
+            loan = Loan.objects.get(pk=self.kwargs['loan_id'])
+            loan.delete()
+            AdminUtils.log(user=self.request.user, app_user=loan.user, action_type='loan status', action=f'Deleted a loan with ID {loan.loan_id}')
+            self._message = f'Loan request deleted successfully'
+            self._status = 'success'
+            self.fetch_loans(size=self.kwargs['size'])
+        else:
+            self._message = f'Permission error'
+            self._status = 'error'
 
     def waive_loan(self):
         loan = Loan.objects.get(pk=self.kwargs.get('loan_id'))
@@ -2638,7 +2665,7 @@ class LoanUtils:
 									</div>
 								</div>
 							</td>
-                          
+                            <td>{loan.user.phone}</td>
                 			<td>&#x20A6;{loan.principal_amount:,}</td>
                 			<td>&#x20A6;{loan.amount_disbursed:,}</td>
                 			<td>{amt_due}</td>
