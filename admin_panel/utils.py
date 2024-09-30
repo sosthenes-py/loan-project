@@ -2322,17 +2322,18 @@ class LoanUtils:
                         Q(lower_first_name__startswith=filters.lower()) |
                         Q(lower_last_name__startswith=filters.lower())
                 )
-            ).order_by('-effective_date').all()
+            ).order_by('-effective_date').all()[:3]
 
             overdue_from = -20 if overdue_start == '' else int(overdue_start)
             overdue_to = 365 if overdue_end == '' else int(overdue_end)
             rows = int(rows)
+            print(rows)
 
             self._content = ''
             sn = 0
-            for loan in loans:
-                if self.request.user.level in ('super admin', 'approval admin', 'team leader'):
-                    if rows > 0:
+            while rows > 0:
+                for loan in loans:
+                    if self.request.user.level in ('super admin', 'approval admin', 'team leader'):
                         if loan.status not in ('disbursed', 'partpayment') and overdue_start == '':
                             overdue_days = overdue_from  # When filter not given, show loan even if not disbursed yet
                         elif loan.status not in ('disbursed', 'partpayment') and overdue_start != '':
@@ -2360,7 +2361,7 @@ class LoanUtils:
                             elif loan.status in statuses:
                                 self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
 
-                            rows = rows - 1
+                            rows -= 1
         else:
             self.user = AppUser.objects.get(user_id=self.kwargs['user_id'])
             # IF SIZE IS SINGLE
