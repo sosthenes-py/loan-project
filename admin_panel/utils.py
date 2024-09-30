@@ -2360,7 +2360,7 @@ class LoanUtils:
                             elif loan.status in statuses:
                                 self.add_table_content(_for='loans', single=False, loan=loan, sn=sn, size=size)
 
-                            rows -= 1
+                            rows = rows - 1
         else:
             self.user = AppUser.objects.get(user_id=self.kwargs['user_id'])
             # IF SIZE IS SINGLE
