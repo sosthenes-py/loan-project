@@ -2322,7 +2322,7 @@ class LoanUtils:
                         Q(lower_first_name__startswith=filters.lower()) |
                         Q(lower_last_name__startswith=filters.lower())
                 )
-            ).order_by('-effective_date').all()[:3]
+            ).order_by('-effective_date').all()
 
             overdue_from = -20 if overdue_start == '' else int(overdue_start)
             overdue_to = 365 if overdue_end == '' else int(overdue_end)
