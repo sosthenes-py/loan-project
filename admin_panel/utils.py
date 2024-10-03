@@ -2404,7 +2404,7 @@ class LoanUtils:
             if self.request.user.level == 'staff':
                 stages = [self.request.user.stage]
             else:
-                stages = ['S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'M1']
+                stages = ['S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'M1', '']
 
             repayments = Repayment.objects.annotate(
                 lower_first_name=Lower('user__first_name'),
