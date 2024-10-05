@@ -180,6 +180,7 @@ class Account:
     def create_virtual_account(user: AppUser):
         # After creating virtual account, store to db
         res = apis.generate_flw_virtual_account(user)
+        print(res)
         if res['status'] == 'success':
             bank_number = res['data']['account_number']
             bank_name = res['data']['bank_name']
