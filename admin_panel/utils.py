@@ -3101,10 +3101,10 @@ class Analysis:
                     dim = dimension.split('_')[0]
                     total_fill = [getattr(pr, f'total_{dim}{loantype}')]
                     a_fill = [
-                        f"{((getattr(pr, f'a_{dim}{loantype}') / getattr(pr, f'total_{dim}{loantype}')) * 100):.1f}%"
+                        f"{((getattr(pr, f'a_{dim}{loantype}') / getattr(pr, f'total_{dim}{loantype}')) * 100):.1f}%" if getattr(pr, f'total_{dim}{loantype}') != 0 else "0.0%"
                     ]
                     b_fill = [
-                        f"{((getattr(pr, f'day{num}_{dim}{loantype}') / getattr(pr, f'total_{dim}{loantype}')) * 100):.1f}%"
+                        f"{((getattr(pr, f'day{num}_{dim}{loantype}') / getattr(pr, f'total_{dim}{loantype}')) * 100):.1f}%" if getattr(pr, f'total_{dim}{loantype}') != 0 else "0.0%"
                         for num in range(32)
                     ]
 
