@@ -290,7 +290,7 @@ class Func:
                 'amount': loan.principal_amount - ((loan.interest_perc / 100) * loan.principal_amount),
                 'currency': 'NGN',
                 'narration': 'MG Loan',
-                'reference': f'{loan.loan_id}-{admin_user.id}-{random.randint(10, 99)}',
+                'reference': f'{loan.loan_id}-{admin_user.id}-{random.randint(10, 99)}-mgloan',
                 'meta': [
                     {
                         'email': loan.user.email,
@@ -592,7 +592,7 @@ class Func:
                 return Func.webhook_charge(data)
             return False
         elif event == 'transfer.completed':
-            if data['narration'] == 'MG Loan' or data['meta'][0]['EmailAddress'] in AppUser.objects.all().values_list('email', flat=True):
+            if data['narration'] == 'MG Loan' or data['reference'].split('-')[-1] == 'mgloan':
                 return Func.webhook_transfer(data)
             return False
 
@@ -654,6 +654,25 @@ class Func:
                 print('WEBHOOK------ Tf recorded successfully')
                 loan = Loan.objects.get(loan_id=loan_id)
                 print(f'Loan Amt: {loan.amount_disbursed}')
+        return True
+
+    @staticmethod
+    def hook_transferred(phone, tx_id):
+        print('WEBHOOK------ Confirmed as tf')
+        admin_id = 2
+        loan = AppUser.objects.get(phone=phone).loan_set.last()
+        admin = AdminUser.objects.get(pk=admin_id)
+        if loan and loan.disburse_id == '':
+            print('WEBHOOK------ Marked success tf')
+            loan.disburse_id = tx_id
+            loan.save()
+            Timeline(user=admin, app_user=loan.user, name='disbursement',
+                     body=f'Loan of &#x20A6;{loan.principal_amount} was requested. &#x20A6;{loan.amount_disbursed} was disbursed').save()
+            LoanStatic(user=admin, loan=loan, status='disbursed').save()
+            Logs(action='transfer',
+                 body=f'Transfer of #{loan.amount_disbursed:,} to user was successful',
+                 status='success', fee=0.0).save()
+            print('WEBHOOK------ Tf recorded successfully')
         return True
 
     @staticmethod
@@ -2462,10 +2481,10 @@ class LoanUtils:
                     self._message = 'Please approve request before disbursement'
                     self._status = 'error'
                     return
-                if to != "disbursed" and loan.status != "pending":
-                    self._message = 'Action could not be completed, refresh page and try again'
-                    self._status = 'error'
-                    return
+                # if to != "disbursed" and loan.status != "pending":
+                #     self._message = 'Action could not be completed, refresh page and try again'
+                #     self._status = 'error'
+                #     return
 
             if to == "disbursed":
                 disbursed, msg = Func.disburse_loan(loans=[loan], admin_user=self.request.user)
@@ -2512,11 +2531,12 @@ class LoanUtils:
                             return
                         Func.repayment(loan=loan, amount_paid=loan.amount_due - loan.amount_paid)
                     else:
+                        pass
                         # IF TO == 'APPROVED' OR 'DECLINED'
-                        if to in ['approve', 'decline'] and loan.status != "pending":
-                            self._message = 'Action could not be completed, refresh page and try again'
-                            self._status = 'error'
-                            return
+                        # if to in ['approve', 'decline'] and loan.status != "pending":
+                        #     self._message = 'Action could not be completed, refresh page and try again'
+                        #     self._status = 'error'
+                        #     return
 
                     if to == 'waive':
                         status = 'repaid'
@@ -2706,6 +2726,7 @@ class LoanUtils:
                     if loan.status == "approved":
                         self._content += f"""
                                         <li data-id='{loan.id}' data-user_id='{loan.user.user_id}' data-size='{kwargs["size"]}' data-action='disbursed' class='loan_actions text-primary'><a class='dropdown-item'><i class='bx bx-check font-22 '></i> Disburse</a></li>
+                                        <li data-id='{loan.id}' data-user_id='{loan.user.user_id}' data-size='{kwargs["size"]}' data-action='declined' class='loan_actions text-danger'><a class='dropdown-item'><i class='bx bx-x font-22 '></i> Decline</a></li>
                                         """
                     if loan.status == "declined":
                         self._content += f"""

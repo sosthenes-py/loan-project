@@ -1624,7 +1624,8 @@
            const level = '{{ user.level }}'
            const allowed_admins = ['super admin', 'approval admin']
            if(status === 'approved'){
-               html = `<li><a class="dropdown-item selected-check-action" data-action='disburse' href="#">Disburse all</a></li>`
+               html = `<li><a class="dropdown-item selected-check-action" data-action='disburse' href="#">Disburse all</a></li>
+                        <li><a class="dropdown-item selected-check-action" data-action='decline' href="#">Decline all</a></li>`
            }else if(status === 'pending'){
                 html = `<li><a class="dropdown-item selected-check-action" data-action='approve' href="#">Approve all</a></li>
                         <li><a class="dropdown-item selected-check-action" data-action='decline' href="#">Decline all</a></li>`

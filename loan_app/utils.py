@@ -334,7 +334,7 @@ class Account:
             amount_due = principal_amount
             reloan = Loan.objects.filter(user=user, status='repaid').count() + 1
             duration = LOAN_DURATION
-            status = 'pending' if reloan == 1 else 'approved'
+            status = 'approved'
             new_loan = Loan(user=user, principal_amount=principal_amount,
                             amount_due=amount_due, reloan=reloan, duration=duration, purpose=purpose, status=status)
             new_loan.save()
