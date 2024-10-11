@@ -1104,7 +1104,7 @@ class UserUtils:
                     Q(user__bvn__startswith=filters) | Q(user__first_name__startswith=filters) |
                     Q(user__last_name__startswith=filters)
             )
-        ).order_by('-created_at').all()[:5]
+        ).order_by('-created_at').all()
         self._content = ''
         rows = int(rows)
         for item in items:
