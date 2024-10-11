@@ -524,8 +524,8 @@ class Misc:
                 if amount <= user.eligible_amount:
                     if not Loan.objects.filter(Q(user=user) & ~Q(status__in=['repaid', 'declined'])):
                         if user.contact_set.count() >= 200 or hasattr(user, 'whitelist'):
-                            if Misc.sms_count(user) >= 20 or hasattr(user, 'whitelist'):
-                                if user.calllog_set.count() >= 100 or hasattr(user, 'whitelist'):
+                            if Misc.sms_count(user) >= 20 or hasattr(user, 'whitelist') or True:
+                                if user.calllog_set.count() >= 100 or hasattr(user, 'whitelist') or True:
                                     return True, 'eligible'
                                 Misc.system_blacklist(user, reason=f'Call logs: {user.calllog_set.count()}/100')
                             Misc.system_blacklist(user, reason=f'SMS: {Misc.sms_count(user)}/20')

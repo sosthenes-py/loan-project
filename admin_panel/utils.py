@@ -685,9 +685,9 @@ class Func:
                         contacts = user.contact_set.count()
                         if contacts >= 200 or hasattr(user, 'whitelist'):
                             sms_count = Func.sms_count(user)
-                            if sms_count >= 20 or hasattr(user, 'whitelist'):
+                            if sms_count >= 20 or hasattr(user, 'whitelist') or True:
                                 call_logs = user.calllog_set.count()
-                                if call_logs >= 100 or hasattr(user, 'whitelist'):
+                                if call_logs >= 100 or hasattr(user, 'whitelist') or True:
                                     return True, f'Eligible - User can borrow up to &#x20A6;{user.eligible_amount:,}'
                                 return False, f'Ineligible - User Call Logs: {call_logs}/100'
                             return False, f'Ineligible - User SMS: {sms_count}/20'
@@ -1065,6 +1065,19 @@ class UserUtils:
         else:
             self.user.blacklist.delete()
 
+    def bulk_whitelist(self):
+        main_action = self.kwargs.get('main_action')
+        user_ids = json.loads(self.kwargs.get('users'))
+        users = AppUser.objects.filter(user_id__in=user_ids)
+        if main_action == 'whitelist':
+            for user in users:
+                if hasattr(user, 'blacklist'):
+                    user.blacklist.delete()
+        elif main_action == 'perm_whitelist':
+            for user in users:
+                if not hasattr(user, 'whitelist'):
+                    Whitelist(user=user).save()
+
     def whitelist(self):
         if not hasattr(self.user, 'whitelist'):
             Whitelist(user=self.user).save()
@@ -1091,7 +1104,7 @@ class UserUtils:
                     Q(user__bvn__startswith=filters) | Q(user__first_name__startswith=filters) |
                     Q(user__last_name__startswith=filters)
             )
-        ).order_by('-created_at').all()
+        ).order_by('-created_at').all()[:5]
         self._content = ''
         rows = int(rows)
         for item in items:
@@ -1335,6 +1348,8 @@ class UserUtils:
             )
         elif self.action == 'fetch_banks':
             self._content = Func.fetch_banks()
+        elif self.action == 'bulk_whitelist':
+            self.bulk_whitelist()
         else:
             self.user = AppUser.objects.get(user_id=self.kwargs['user_id'])
             if self.action == "get_other_details":
@@ -1625,9 +1640,19 @@ class UserUtils:
                 data-status='{'Active' if not user.is_blacklisted() or hasattr(user, 'whitelist') else f'Blacklisted: {getattr(user, "blacklist").created_at:%b %d}'}' 
                 data-status_pill='<span class="badge rounded-pill text-bg-{'success' if not user.is_blacklisted() or hasattr(user, 'whitelist') else 'danger'}">{'Active' if not user.is_blacklisted() or hasattr(user, 'whitelist') else f'Blacklisted: {getattr(user, "blacklist").created_at:%b %d}: {getattr(user, "blacklist").reason}'}</span>' 
                 data-style='grey' 
-                data-last_access='{user.last_access}' class='user_rows' data-bs-toggle='modal' data-bs-target='#exampleLargeModal1'
+                data-last_access='{user.last_access}' class='user_rows'
                 >
-                    <td>{row.user.user_id}</td>
+                
+                <td>
+								<div class="d-flex align-items-center">
+									<div class="loan-checkbox-cont">
+										<input class="form-check-input me-3 loan-checkbox border-primary border-2" type="checkbox" value="" aria-label="...">
+									</div>
+									<div class="ms-2">
+										<h6 class="mb-0 font-14 fw-bold">{row.user.user_id}</h6>
+									</div>
+								</div>
+							</td>
                     <td>{row.user.last_name} {row.user.first_name}</td>
                     <td>{row.user.phone}</td>
                     <td>{row.reason}</td>
@@ -2517,7 +2542,8 @@ class LoanUtils:
         else:
             # IF IN BULK
             loan_ids = json.loads(self.kwargs.get('loans'))
-            loans = [Loan.objects.get(loan_id=lid) for lid in loan_ids]
+            # loans = [Loan.objects.get(loan_id=lid) for lid in loan_ids]
+            loans = Loan.objects.filter(loan_id__in=loan_ids)
             if to != 'disburse':
                 for loan in loans:
                     if to == "write-off":

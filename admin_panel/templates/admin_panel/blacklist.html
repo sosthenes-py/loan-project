@@ -158,7 +158,12 @@
                         <table class="table align-middle mb-0" id="example2">
                             <thead class="table-light">
                             <tr>
-                                <th>User ID</th>
+                                <th>
+                                    <div>
+										<input class="form-check-input me-3 all-checkbox border-primary border-2" type="checkbox" value="" aria-label="..." onchange="check_all_loans()">
+                                        User ID
+									</div>
+                                </th>
                                 <th>Full Name</th>
                                 <th>Phone</th>
                                 <th>Reason</th>
@@ -1395,6 +1400,25 @@
 
 
 
+    {#    CHECKBOX SELECTED MODAL#}
+    <div class="modal fade" id="CheckboxSelectedModal" tabindex="-1" aria-modal="true" role="dialog" style="display: none;">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sure to proceed?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">You are about to <span class="fw-bold text-danger"><span class="checkbox-modal-action" style="text-transform: capitalize"></span> All Selected Rows</span>. This action may not be explicitly reversible, proceed?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary checkbox-modal-sbmt" style="text-transform: capitalize" onclick="get_all_checked()">Action</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 
 
 
@@ -1477,9 +1501,13 @@
                     setTimeout(function () {
                         $("#blacklist").html(data.content);
                         var table = $('#example2').DataTable({
-                            lengthChange: false,
+                            lengthMenu: [ [20, 70, 150, -1], [20, 70, 150, "All"] ],
                             pageLength: 15,
-                            buttons: ['copy', 'excel', 'pdf', 'print']
+                            buttons: ['copy', 'excel', 'pdf', 'print'],
+                            ordering: false,
+                            columnDefs: [
+                                {"orderable": false, "targets": 0}
+                            ]
                         });
                         table.buttons().container().appendTo('#example2_wrapper .col-md-6:eq(0)');
                     }, 10)
@@ -1575,6 +1603,117 @@
             window.e2_chart = new ApexCharts(document.querySelector('#overdue_chart'), e2);
             e2_chart.render();
        }
+
+
+       {#CHECKBOX STUFFS#}
+
+       function get_selected_checkbox_action(){
+           var html = '';
+           const level = '{{ user.level }}'
+           const allowed_admins = ['super admin', 'approval admin']
+
+           if(allowed_admins.includes(level)){
+               html = `<li><a class="dropdown-item selected-check-action" data-action='whitelist' href="#">Whitelist all</a></li>
+                       <li><a class="dropdown-item selected-check-action" data-action='perm_whitelist' href="#">Permanently whitelist all</a></li>`
+           }
+
+           return `
+                <div class="dropdown ms-3 checkbox-btn">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Selected Actions</button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item selected-check-action" data-action='copy_phone' href="#">Copy phones</a></li>
+                            ${html}
+                        </ul>
+                    </div>
+           `
+       }
+
+
+       function check_all_loans(){
+           const all_check = $('.all-checkbox').is(':checked') ? 'checked' : 'unchecked'
+           if(all_check === 'checked'){
+               $('.dt-buttons').append(get_selected_checkbox_action())
+           }else{
+               $('.checkbox-btn').hide()
+           }
+
+           $('.loan-checkbox').each(function(){
+               if(all_check === 'checked'){
+                   $(this).prop('checked', true)
+               }else{
+                   $(this).prop('checked', false)
+               }
+           })
+       }
+
+       var checkbox_btn_appended = false
+       $('body').on('change', '.loan-checkbox', function(){
+           if($('.loan-checkbox:checked').length > 0 && !checkbox_btn_appended){
+               checkbox_btn_appended = true
+               $('.dt-buttons').append(get_selected_checkbox_action())
+           }else if($('.loan-checkbox:checked').length === 0 && checkbox_btn_appended){
+               $('.checkbox-btn').hide()
+               checkbox_btn_appended = false
+           }
+
+        })
+
+
+        $('body').on('click', '.selected-check-action', function (){
+            const action = $(this).data('action')
+            if(action === 'copy_phone'){
+                var phones = get_all_checked('phone')
+                copy_to_clipboard(phones.join(' '))
+            }else {
+                $('#CheckboxSelectedModal').modal('show')
+                $('.checkbox-modal-action').text(action)
+                $('.checkbox-modal-sbmt').data('action', action).text('Yes, ' + action)
+            }
+        })
+
+        function get_all_checked(get='user_id'){
+           var checked = []
+            $('.user_rows').each(function (){
+                const check = $(this).find('input')
+                if(check.is(':checked')){
+                    var item = $(this).data(get)
+                    checked.push(item)
+                }
+            })
+            return checked
+        }
+
+
+        $('.checkbox-modal-sbmt').click(function () {
+            const checked = get_all_checked()
+            loadOn();
+            $.ajax({
+                url: '{% url "users" %}',
+                data: {
+                    action: 'bulk_whitelist',
+                    main_action: $(this).data('action'),
+                    users: JSON.stringify(checked)
+                },
+                dataType: 'json',
+                type: 'post',
+                success: function (data) {
+                    loadOff()
+                    notify(data.status, data.message)
+                    start(true)
+                    $('#CheckboxSelectedModal').modal('hide')
+                },
+                error: function (err1, err2) {
+                    loadOff()
+                    notify('error', JSON.stringify(err1))
+                },
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}")
+                }
+            })
+        })
+
+
+        {#CHECKBOX STUFF ENDS#}
 
 
         function doc_decide(action) {
@@ -1724,6 +1863,9 @@
 
 
             $('body').on('click', '.user_rows', function () {
+                if(!$(event.target).hasClass('loan-checkbox')){
+                    $('#exampleLargeModal1').modal('show')
+                }
                 var row = $(this);
                 var first_name = row.data('first_name');
                 var eligible_amount = row.data('eligible_amount');
