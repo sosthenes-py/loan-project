@@ -77,7 +77,8 @@ class Auth:
                                     children=kwargs['children'],
                                     employment=kwargs['employment'],
                                     state=kwargs['state'],
-                                    lga=kwargs['lga']
+                                    lga=kwargs['lga'],
+                                    device_id=kwargs.get('device_id', '')
                                 )
                                 user.save()
                                 user.user_id = f'MGU{user.id}{random.randint(100, 1000)}'

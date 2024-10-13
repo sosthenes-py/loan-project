@@ -417,9 +417,9 @@ class Func:
         exempt_loans = [int(col.loan.id) for col in Collection.objects.all()]
         if exempt_loans:
             loans = Loan.objects.filter(
-                Q(disbursed_at__isnull=False) & Q(status='disbursed') & ~Q(pk__in=exempt_loans)).all()
+                Q(disbursed_at__isnull=False) & Q(status__in=['disbursed', 'partpayment']) & ~Q(pk__in=exempt_loans)).all()
         else:
-            loans = Loan.objects.filter(Q(disbursed_at__isnull=False) & Q(status='disbursed')).all()
+            loans = Loan.objects.filter(Q(disbursed_at__isnull=False) & Q(status__in=['disbursed', 'partpayment'])).all()
         stages = ['S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'M1']
         staged_loans = {}
         for stage in stages:
